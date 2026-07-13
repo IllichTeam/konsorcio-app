@@ -1,0 +1,24 @@
+# Normaliza fines de línea: todo texto se guarda como LF en el repo,
+# sin importar el sistema operativo del que venga el commit.
+* text=auto eol=lf
+
+# Scripts de Windows sí necesitan CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Binarios: nunca tocar
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.avif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.eot binary
+*.pdf binary
+*.zip binary

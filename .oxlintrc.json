@@ -19,5 +19,14 @@
     "import/no-default-export": "off",
     "import/no-unassigned-import": "off"
   },
+  "overrides": [
+    {
+      "files": ["src/components/ui/**"],
+      "rules": {
+        "jsx-a11y/label-has-associated-control": "off",
+        "no-shadow": "off"
+      }
+    }
+  ],
   "ignorePatterns": ["node_modules", ".next", "dist", "build", "coverage"]
 }
