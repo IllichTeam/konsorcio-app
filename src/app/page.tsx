@@ -1,50 +1,35 @@
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+import type { Metadata } from "next";
 
-export default function Home() {
+import { LoginForm } from "@/components/auth/login-form";
+import { RotatingCube } from "@/components/decorative/rotating-cube";
+import { Card, CardContent } from "@/components/ui/card";
+
+export const metadata: Metadata = {
+  title: "Iniciar sesión — Konsorcio",
+};
+
+export default function LoginPage() {
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-8 p-8">
-      <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="font-heading text-3xl font-semibold tracking-tight">Konsorcio</h1>
-        <p className="text-muted-foreground text-sm">Página de prueba del design system</p>
-      </div>
-
-      <Card className="w-full max-w-md shadow-none rounded-xl">
-        <CardHeader>
-          <CardTitle className="font-heading">Nuevo consorcio</CardTitle>
-          <CardDescription>
-            Card sobre fondo con jerarquía por contraste, sin sombras.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="name">Nombre</Label>
-            <Input id="name" placeholder="Consorcio Los Toros" />
-          </div>
-          <Separator />
-          <div className="flex items-center gap-2">
-            <Badge>Activo</Badge>
-            <Badge variant="secondary">12 participantes</Badge>
-            <Badge variant="outline">Mensual</Badge>
-          </div>
-        </CardContent>
-        <CardFooter className="gap-2">
-          <Button>Crear consorcio</Button>
-          <Button variant="outline">Cancelar</Button>
-          <Button variant="ghost">Ayuda</Button>
-        </CardFooter>
-      </Card>
+    <main className="grid min-h-svh flex-1 lg:grid-cols-[3fr_2fr] lg:bg-primary">
+      <section className="flex items-center justify-center bg-background p-6 lg:rounded-r-4xl">
+        <div className="w-full max-w-sm">
+          <p className="font-heading text-lg font-semibold text-primary">Konsorcio</p>
+          <h1 className="mt-6 font-heading text-3xl font-semibold tracking-tight">
+            Bienvenido de nuevo
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Ingresa tus credenciales para acceder a tu cuenta.
+          </p>
+          <Card className="mt-8">
+            <CardContent>
+              <LoginForm />
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+      <aside className="relative hidden items-center justify-center overflow-hidden lg:flex">
+        <RotatingCube />
+      </aside>
     </main>
   );
 }
