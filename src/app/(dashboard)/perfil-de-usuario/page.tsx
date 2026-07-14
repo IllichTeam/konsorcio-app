@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   title: "Perfil — Konsorcio",
 };
 
-export default async function ProfilePage() {
+export default async function PerfilDeUsuarioPage() {
   const session = await getSession();
 
   return <ProfileForm userName={session?.user.name ?? "Administrador"} />;

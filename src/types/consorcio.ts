@@ -22,6 +22,18 @@ export type CreateConsorcioCommentInput = {
   message: string;
 };
 
+export type CreateConsorcioInput = {
+  name: string;
+  location: string;
+  paymentAlias: string;
+  billingEmail: string;
+  driveLink: string;
+};
+
+export type UpdateConsorcioInput = CreateConsorcioInput & {
+  id: string;
+};
+
 export type UpdateConsorcioAmountInput = {
   consorcioId: string;
   amount: number;

@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   title: "Consorcios — Konsorcio",
 };
 
-export default async function DashboardPage() {
+export default async function ConsorciosPage() {
   const session = await getSession();
 
   return <ConsorciosScreen userName={session?.user.name ?? "Administrador"} />;

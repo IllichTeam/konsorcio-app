@@ -3,7 +3,9 @@ import type {
   ConsorcioDetail,
   ConsorcioHistoryEntry,
   CreateConsorcioCommentInput,
+  CreateConsorcioInput,
   UpdateConsorcioAmountInput,
+  UpdateConsorcioInput,
 } from "@/types/consorcio";
 
 const MOCK_CONSORCIOS: ConsorcioDetail[] = [
@@ -104,6 +106,39 @@ export async function getConsorcioHistory(id: string): Promise<ConsorcioHistoryE
 export async function createConsorcioComment(input: CreateConsorcioCommentInput): Promise<void> {
   void input;
   // TODO: persistir comentario en base de datos.
+}
+
+/** Crea un consorcio. Sustituir por POST /api/consorcios. */
+export async function createConsorcio(input: CreateConsorcioInput): Promise<ConsorcioDetail> {
+  const newConsorcio: ConsorcioDetail = {
+    id: crypto.randomUUID(),
+    name: input.name,
+    location: input.location,
+    amount: 0,
+    paymentAlias: input.paymentAlias,
+    billingEmail: input.billingEmail,
+    driveLink: input.driveLink,
+  };
+
+  MOCK_CONSORCIOS.push(newConsorcio);
+  return { ...newConsorcio };
+}
+
+/** Actualiza un consorcio. Sustituir por PATCH /api/consorcios/:id. */
+export async function updateConsorcio(input: UpdateConsorcioInput): Promise<ConsorcioDetail> {
+  const consorcio = MOCK_CONSORCIOS.find((item) => item.id === input.id);
+
+  if (!consorcio) {
+    throw new Error("Consorcio no encontrado");
+  }
+
+  consorcio.name = input.name;
+  consorcio.location = input.location;
+  consorcio.paymentAlias = input.paymentAlias;
+  consorcio.billingEmail = input.billingEmail;
+  consorcio.driveLink = input.driveLink;
+
+  return { ...consorcio };
 }
 
 /** Actualiza monto de caja. Sustituir por PATCH /api/consorcios/:id/amount. */
