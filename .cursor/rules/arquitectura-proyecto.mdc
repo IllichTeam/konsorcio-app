@@ -1,0 +1,17 @@
+---
+description: Reglas de arquitectura y diseño del proyecto Konsorcio (fuente única: AGENTS.md)
+alwaysApply: true
+---
+
+Antes de escribir o modificar cualquier código, lee y respeta íntegramente las reglas del archivo raíz del repositorio:
+
+@AGENTS.md
+
+Puntos innegociables (resumen — el detalle completo está en AGENTS.md):
+
+1. **Next.js de esta versión**: consulta `node_modules/next/dist/docs/` antes de usar APIs; no uses convenciones deprecadas de versiones anteriores.
+2. **Formularios**: siempre react-hook-form + zod (`zodResolver`). Nunca usar componentes crudos de `src/components/ui/` dentro de un form ni `Controller` inline en páginas. Si falta un wrapper, créalo en `src/components/form/` siguiendo el patrón de `form-input.tsx` (label, error de `fieldState`, `aria-invalid`/`aria-describedby`).
+3. **Capas**: primitivos en `src/components/ui/`, wrappers de form en `src/components/form/`, componentes de dominio en carpetas propias, hooks en `src/hooks/`, data/API en `src/lib/`.
+4. **Diseño sobrio (Linear/Apple)**: fondo nunca blanco puro; neutrales en oklch hue ~255; cards planas (borde 1px, sin sombra, `rounded-lg`); contenido agrupado en `Card`, no cajas ad-hoc; un solo acento azul; sin gradientes; `text-sm` base en cards; sin títulos en MAYÚSCULAS sostenidas.
+5. **Package manager**: solo pnpm. Nunca generar `package-lock.json` ni `yarn.lock`.
+6. **Data fetching cliente**: usar TanStack Query con los hooks de `src/hooks/` y las claves de `src/lib/api/query-keys.ts` — no `useEffect` + `useState` para cargar datos.

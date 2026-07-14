@@ -1,72 +1,96 @@
 "use client";
 
 import * as React from "react";
-import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { z } from "zod";
 
-import { getCurrentProfile, updateProfile } from "@/lib/api/profile";
-import type { UserProfile } from "@/types/user";
+import { useProfile, useUpdateProfile } from "@/hooks/use-profile";
+import { FormInput } from "@/components/form/form-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+
+const profileSchema = z
+  .object({
+    name: z.string().min(1, "El nombre es obligatorio"),
+    email: z.string().email("Email inválido"),
+    phone: z.string().min(1, "El teléfono es obligatorio"),
+    address: z.string().min(1, "La dirección es obligatoria"),
+    currentPassword: z.string(),
+    newPassword: z.string(),
+  })
+  .superRefine((values, ctx) => {
+    if (values.newPassword.length > 0) {
+      if (values.newPassword.length < 8) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["newPassword"],
+          message: "Mínimo 8 caracteres",
+        });
+      }
+      if (values.currentPassword.length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["currentPassword"],
+          message: "Ingresa tu contraseña actual",
+        });
+      }
+    }
+  });
+
+type ProfileValues = z.infer<typeof profileSchema>;
 
 type ProfileFormProps = {
   userName: string;
 };
 
 export function ProfileForm({ userName }: ProfileFormProps) {
-  const [profile, setProfile] = React.useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [isSaving, setIsSaving] = React.useState(false);
-  const [showCurrent, setShowCurrent] = useState(false);
+  const { data: profile, isLoading, isError } = useProfile();
+  const updateProfileMutation = useUpdateProfile();
+  const [showCurrent, setShowCurrent] = React.useState(false);
 
-  React.useEffect(() => {
-    let cancelled = false;
-
-    async function loadProfile() {
-      try {
-        const data = await getCurrentProfile();
-        if (!cancelled) {
-          setProfile(data);
+  const { control, handleSubmit, formState, reset } = useForm<ProfileValues>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      address: "",
+      currentPassword: "",
+      newPassword: "",
+    },
+    values: profile
+      ? {
+          name: profile.name,
+          email: profile.email,
+          phone: profile.phone,
+          address: profile.address,
+          currentPassword: "",
+          newPassword: "",
         }
-      } catch {
-        if (!cancelled) {
-          toast.error("No se pudo cargar el perfil");
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    }
+      : undefined,
+  });
 
-    void loadProfile();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
+  async function onSubmit(values: ProfileValues) {
     if (!profile) {
       return;
     }
 
-    setIsSaving(true);
-
     try {
-      const updated = await updateProfile(profile);
-      setProfile(updated);
+      await updateProfileMutation.mutateAsync({
+        id: profile.id,
+        name: values.name,
+        email: values.email,
+        phone: values.phone,
+        address: values.address,
+      });
       toast.success("Perfil actualizado");
+      reset({ ...values, currentPassword: "", newPassword: "" });
     } catch {
       toast.error("No se pudo guardar el perfil");
-    } finally {
-      setIsSaving(false);
     }
   }
 
@@ -79,130 +103,81 @@ export function ProfileForm({ userName }: ProfileFormProps) {
     );
   }
 
-  if (!profile) {
+  if (isError || !profile) {
     return <p className="text-sm text-destructive">No se pudo cargar el perfil.</p>;
   }
 
   return (
     <div className="w-full max-w-xl">
-      <h1 className="mb-4 text-lg font-bold tracking-wide text-foreground">
-        CONFIGURACIÓN DE USUARIO{" "}
-        <span className="text-muted-foreground">| {userName.toUpperCase()}</span>
+      <h1 className="mb-4 text-lg font-semibold tracking-tight text-foreground">
+        Configuración de usuario <span className="text-muted-foreground">· {userName}</span>
       </h1>
 
       <Card>
-        <form onSubmit={(event) => void handleSubmit(event)}>
+        <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <CardContent className="space-y-6">
             <section className="space-y-4">
-              <h2 className="text-sm font-bold tracking-wide text-foreground">
-                INFORMACIÓN PERSONAL
-              </h2>
+              <h2 className="text-sm font-semibold text-foreground">Información personal</h2>
+
+              <FormInput control={control} name="name" label="Nombre" autoComplete="name" />
+              <FormInput
+                control={control}
+                name="email"
+                label="Email"
+                type="email"
+                autoComplete="email"
+              />
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="nombre">Nombre</Label>
-                  <Input
-                    id="nombre"
-                    value={profile.name}
-                    onChange={(event) =>
-                      setProfile((current) =>
-                        current ? { ...current, name: event.target.value } : current,
-                      )
-                    }
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="name">Name</Label>
-                  <Input id="name" placeholder="Name" />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={profile.email}
-                  onChange={(event) =>
-                    setProfile((current) =>
-                      current ? { ...current, email: event.target.value } : current,
-                    )
-                  }
+                <FormInput control={control} name="phone" label="Teléfono" autoComplete="tel" />
+                <FormInput
+                  control={control}
+                  name="address"
+                  label="Dirección"
+                  autoComplete="street-address"
                 />
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="telefono">Teléfono</Label>
-                  <Input
-                    id="telefono"
-                    value={profile.phone}
-                    onChange={(event) =>
-                      setProfile((current) =>
-                        current ? { ...current, phone: event.target.value } : current,
-                      )
-                    }
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="direccion">Dirección</Label>
-                  <Input
-                    id="direccion"
-                    value={profile.address}
-                    onChange={(event) =>
-                      setProfile((current) =>
-                        current ? { ...current, address: event.target.value } : current,
-                      )
-                    }
-                  />
-                </div>
               </div>
             </section>
 
             <section className="space-y-4">
-              <h2 className="text-sm font-bold tracking-wide text-foreground">
-                CAMBIAR CONTRASEÑA
-              </h2>
+              <h2 className="text-sm font-semibold text-foreground">Cambiar contraseña</h2>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="current-password">Contraseña Actual</Label>
-                  <div className="relative">
-                    <Input
-                      id="current-password"
-                      type={showCurrent ? "text" : "password"}
-                      placeholder="Contraseña"
-                      className="pr-10"
-                    />
-                    <button
+                <FormInput
+                  control={control}
+                  name="currentPassword"
+                  label="Contraseña actual"
+                  type={showCurrent ? "text" : "password"}
+                  autoComplete="current-password"
+                  placeholder="••••••••"
+                  endAdornment={
+                    <Button
                       type="button"
-                      onClick={() => setShowCurrent((value) => !value)}
+                      variant="ghost"
+                      size="icon-sm"
+                      className="absolute top-1/2 right-1 -translate-y-1/2 text-muted-foreground"
                       aria-label={showCurrent ? "Ocultar contraseña" : "Mostrar contraseña"}
-                      className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground transition-colors hover:text-foreground"
+                      onClick={() => setShowCurrent((v) => !v)}
                     >
-                      {showCurrent ? (
-                        <EyeOff className="size-4" aria-hidden="true" />
-                      ) : (
-                        <Eye className="size-4" aria-hidden="true" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="new-password">Nueva</Label>
-                  <Input id="new-password" type="password" placeholder="Confirmar" />
-                </div>
+                      {showCurrent ? <EyeOff /> : <Eye />}
+                    </Button>
+                  }
+                />
+                <FormInput
+                  control={control}
+                  name="newPassword"
+                  label="Nueva contraseña"
+                  type="password"
+                  autoComplete="new-password"
+                  placeholder="••••••••"
+                />
               </div>
             </section>
           </CardContent>
 
           <CardFooter className="border-t border-border">
-            <Button
-              type="submit"
-              className="w-full font-semibold tracking-wide"
-              disabled={isSaving}
-            >
-              {isSaving ? "Guardando…" : "GUARDAR CAMBIOS"}
+            <Button type="submit" className="w-full" disabled={formState.isSubmitting}>
+              {formState.isSubmitting ? "Guardando…" : "Guardar cambios"}
             </Button>
           </CardFooter>
         </form>
