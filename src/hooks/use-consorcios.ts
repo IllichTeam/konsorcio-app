@@ -1,13 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
+  createConsorcio,
   createConsorcioComment,
   getConsorcioById,
   getConsorcioHistory,
   getConsorcios,
+  updateConsorcio,
   updateConsorcioAmount,
 } from "@/lib/api/consorcios";
 import { queryKeys } from "@/lib/api/query-keys";
+import type { Consorcio } from "@/types/consorcio";
 
 export function useConsorcios() {
   return useQuery({
@@ -41,6 +44,37 @@ export function useCreateConsorcioComment() {
       void queryClient.invalidateQueries({
         queryKey: queryKeys.consorcios.history(variables.consorcioId),
       });
+    },
+  });
+}
+
+export function useCreateConsorcio() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createConsorcio,
+    onSuccess: (data) => {
+      queryClient.setQueryData(queryKeys.consorcios.detail(data.id), data);
+      queryClient.setQueryData(queryKeys.consorcios.all, (current: Consorcio[] | undefined) => [
+        ...(current ?? []),
+        { id: data.id, name: data.name, location: data.location },
+      ]);
+    },
+  });
+}
+
+export function useUpdateConsorcio() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: updateConsorcio,
+    onSuccess: (data) => {
+      queryClient.setQueryData(queryKeys.consorcios.detail(data.id), data);
+      queryClient.setQueryData(queryKeys.consorcios.all, (current: Consorcio[] | undefined) =>
+        (current ?? []).map((item) =>
+          item.id === data.id ? { id: data.id, name: data.name, location: data.location } : item,
+        ),
+      );
     },
   });
 }
