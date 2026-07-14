@@ -2,11 +2,15 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Building2, MapPin, MessageSquareText, Pencil, Plus, Settings, Trash2 } from "lucide-react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { z } from "zod";
 
 import { useConsorcios, useCreateConsorcioComment } from "@/hooks/use-consorcios";
 import type { Consorcio } from "@/types/consorcio";
+import { FormTextarea } from "@/components/form/form-textarea";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,7 +26,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Textarea } from "@/components/ui/textarea";
+
+const commentSchema = z.object({
+  message: z.string().trim().min(1, "Escribe un comentario"),
+});
+
+type CommentValues = z.infer<typeof commentSchema>;
 
 type ConsorciosScreenProps = {
   userName: string;
@@ -32,22 +41,24 @@ export function ConsorciosScreen({ userName }: ConsorciosScreenProps) {
   const { data: consorcios = [], isLoading, isError } = useConsorcios();
   const createComment = useCreateConsorcioComment();
   const [openConsorcio, setOpenConsorcio] = useState<Consorcio | null>(null);
-  const [comment, setComment] = useState("");
 
-  async function handleSendComment(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  const { control, handleSubmit, formState, reset } = useForm<CommentValues>({
+    resolver: zodResolver(commentSchema),
+    defaultValues: { message: "" },
+  });
 
-    if (!openConsorcio || comment.trim().length === 0) {
+  async function onSubmitComment(values: CommentValues) {
+    if (!openConsorcio) {
       return;
     }
 
     try {
       await createComment.mutateAsync({
         consorcioId: openConsorcio.id,
-        message: comment.trim(),
+        message: values.message,
       });
       toast.success("Comentario enviado");
-      setComment("");
+      reset();
       setOpenConsorcio(null);
     } catch {
       toast.error("No se pudo enviar el comentario");
@@ -66,8 +77,8 @@ export function ConsorciosScreen({ userName }: ConsorciosScreenProps) {
     <div className="flex min-h-[calc(100vh-5rem)] w-full max-w-7xl flex-col">
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-lg font-bold tracking-wide text-foreground">
-            SELECCIÓN DE CONSORCIOS
+          <h1 className="text-lg font-semibold tracking-tight text-foreground">
+            Selección de consorcios
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">Bienvenido, {userName}</p>
         </div>
@@ -112,8 +123,8 @@ export function ConsorciosScreen({ userName }: ConsorciosScreenProps) {
               </DropdownMenu>
 
               <Building2 className="size-24 text-primary" aria-hidden="true" />
-              <span className="text-lg font-bold tracking-wide text-foreground">
-                {consorcio.name.toUpperCase()}
+              <span className="text-lg font-semibold tracking-tight text-foreground">
+                {consorcio.name}
               </span>
               <span className="flex items-center gap-1 text-sm text-muted-foreground">
                 <MapPin className="size-4" aria-hidden="true" />
@@ -129,7 +140,7 @@ export function ConsorciosScreen({ userName }: ConsorciosScreenProps) {
                   onClick={(event) => {
                     event.preventDefault();
                     event.stopPropagation();
-                    setComment("");
+                    reset();
                     setOpenConsorcio(consorcio);
                   }}
                 >
@@ -148,22 +159,18 @@ export function ConsorciosScreen({ userName }: ConsorciosScreenProps) {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-base font-bold tracking-wide">
-              {openConsorcio?.name.toUpperCase()}
-            </DialogTitle>
+            <DialogTitle>{openConsorcio?.name}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={(event) => void handleSendComment(event)} className="space-y-4">
-            <Textarea
-              value={comment}
-              onChange={(event) => setComment(event.target.value)}
+          <form onSubmit={handleSubmit(onSubmitComment)} noValidate className="space-y-4">
+            <FormTextarea
+              control={control}
+              name="message"
+              label="Comentario"
               placeholder="Escribe tu comentario..."
               rows={5}
             />
             <DialogFooter>
-              <Button
-                type="submit"
-                disabled={comment.trim().length === 0 || createComment.isPending}
-              >
+              <Button type="submit" disabled={formState.isSubmitting || createComment.isPending}>
                 {createComment.isPending ? "Enviando…" : "Enviar"}
               </Button>
             </DialogFooter>
