@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { useConsorcios, useCreateConsorcioComment } from "@/hooks/use-consorcios";
 import type { Consorcio } from "@/types/consorcio";
+import { ConsorcioFormDialog } from "@/components/consorcios/consorcio-form-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -32,7 +33,27 @@ export function ConsorciosScreen({ userName }: ConsorciosScreenProps) {
   const { data: consorcios = [], isLoading, isError } = useConsorcios();
   const createComment = useCreateConsorcioComment();
   const [openConsorcio, setOpenConsorcio] = useState<Consorcio | null>(null);
+  const [formDialogOpen, setFormDialogOpen] = useState(false);
+  const [editingConsorcioId, setEditingConsorcioId] = useState<string | null>(null);
   const [comment, setComment] = useState("");
+
+  function openCreateDialog() {
+    setEditingConsorcioId(null);
+    setFormDialogOpen(true);
+  }
+
+  function openEditDialog(consorcioId: string) {
+    setEditingConsorcioId(consorcioId);
+    setFormDialogOpen(true);
+  }
+
+  function handleFormDialogChange(open: boolean) {
+    setFormDialogOpen(open);
+
+    if (!open) {
+      setEditingConsorcioId(null);
+    }
+  }
 
   async function handleSendComment(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -72,7 +93,12 @@ export function ConsorciosScreen({ userName }: ConsorciosScreenProps) {
           <p className="mt-1 text-sm text-muted-foreground">Bienvenido, {userName}</p>
         </div>
 
-        <Button variant="outline" className="bg-transparent font-semibold tracking-wide">
+        <Button
+          type="button"
+          variant="outline"
+          className="bg-transparent font-semibold tracking-wide"
+          onClick={openCreateDialog}
+        >
           <Plus className="size-4" aria-hidden="true" />
           Agregar nuevo consorcio
         </Button>
@@ -82,8 +108,8 @@ export function ConsorciosScreen({ userName }: ConsorciosScreenProps) {
         {consorcios.map((consorcio) => (
           <li key={consorcio.id} className="min-h-64">
             <Link
-              href={`/dashboard/consorcios/${consorcio.id}`}
-              className="relative flex h-full flex-col items-center justify-center gap-4 rounded-lg border border-border bg-card p-6 text-center transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              href={`/consorcios/${consorcio.id}`}
+              className="relative flex h-full min-h-64 flex-col items-center justify-center gap-4 rounded-lg border border-border bg-card p-6 text-center transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <DropdownMenu>
                 <DropdownMenuTrigger
@@ -100,7 +126,12 @@ export function ConsorciosScreen({ userName }: ConsorciosScreenProps) {
                   }
                 />
                 <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={(event) => {
+                      event.preventDefault();
+                      openEditDialog(consorcio.id);
+                    }}
+                  >
                     <Pencil className="size-4" aria-hidden="true" />
                     Editar consorcio
                   </DropdownMenuItem>
@@ -120,27 +151,31 @@ export function ConsorciosScreen({ userName }: ConsorciosScreenProps) {
                 {consorcio.location}
               </span>
 
-              <div className="mt-2 flex w-full justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="bg-transparent font-semibold"
-                  onClick={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    setComment("");
-                    setOpenConsorcio(consorcio);
-                  }}
-                >
-                  <MessageSquareText className="size-4" aria-hidden="true" />
-                  Enviar comentario
-                </Button>
-              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="absolute right-3 bottom-3 bg-transparent font-semibold"
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setComment("");
+                  setOpenConsorcio(consorcio);
+                }}
+              >
+                <MessageSquareText className="size-4" aria-hidden="true" />
+                Enviar comentario
+              </Button>
             </Link>
           </li>
         ))}
       </ul>
+
+      <ConsorcioFormDialog
+        open={formDialogOpen}
+        onOpenChange={handleFormDialogChange}
+        consorcioId={editingConsorcioId}
+      />
 
       <Dialog
         open={openConsorcio !== null}
