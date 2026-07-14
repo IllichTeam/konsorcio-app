@@ -1,0 +1,192 @@
+"use client";
+
+import Link from "next/link";
+import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Building2, MapPin, MessageSquareText, Pencil, Plus, Settings, Trash2 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
+
+import { useConsorcios, useCreateConsorcioComment } from "@/hooks/use-consorcios";
+import type { Consorcio } from "@/types/consorcio";
+import { FormTextarea } from "@/components/form/form-textarea";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const commentSchema = z.object({
+  message: z.string().trim().min(1, "Escribe un comentario"),
+});
+
+type CommentValues = z.infer<typeof commentSchema>;
+
+type ConsorciosScreenProps = {
+  userName: string;
+};
+
+export function ConsorciosScreen({ userName }: ConsorciosScreenProps) {
+  const { data: consorcios = [], isLoading, isError } = useConsorcios();
+  const createComment = useCreateConsorcioComment();
+  const [openConsorcio, setOpenConsorcio] = useState<Consorcio | null>(null);
+
+  const { control, handleSubmit, formState, reset } = useForm<CommentValues>({
+    resolver: zodResolver(commentSchema),
+    defaultValues: { message: "" },
+  });
+
+  async function onSubmitComment(values: CommentValues) {
+    if (!openConsorcio) {
+      return;
+    }
+
+    try {
+      await createComment.mutateAsync({
+        consorcioId: openConsorcio.id,
+        message: values.message,
+      });
+      toast.success("Comentario enviado");
+      reset();
+      setOpenConsorcio(null);
+    } catch {
+      toast.error("No se pudo enviar el comentario");
+    }
+  }
+
+  if (isLoading) {
+    return <ConsorciosSkeleton />;
+  }
+
+  if (isError) {
+    return <p className="text-sm text-destructive">No se pudieron cargar los consorcios.</p>;
+  }
+
+  return (
+    <div className="flex min-h-[calc(100vh-5rem)] w-full max-w-7xl flex-col">
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-lg font-semibold tracking-tight text-foreground">
+            Selección de consorcios
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">Bienvenido, {userName}</p>
+        </div>
+
+        <Button variant="outline" className="bg-transparent font-semibold tracking-wide">
+          <Plus className="size-4" aria-hidden="true" />
+          Agregar nuevo consorcio
+        </Button>
+      </div>
+
+      <ul className="grid flex-1 grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {consorcios.map((consorcio) => (
+          <li key={consorcio.id} className="min-h-64">
+            <Link
+              href={`/dashboard/consorcios/${consorcio.id}`}
+              className="relative flex h-full flex-col items-center justify-center gap-4 rounded-lg border border-border bg-card p-6 text-center transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      className="absolute top-3 right-3 text-muted-foreground"
+                      aria-label={`Configurar ${consorcio.name}`}
+                      onClick={(event) => event.preventDefault()}
+                    >
+                      <Settings className="size-5" aria-hidden="true" />
+                    </Button>
+                  }
+                />
+                <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
+                  <DropdownMenuItem>
+                    <Pencil className="size-4" aria-hidden="true" />
+                    Editar consorcio
+                  </DropdownMenuItem>
+                  <DropdownMenuItem variant="destructive">
+                    <Trash2 className="size-4" aria-hidden="true" />
+                    Eliminar consorcio
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <Building2 className="size-24 text-primary" aria-hidden="true" />
+              <span className="text-lg font-semibold tracking-tight text-foreground">
+                {consorcio.name}
+              </span>
+              <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                <MapPin className="size-4" aria-hidden="true" />
+                {consorcio.location}
+              </span>
+
+              <div className="mt-2 flex w-full justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="bg-transparent font-semibold"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    reset();
+                    setOpenConsorcio(consorcio);
+                  }}
+                >
+                  <MessageSquareText className="size-4" aria-hidden="true" />
+                  Enviar comentario
+                </Button>
+              </div>
+            </Link>
+          </li>
+        ))}
+      </ul>
+
+      <Dialog
+        open={openConsorcio !== null}
+        onOpenChange={(open) => !open && setOpenConsorcio(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{openConsorcio?.name}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit(onSubmitComment)} noValidate className="space-y-4">
+            <FormTextarea
+              control={control}
+              name="message"
+              label="Comentario"
+              placeholder="Escribe tu comentario..."
+              rows={5}
+            />
+            <DialogFooter>
+              <Button type="submit" disabled={formState.isSubmitting || createComment.isPending}>
+                {createComment.isPending ? "Enviando…" : "Enviar"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function ConsorciosSkeleton() {
+  return (
+    <div className="grid w-full max-w-7xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {["a", "b", "c", "d", "e", "f"].map((key) => (
+        <Skeleton key={key} className="min-h-64 rounded-lg" />
+      ))}
+    </div>
+  );
+}
