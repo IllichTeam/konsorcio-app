@@ -4,10 +4,12 @@ import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import { signIn } from "@/lib/auth/actions";
 import { FormInput } from "@/components/form/form-input";
 import { Button } from "@/components/ui/button";
 
@@ -18,20 +20,29 @@ const loginSchema = z.object({
 
 type LoginValues = z.infer<typeof loginSchema>;
 
-// Costura para better-auth: reemplazar por authClient.signIn.email(values)
-async function loginAction(_values: LoginValues) {
-  toast.success("Sesión iniciada (demo)");
-}
-
 export function LoginForm() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = React.useState(false);
   const { control, handleSubmit, formState } = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
   });
 
+  async function onSubmit(values: LoginValues) {
+    const result = await signIn(values);
+
+    if (!result.success) {
+      toast.error(result.error);
+      return;
+    }
+
+    toast.success("Sesión iniciada");
+    router.push("/dashboard");
+    router.refresh();
+  }
+
   return (
-    <form onSubmit={handleSubmit(loginAction)} noValidate className="grid gap-5">
+    <form onSubmit={handleSubmit(onSubmit)} noValidate className="grid gap-5">
       <FormInput
         control={control}
         name="email"
