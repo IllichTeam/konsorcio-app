@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, FileText } from "lucide-react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { z } from "zod";
 
 import { defaultAuthenticatedPath } from "@/lib/navigation/dashboard-nav";
 
@@ -12,7 +15,9 @@ import {
   useConsorcioHistory,
   useUpdateConsorcioAmount,
 } from "@/hooks/use-consorcios";
+import { FormInput } from "@/components/form/form-input";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -31,6 +36,16 @@ const currencyFormatter = new Intl.NumberFormat("es-AR", {
   minimumFractionDigits: 2,
 });
 
+const amountSchema = z.object({
+  amount: z
+    .string()
+    .min(1, "Ingresa un monto")
+    .refine((value) => !Number.isNaN(Number(value)), "Ingresa un monto válido")
+    .refine((value) => Number(value) > 0, "El monto debe ser mayor a cero"),
+});
+
+type AmountValues = z.infer<typeof amountSchema>;
+
 type ConsorcioDetailProps = {
   consorcioId: string;
 };
@@ -40,18 +55,15 @@ export function ConsorcioDetail({ consorcioId }: ConsorcioDetailProps) {
   const { data: history = [], isLoading: isHistoryLoading } = useConsorcioHistory(consorcioId);
   const updateAmount = useUpdateConsorcioAmount();
   const [editOpen, setEditOpen] = useState(false);
-  const [draftAmount, setDraftAmount] = useState("");
 
-  async function handleSaveAmount(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  const { control, handleSubmit, formState, reset } = useForm<AmountValues>({
+    resolver: zodResolver(amountSchema),
+    defaultValues: { amount: "" },
+  });
 
-    const parsed = Number(draftAmount);
-    if (Number.isNaN(parsed)) {
-      return;
-    }
-
+  async function onSubmitAmount(values: AmountValues) {
     try {
-      await updateAmount.mutateAsync({ consorcioId, amount: parsed });
+      await updateAmount.mutateAsync({ consorcioId, amount: Number(values.amount) });
       toast.success("Monto actualizado");
       setEditOpen(false);
     } catch {
@@ -92,89 +104,90 @@ export function ConsorcioDetail({ consorcioId }: ConsorcioDetailProps) {
         Volver a consorcios
       </Button>
 
-      <div className="mt-4 rounded-lg border border-border bg-card p-6 md:p-8">
-        <div className="flex flex-col items-center text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-balance text-foreground">
-            {consorcio.name}
-          </h1>
-          <p className="mt-2 text-5xl font-bold tracking-tight text-foreground">
-            {currencyFormatter.format(consorcio.amount)}
-          </p>
-          <Button
-            variant="outline"
-            className="mt-4 bg-transparent font-semibold"
-            onClick={() => {
-              setDraftAmount(String(consorcio.amount));
-              setEditOpen(true);
-            }}
-          >
-            Cambiar monto
+      <Card className="mt-4">
+        <CardContent>
+          <div className="flex flex-col items-center text-center">
+            <h1 className="text-xl font-semibold tracking-tight text-balance text-foreground">
+              {consorcio.name}
+            </h1>
+            <p className="mt-2 text-3xl font-bold tracking-tight text-foreground">
+              {currencyFormatter.format(consorcio.amount)}
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-4"
+              onClick={() => {
+                reset({ amount: String(consorcio.amount) });
+                setEditOpen(true);
+              }}
+            >
+              Cambiar monto
+            </Button>
+          </div>
+
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="alias">Alias de cobro</Label>
+              <Input id="alias" defaultValue={consorcio.paymentAlias} readOnly />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="email-cobro">Email</Label>
+              <Input id="email-cobro" type="email" defaultValue={consorcio.billingEmail} readOnly />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="drive">Link del drive</Label>
+              <Input id="drive" defaultValue={consorcio.driveLink} readOnly />
+            </div>
+          </div>
+
+          <div className="mt-8 rounded-lg border border-border bg-secondary/40 p-4">
+            <h2 className="mb-3 text-sm font-semibold text-foreground">Historial de acciones</h2>
+            {isHistoryLoading ? (
+              <Skeleton className="h-56 w-full rounded-lg" />
+            ) : (
+              <ScrollArea className="h-56 pr-3">
+                <ul className="space-y-3">
+                  {history.map((entry) => (
+                    <li
+                      key={entry.id}
+                      className="rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground"
+                    >
+                      <span className="text-muted-foreground">{entry.timestamp}</span> -{" "}
+                      {entry.description}
+                    </li>
+                  ))}
+                </ul>
+              </ScrollArea>
+            )}
+          </div>
+
+          <Button className="mt-6 w-full">
+            <FileText className="size-4" aria-hidden="true" />
+            Enviar expensa mensual
           </Button>
-        </div>
-
-        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="alias">Alias de cobro</Label>
-            <Input id="alias" defaultValue={consorcio.paymentAlias} readOnly />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="email-cobro">Email</Label>
-            <Input id="email-cobro" type="email" defaultValue={consorcio.billingEmail} readOnly />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="drive">Link del drive</Label>
-            <Input id="drive" defaultValue={consorcio.driveLink} readOnly />
-          </div>
-        </div>
-
-        <div className="mt-8 rounded-lg border border-border bg-secondary/40 p-4">
-          <h2 className="mb-3 text-base font-bold text-foreground">Historial de Acciones</h2>
-          {isHistoryLoading ? (
-            <Skeleton className="h-56 w-full rounded-lg" />
-          ) : (
-            <ScrollArea className="h-56 pr-3">
-              <ul className="space-y-3">
-                {history.map((entry) => (
-                  <li
-                    key={entry.id}
-                    className="rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground"
-                  >
-                    <span className="text-muted-foreground">{entry.timestamp}</span> -{" "}
-                    {entry.description}
-                  </li>
-                ))}
-              </ul>
-            </ScrollArea>
-          )}
-        </div>
-
-        <Button className="mt-6 h-12 w-full text-base font-semibold tracking-wide">
-          <FileText className="size-5" aria-hidden="true" />
-          ENVIAR EXPENSA MENSUAL
-        </Button>
-      </div>
+        </CardContent>
+      </Card>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Cambiar monto de la caja</DialogTitle>
           </DialogHeader>
-          <form onSubmit={(event) => void handleSaveAmount(event)} className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="nuevo-monto">Nuevo monto (ARS)</Label>
-              <Input
-                id="nuevo-monto"
-                type="number"
-                step="0.01"
-                value={draftAmount}
-                onChange={(event) => setDraftAmount(event.target.value)}
-              />
-            </div>
+          <form onSubmit={handleSubmit(onSubmitAmount)} noValidate className="space-y-4">
+            <FormInput
+              control={control}
+              name="amount"
+              label="Nuevo monto (ARS)"
+              type="number"
+              step="0.01"
+              inputMode="decimal"
+            />
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={updateAmount.isPending}>
+              <Button type="submit" disabled={formState.isSubmitting || updateAmount.isPending}>
                 {updateAmount.isPending ? "Guardando…" : "Guardar"}
               </Button>
             </DialogFooter>
