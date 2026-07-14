@@ -8,6 +8,8 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import { defaultAuthenticatedPath } from "@/lib/navigation/dashboard-nav";
+
 import {
   useConsorcio,
   useConsorcioHistory,
@@ -76,7 +78,12 @@ export function ConsorcioDetail({ consorcioId }: ConsorcioDetailProps) {
   if (isError || !consorcio) {
     return (
       <div className="w-full max-w-3xl space-y-4">
-        <Button variant="ghost" size="sm" render={<Link href="/dashboard" />} className="-ml-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          render={<Link href={defaultAuthenticatedPath} />}
+          className="-ml-2"
+        >
           <ArrowLeft className="size-4" aria-hidden="true" />
           Volver a consorcios
         </Button>
@@ -90,7 +97,7 @@ export function ConsorcioDetail({ consorcioId }: ConsorcioDetailProps) {
       <Button
         variant="ghost"
         size="sm"
-        render={<Link href="/dashboard" />}
+        render={<Link href={defaultAuthenticatedPath} />}
         className="-ml-2 text-muted-foreground"
       >
         <ArrowLeft className="size-4" aria-hidden="true" />

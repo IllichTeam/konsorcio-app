@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { signIn } from "@/lib/auth/actions";
+import { defaultAuthenticatedPath } from "@/lib/navigation/dashboard-nav";
 import { FormInput } from "@/components/form/form-input";
 import { Button } from "@/components/ui/button";
 
@@ -37,7 +38,7 @@ export function LoginForm() {
     }
 
     toast.success("Sesión iniciada");
-    router.push("/dashboard");
+    router.push(defaultAuthenticatedPath);
     router.refresh();
   }
 
