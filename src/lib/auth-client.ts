@@ -1,20 +1,18 @@
 import { createAuthClient } from "better-auth/react";
-import { adminClient } from "better-auth/client/plugins";
-
-import { env } from "@/env";
+import { adminClient, emailOTPClient } from "better-auth/client/plugins";
 
 /**
- * better-auth client for use in Client Components. Points at
- * `BETTER_AUTH_URL` (same origin as the app in this project's setup) and
- * exposes the email/password flows plus the `useSession` hook.
+ * better-auth client for use in Client Components.
+ *
+ * No `baseURL`: falls back to same-origin `/api/auth`. That avoids
+ * `Failed to fetch` if the browser origin and `BETTER_AUTH_URL` diverge.
  *
  * `adminClient()` mirrors the server-side `admin()` plugin so the client's
  * inferred types (and future `authClient.admin.*` calls) include the
  * `role`/`banned`/`banReason`/`banExpires` fields added to the session user.
  */
 export const authClient = createAuthClient({
-  baseURL: env.BETTER_AUTH_URL,
-  plugins: [adminClient()],
+  plugins: [adminClient(), emailOTPClient()],
 });
 
 export const { signIn, signUp, signOut, useSession } = authClient;

@@ -58,7 +58,7 @@ function FormInput<T extends FieldValues>({
             {endAdornment}
           </div>
           {fieldState.error ? (
-            <p id={errorId} className="text-sm text-destructive">
+            <p id={errorId} role="alert" className="text-sm text-destructive">
               {fieldState.error.message}
             </p>
           ) : null}

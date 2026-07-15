@@ -23,7 +23,7 @@ const envSchema = z.object({
    * asserts it is present before constructing the real runtime instance.
    */
   BETTER_AUTH_SECRET: z.string().optional(),
-  BETTER_AUTH_URL: z.string().default("http://localhost:3000"),
+  BETTER_AUTH_URL: z.string().default("http://localhost:3200"),
   /**
    * Credentials for the permanent admin account, consumed by the idempotent
    * seed (`src/db/seed-admin.ts`). Optional at the schema level (like
@@ -38,6 +38,8 @@ const envSchema = z.object({
    * level (like `BETTER_AUTH_SECRET`) so tooling that imports this module —
    * drizzle-kit, the better-auth CLI — never throws; `src/lib/email/client.ts`
    * asserts it is present before constructing the real `Resend` instance.
+   * When unset, OTP/forgot-password emails are logged to stdout for local/pglite
+   * dev (see `src/lib/email/send-otp-email.ts`).
    */
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().default("Konsorcio <onboarding@resend.dev>"),

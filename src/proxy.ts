@@ -45,12 +45,17 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL(defaultAuthenticatedPath, request.url));
   }
 
+  if (pathname === "/recuperar-contrasena" && hasSession) {
+    return NextResponse.redirect(new URL(defaultAuthenticatedPath, request.url));
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
   matcher: [
     "/",
+    "/recuperar-contrasena",
     "/dashboard/:path*",
     "/consorcios/:path*",
     "/resumen",
