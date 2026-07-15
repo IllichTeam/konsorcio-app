@@ -1,39 +1,38 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { getEmailHistory, getEmailRecipients, sendEmail } from "@/lib/api/emails";
-import { queryKeys } from "@/lib/api/query-keys";
+import { useTRPC } from "@/lib/trpc/client";
 
 export function useEmailRecipients() {
-  return useQuery({
-    queryKey: queryKeys.emails.recipients,
-    queryFn: getEmailRecipients,
-  });
+  const trpc = useTRPC();
+
+  return useQuery(trpc.emails.recipients.queryOptions());
 }
 
 export function useSendEmail() {
+  const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: sendEmail,
-    onSuccess: (result) => {
-      if (result.failed > 0) {
-        toast.warning(`Enviados ${result.sent}, fallaron ${result.failed}`);
-      } else {
-        toast.success("Correo enviado");
-      }
+  return useMutation(
+    trpc.emails.send.mutationOptions({
+      onSuccess: (result) => {
+        if (result.failed > 0) {
+          toast.warning(`Enviados ${result.sent}, fallaron ${result.failed}`);
+        } else {
+          toast.success("Correo enviado");
+        }
 
-      void queryClient.invalidateQueries({ queryKey: queryKeys.emails.history });
-    },
-    onError: (error: Error) => {
-      toast.error(error.message);
-    },
-  });
+        void queryClient.invalidateQueries(trpc.emails.history.queryFilter());
+      },
+      onError: (error) => {
+        toast.error(error.message || "No se pudo enviar el correo");
+      },
+    }),
+  );
 }
 
 export function useEmailHistory() {
-  return useQuery({
-    queryKey: queryKeys.emails.history,
-    queryFn: getEmailHistory,
-  });
+  const trpc = useTRPC();
+
+  return useQuery(trpc.emails.history.queryOptions());
 }

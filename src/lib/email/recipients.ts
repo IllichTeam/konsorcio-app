@@ -4,13 +4,10 @@ import { asc } from "drizzle-orm";
 
 import { db } from "@/db";
 import { user } from "@/db/schema";
+import type { EmailRecipientOption } from "@/lib/schemas/email";
 
 /** A recipient candidate for the email composer, sourced from app users. */
-export type EmailRecipient = {
-  id: string;
-  name: string;
-  email: string;
-};
+export type EmailRecipient = EmailRecipientOption;
 
 /**
  * Lists every app user as a potential email recipient, ordered by name.

@@ -4,16 +4,13 @@ import * as React from "react";
 import { Controller, type Control, type FieldPath, type FieldValues } from "react-hook-form";
 
 import type { Recipient } from "@/lib/email/types";
+import type { EmailRecipientOption } from "@/lib/schemas/email";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 /** Candidate recipient offered as a selectable option. */
-export type RecipientOption = {
-  id: string;
-  name: string;
-  email: string;
-};
+export type RecipientOption = EmailRecipientOption;
 
 type FormRecipientSelectProps<T extends FieldValues> = {
   control: Control<T>;

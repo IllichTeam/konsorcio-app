@@ -45,3 +45,7 @@ Always use **pnpm** to install dependencies and run scripts — never npm or yar
 # Forms
 
 Forms use react-hook-form + zod (`zodResolver`). Before implementing any form, check `src/components/form/` and reuse the existing wrappers (e.g. `FormInput`). Never use the raw `src/components/ui/` components directly inside a form, and never wire `Controller` inline in a screen/page component: if a form needs a component that has no wrapper yet, first create that wrapper in `src/components/form/` following the existing Controller + ui pattern (label, error message from `fieldState`, `aria-invalid`/`aria-describedby`), then use it from the screen. Inline one-off implementations in the consuming screen are not acceptable.
+
+# Data fetching
+
+Client data loading goes through TanStack Query hooks in `src/hooks/`. Domain APIs live as tRPC procedures under `src/server/trpc/`; the client uses `@trpc/tanstack-react-query` (`queryOptions`, `mutationOptions`, `queryFilter`) so query keys stay inferred. Do **not** re-declare those keys in `src/lib/api/query-keys.ts`. Keep manual `query-keys.ts` entries only for modules still on the mock/`lib/api` layer. Never load remote data with `useEffect` + `useState`. Shared request/response Zod contracts belong in `src/lib/schemas/` and may be reused by forms when the UI shape matches the API; keep form-only schemas in the screen when the UI needs transformations (e.g. string amount → number).
