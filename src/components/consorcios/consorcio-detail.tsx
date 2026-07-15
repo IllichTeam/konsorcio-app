@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, FileText, Pencil } from "lucide-react";
+import { ArrowLeft, FileText, Mail, Pencil } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "@/lib/zod";
@@ -132,6 +132,14 @@ export function ConsorcioDetail({ consorcioId }: ConsorcioDetailProps) {
           <Button className="w-fit">
             <FileText className="size-4" aria-hidden="true" />
             Enviar expensa mensual
+          </Button>
+          <Button
+            variant="outline"
+            className="w-fit"
+            render={<Link href={`/consorcios/${consorcioId}/emails-inquilinos`} />}
+          >
+            <Mail className="size-4" aria-hidden="true" />
+            Emails de inquilinos
           </Button>
           <Button variant="outline" className="w-fit" onClick={() => setFormDialogOpen(true)}>
             <Pencil className="size-4" aria-hidden="true" />
