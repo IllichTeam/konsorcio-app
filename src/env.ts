@@ -23,7 +23,7 @@ const envSchema = z.object({
    * asserts it is present before constructing the real runtime instance.
    */
   BETTER_AUTH_SECRET: z.string().optional(),
-  BETTER_AUTH_URL: z.string().default("http://localhost:3000"),
+  BETTER_AUTH_URL: z.string().default("http://localhost:3200"),
   /**
    * Credentials for the permanent admin account, consumed by the idempotent
    * seed (`src/db/seed-admin.ts`). Optional at the schema level (like
@@ -33,6 +33,10 @@ const envSchema = z.object({
    */
   ADMIN_EMAIL: z.string().email().optional(),
   ADMIN_PASSWORD: z.string().min(8).optional(),
+  /** Resend API key. When unset, emails are logged to stdout for local/pglite dev. */
+  RESEND_API_KEY: z.string().optional(),
+  /** Sender address for transactional email (Resend `from` field). */
+  EMAIL_FROM: z.string().default("Konsorcio <onboarding@resend.dev>"),
 });
 
 export const env = envSchema.parse({
@@ -42,6 +46,8 @@ export const env = envSchema.parse({
   BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
   ADMIN_EMAIL: process.env.ADMIN_EMAIL,
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
+  RESEND_API_KEY: process.env.RESEND_API_KEY,
+  EMAIL_FROM: process.env.EMAIL_FROM,
 });
 
 export type Env = typeof env;
