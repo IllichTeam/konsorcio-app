@@ -21,10 +21,10 @@ function getLegacyDashboardRedirect(pathname: string): string | null {
   return null;
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   // Optimistic check only: reads the session cookie without hitting the DB
-  // (middleware runs on the edge runtime). Actual validation happens in
+  // (proxy runs on the Node.js runtime). Actual validation happens in
   // `getSession()` via `auth.api.getSession`.
   const hasSession = Boolean(getSessionCookie(request));
 
