@@ -106,6 +106,7 @@ function FormRecipientSelect<T extends FieldValues>({
             </div>
 
             <fieldset
+              aria-invalid={fieldState.invalid || undefined}
               aria-describedby={fieldState.error ? errorId : undefined}
               className={cn(
                 "flex flex-col gap-2 rounded-md border border-input p-2",
