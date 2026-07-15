@@ -43,6 +43,13 @@ const envSchema = z.object({
    */
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().default("Konsorcio <onboarding@resend.dev>"),
+  /**
+   * Temporary override for all outbound Resend `to` addresses (notifications +
+   * OTP). Use while the production domain is unverified — Resend's
+   * `onboarding@resend.dev` sender can only deliver to the account owner.
+   * Unset once the domain is verified to restore real recipients.
+   */
+  EMAIL_OVERRIDE_TO: z.string().email().optional(),
 });
 
 export const env = envSchema.parse({
@@ -54,6 +61,7 @@ export const env = envSchema.parse({
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
   RESEND_API_KEY: process.env.RESEND_API_KEY,
   EMAIL_FROM: process.env.EMAIL_FROM,
+  EMAIL_OVERRIDE_TO: process.env.EMAIL_OVERRIDE_TO || undefined,
 });
 
 export type Env = typeof env;
