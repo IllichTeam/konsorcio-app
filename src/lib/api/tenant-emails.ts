@@ -112,7 +112,7 @@ export async function updateTenantEmail(input: UpdateTenantEmailInput): Promise<
   );
 
   if (!entry) {
-    throw new Error("Email no encontrado");
+    throw new Error("Tenant email not found");
   }
 
   entry.email = input.email;
@@ -128,7 +128,7 @@ export async function deleteTenantEmail(consorcioId: string, id: string): Promis
   );
 
   if (index === -1) {
-    throw new Error("Email no encontrado");
+    throw new Error("Tenant email not found");
   }
 
   MOCK_TENANT_EMAILS.splice(index, 1);

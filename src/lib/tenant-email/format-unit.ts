@@ -11,6 +11,15 @@ function normalizeField(value: string | null | undefined): string | null {
   return trimmed ? trimmed : null;
 }
 
+function normalizeFloor(value: string | null | undefined): string | null {
+  const trimmed = normalizeField(value);
+  if (!trimmed) {
+    return null;
+  }
+
+  return trimmed.toUpperCase() === "PB" ? "PB" : trimmed;
+}
+
 export function formatFunctionalUnit(unit: FunctionalUnitFields): string {
   const floor = normalizeField(unit.floor);
   const departmentNumber = normalizeField(unit.departmentNumber);
@@ -44,7 +53,7 @@ export function normalizeUnitFields(input: {
   letter?: string;
 }): Pick<TenantEmail, "floor" | "departmentNumber" | "letter"> {
   return {
-    floor: normalizeField(input.floor),
+    floor: normalizeFloor(input.floor),
     departmentNumber: normalizeField(input.departmentNumber),
     letter: normalizeField(input.letter),
   };
