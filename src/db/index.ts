@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle as drizzlePglite } from "drizzle-orm/pglite";
 import { drizzle as drizzlePostgres } from "drizzle-orm/postgres-js";
@@ -42,7 +44,8 @@ function createPostgresDb() {
 }
 
 function createPgliteDb() {
-  const client = new PGlite("./.pglite");
+  const dataDir = path.join(process.cwd(), ".pglite");
+  const client = new PGlite(dataDir);
   return drizzlePglite({ client, schema });
 }
 

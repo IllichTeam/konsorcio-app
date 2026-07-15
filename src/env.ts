@@ -33,9 +33,15 @@ const envSchema = z.object({
    */
   ADMIN_EMAIL: z.string().email().optional(),
   ADMIN_PASSWORD: z.string().min(8).optional(),
-  /** Resend API key. When unset, emails are logged to stdout for local/pglite dev. */
+  /**
+   * Resend API key used to send transactional email. Optional at the schema
+   * level (like `BETTER_AUTH_SECRET`) so tooling that imports this module —
+   * drizzle-kit, the better-auth CLI — never throws; `src/lib/email/client.ts`
+   * asserts it is present before constructing the real `Resend` instance.
+   * When unset, OTP/forgot-password emails are logged to stdout for local/pglite
+   * dev (see `src/lib/email/send-otp-email.ts`).
+   */
   RESEND_API_KEY: z.string().optional(),
-  /** Sender address for transactional email (Resend `from` field). */
   EMAIL_FROM: z.string().default("Konsorcio <onboarding@resend.dev>"),
 });
 
