@@ -1,9 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { sendMock, renderMock, getResendClientMock } = vi.hoisted(() => ({
+const { sendMock, renderMock, getResendClientMock, mockEnv } = vi.hoisted(() => ({
   sendMock: vi.fn(),
   renderMock: vi.fn(),
   getResendClientMock: vi.fn(),
+  mockEnv: {
+    EMAIL_FROM: "Konsorcio <onboarding@resend.dev>",
+    EMAIL_OVERRIDE_TO: undefined as string | undefined,
+    RESEND_API_KEY: "test-key",
+  },
 }));
 
 // `send.tsx` imports "server-only" at module top level, which throws when
@@ -11,6 +16,10 @@ const { sendMock, renderMock, getResendClientMock } = vi.hoisted(() => ({
 // condition isn't active under plain Vite/Vitest). Stub it to a no-op so the
 // module can be imported in this jsdom test environment.
 vi.mock("server-only", () => ({}));
+
+vi.mock("@/env", () => ({
+  env: mockEnv,
+}));
 
 vi.mock("@/lib/email/client", () => ({
   getResendClient: getResendClientMock,
@@ -64,6 +73,7 @@ describe("sendEmail", () => {
     getResendClientMock.mockReset();
     getResendClientMock.mockReturnValue({ batch: { send: sendMock } });
     renderMock.mockResolvedValue("<html>mock</html>");
+    mockEnv.EMAIL_OVERRIDE_TO = undefined;
   });
 
   it("returns a failed result without calling Resend when there are no recipients", async () => {
@@ -134,6 +144,24 @@ describe("sendEmail", () => {
       subject: "Recordatorio",
       body: "Cuerpo del mensaje",
     });
+  });
+
+  it("redirects every `to` to EMAIL_OVERRIDE_TO and prefixes the subject", async () => {
+    mockEnv.EMAIL_OVERRIDE_TO = "illich570@gmail.com";
+
+    sendMock.mockImplementation(async (batchEmails: unknown[]) => ({
+      data: { data: batchEmails.map((_, index) => ({ id: `id-${index}` })) },
+      error: null,
+    }));
+
+    const recipients = makeRecipients(2);
+    await sendEmail({ subject: "Recordatorio", body: "Cuerpo", recipients });
+
+    const batchEmails = sendMock.mock.calls[0][0] as Array<{ to: string[]; subject: string }>;
+    expect(batchEmails[0].to).toEqual(["illich570@gmail.com"]);
+    expect(batchEmails[1].to).toEqual(["illich570@gmail.com"]);
+    expect(batchEmails[0].subject).toBe("[para: user-0@example.com] Recordatorio");
+    expect(batchEmails[1].subject).toBe("[para: user-1@example.com] Recordatorio");
   });
 
   it("collects ids and reports 'sent' when every chunk succeeds", async () => {
