@@ -3,7 +3,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Send } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { z } from "@/lib/zod";
 
 import { useEmailRecipients, useSendEmail } from "@/hooks/use-emails";
 import { FormInput } from "@/components/form/form-input";
@@ -11,21 +10,9 @@ import { FormRecipientSelect } from "@/components/form/form-recipient-select";
 import { FormTextarea } from "@/components/form/form-textarea";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { sendEmailInputSchema, type SendEmailInput } from "@/lib/schemas/email";
 
-const notificacionSchema = z.object({
-  recipients: z
-    .array(
-      z.object({
-        email: z.string(),
-        name: z.string().optional(),
-      }),
-    )
-    .min(1, "Selecciona al menos un destinatario"),
-  subject: z.string().min(1, "El asunto es obligatorio"),
-  body: z.string().min(1, "El mensaje es obligatorio"),
-});
-
-type NotificacionFormValues = z.infer<typeof notificacionSchema>;
+type NotificacionFormValues = SendEmailInput;
 
 const emptyValues: NotificacionFormValues = {
   recipients: [],
@@ -42,7 +29,7 @@ export function NotificacionesScreen() {
   const sendEmail = useSendEmail();
 
   const { control, handleSubmit, reset, formState } = useForm<NotificacionFormValues>({
-    resolver: zodResolver(notificacionSchema),
+    resolver: zodResolver(sendEmailInputSchema),
     defaultValues: emptyValues,
   });
 
