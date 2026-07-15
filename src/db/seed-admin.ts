@@ -1,3 +1,5 @@
+import { fileURLToPath } from "node:url";
+
 import { db } from "@/db";
 import { env } from "@/env";
 import { createAuth } from "@/lib/auth";
@@ -126,7 +128,7 @@ async function main() {
   );
 }
 
-const isMainModule = import.meta.url === `file://${process.argv[1]}`;
+const isMainModule = process.argv[1] === fileURLToPath(import.meta.url);
 
 if (isMainModule) {
   main()
