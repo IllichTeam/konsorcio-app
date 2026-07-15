@@ -103,7 +103,7 @@ export function ConsorcioFormDialog({
         toast.success("Consorcio actualizado");
       } else {
         await createConsorcio.mutateAsync(payload);
-        toast.success("Consorcio creado");
+        toast.success("Consorcio creado", { toasterId: "center" });
       }
 
       reset(emptyValues);
