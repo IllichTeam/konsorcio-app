@@ -6,6 +6,7 @@ import { env } from "@/env";
 import { NotificationEmail } from "@/emails/notification-email";
 
 import { getResendClient } from "./client";
+import { isEmailToOverridden, resolveEmailTo } from "./resolve-to";
 import type { Recipient, SendEmailInput, SendEmailResult } from "./types";
 
 /** Resend's batch API accepts at most this many emails per request. */
@@ -38,10 +39,12 @@ async function buildBatchEmail(recipient: Recipient, subject: string, body: stri
     <NotificationEmail recipientName={recipient.name} subject={subject} body={body} />,
   );
 
+  const resolvedSubject = isEmailToOverridden() ? `[para: ${recipient.email}] ${subject}` : subject;
+
   return {
     from: env.EMAIL_FROM,
-    to: [recipient.email],
-    subject,
+    to: [resolveEmailTo(recipient.email)],
+    subject: resolvedSubject,
     html,
   };
 }
