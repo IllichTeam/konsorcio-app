@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getSessionCookie } from "better-auth/cookies";
 
-import { AUTH_SESSION_COOKIE } from "@/lib/auth/constants";
 import { defaultAuthenticatedPath, isProtectedDashboardPath } from "@/lib/navigation/dashboard-nav";
 
 function getLegacyDashboardRedirect(pathname: string): string | null {
@@ -23,7 +23,10 @@ function getLegacyDashboardRedirect(pathname: string): string | null {
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const hasSession = Boolean(request.cookies.get(AUTH_SESSION_COOKIE)?.value);
+  // Optimistic check only: reads the session cookie without hitting the DB
+  // (middleware runs on the edge runtime). Actual validation happens in
+  // `getSession()` via `auth.api.getSession`.
+  const hasSession = Boolean(getSessionCookie(request));
 
   const legacyRedirect = getLegacyDashboardRedirect(pathname);
   if (legacyRedirect) {

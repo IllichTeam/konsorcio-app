@@ -1,22 +1,14 @@
-import { cookies } from "next/headers";
+import { headers } from "next/headers";
 
-import { AUTH_SESSION_COOKIE } from "@/lib/auth/constants";
-import type { Session, SessionUser } from "@/lib/auth/types";
+import { auth } from "@/lib/auth";
 
-const DEMO_USER: SessionUser = {
-  id: "demo-user",
-  name: "Admin Name",
-  email: "consorcioa@gmail.com",
-};
-
-export async function getSession(): Promise<Session | null> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(AUTH_SESSION_COOKIE)?.value;
-
-  if (!token) {
-    return null;
-  }
-
-  // TODO: validar sesión con Better Auth y/o base de datos.
-  return { user: DEMO_USER };
+/**
+ * Reads the current better-auth session from the incoming request's
+ * cookies. Returns `null` when there is no active (or valid) session.
+ */
+export async function getSession() {
+  return auth.api.getSession({ headers: await headers() });
 }
+
+export type Session = NonNullable<Awaited<ReturnType<typeof getSession>>>;
+export type SessionUser = Session["user"];

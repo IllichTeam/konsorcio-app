@@ -27,6 +27,17 @@ Sober, compact, precise — Linear/Apple-inspired. Rules for every screen:
 - **One accent.** The primary blue is the only strong color; use it sparingly (primary actions, brand, focus). Everything else stays neutral. No gradients, no decorative color.
 - **Density over ornament**: compact spacing, `text-sm` as base inside cards, restrained radii. Motion is subtle and purposeful (micro-interactions, `motion-reduce` respected).
 
+# Language
+
+Two languages, strictly separated:
+
+- **Spanish** — everything the end user reads: UI copy, labels, button text, placeholders, headings, empty states, toasts/notifications, and any validation or error message surfaced in the interface (e.g. zod messages that render in a form, or an API error meant to be shown).
+- **English** — everything else, always: code identifiers (variables, functions, components, types, hooks), comments, JSDoc, file and directory names, config files, env var names, git commit messages, database/schema field names, enum values, query keys, route segments, and internal/server log messages (`console.*`, thrown `Error` text not shown to the user).
+
+Rule of thumb: if a string is rendered to the user, it's Spanish; if it's part of the program or its configuration, it's English. Do not translate identifiers or config to Spanish, and do not hardcode English UI copy.
+
+**Zod validation messages are user-facing → Spanish.** A global Spanish locale is configured in `src/lib/zod.ts` via `z.config(z.locales.es())`, so default messages come out in Spanish automatically. **Always import Zod from `@/lib/zod`** (`import { z } from "@/lib/zod"`), never from `"zod"` directly — otherwise the locale may not be applied. Only pass an explicit `message` when the default wording isn't good enough for a field; that message must be in Spanish.
+
 # Package manager
 
 Always use **pnpm** to install dependencies and run scripts — never npm or yarn (`pnpm add <pkg>`, `pnpm dlx <cli>`, `pnpm run <script>`).
