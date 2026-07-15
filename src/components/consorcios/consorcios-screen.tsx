@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Building2, MapPin, MessageSquareText, Pencil, Plus, Settings, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 import { useConsorcios, useCreateConsorcioComment } from "@/hooks/use-consorcios";
 import type { Consorcio } from "@/types/consorcio";

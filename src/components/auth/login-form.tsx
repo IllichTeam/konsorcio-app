@@ -3,13 +3,12 @@
 import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
-import { signIn } from "@/lib/auth/actions";
+import { authClient } from "@/lib/auth-client";
 import { defaultAuthenticatedPath } from "@/lib/navigation/dashboard-nav";
 import { FormInput } from "@/components/form/form-input";
 import { Button } from "@/components/ui/button";
@@ -30,10 +29,13 @@ export function LoginForm() {
   });
 
   async function onSubmit(values: LoginValues) {
-    const result = await signIn(values);
+    const { error } = await authClient.signIn.email({
+      email: values.email,
+      password: values.password,
+    });
 
-    if (!result.success) {
-      toast.error(result.error);
+    if (error) {
+      toast.error(error.message ?? "Credenciales inválidas");
       return;
     }
 
@@ -59,14 +61,6 @@ export function LoginForm() {
         type={showPassword ? "text" : "password"}
         autoComplete="current-password"
         placeholder="••••••••"
-        labelAction={
-          <Link
-            href="/forgot-password"
-            className="text-sm text-muted-foreground underline-offset-4 hover:underline"
-          >
-            Olvidé mi contraseña
-          </Link>
-        }
         endAdornment={
           <Button
             type="button"
