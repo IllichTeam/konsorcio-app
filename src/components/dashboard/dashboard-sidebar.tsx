@@ -7,8 +7,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ChevronRight, LayoutDashboard, LogOut, Settings } from "lucide-react";
 
-import { signOut } from "@/lib/auth/actions";
-import type { SessionUser } from "@/lib/auth/types";
+import { authClient } from "@/lib/auth-client";
+import type { SessionUser } from "@/lib/auth/session";
 import {
   dashboardNavGroups,
   isNavPathActive,
@@ -86,7 +86,7 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
   const router = useRouter();
 
   async function handleSignOut() {
-    await signOut();
+    await authClient.signOut();
     router.push("/");
     router.refresh();
   }

@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 import { useConsorcio, useCreateConsorcio, useUpdateConsorcio } from "@/hooks/use-consorcios";
 import { FormInput } from "@/components/form/form-input";
