@@ -10,7 +10,7 @@ import { useCreateTenantEmail, useUpdateTenantEmail } from "@/hooks/use-tenant-e
 import { FormInput } from "@/components/form/form-input";
 import { FormSelect } from "@/components/form/form-select";
 import { UnitBadge } from "@/components/tenant-emails/tenant-email-badges";
-import { sanitizeDigitsOnly, sanitizeLettersOnly } from "@/lib/form/input-sanitize";
+import { sanitizeDigitsOnly, sanitizeFloor, sanitizeLettersOnly } from "@/lib/form/input-sanitize";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -30,6 +30,12 @@ const optionalNumericField = z.string().refine((value) => value === "" || /^\d+$
   message: "Solo se permiten números",
 });
 
+const optionalFloorField = z
+  .string()
+  .refine((value) => value === "" || /^\d+$/.test(value) || /^PB$/i.test(value.trim()), {
+    message: "Usá un número de piso o PB",
+  });
+
 const optionalLetterField = z
   .string()
   .refine((value) => value === "" || /^[A-Za-zÁÉÍÓÚáéíóúÑñ]+$/.test(value), {
@@ -38,7 +44,7 @@ const optionalLetterField = z
 
 const createFormSchema = z
   .object({
-    floor: optionalNumericField,
+    floor: optionalFloorField,
     departmentNumber: optionalNumericField,
     letter: optionalLetterField,
     email: z.email("Correo inválido"),
@@ -209,10 +215,9 @@ export function TenantEmailFormDialog({
               name="floor"
               label="Piso"
               autoComplete="off"
-              placeholder="Ej: 1"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              sanitize={sanitizeDigitsOnly}
+              placeholder="Ej: 1 o PB"
+              autoCapitalize="characters"
+              sanitize={sanitizeFloor}
             />
             <FormInput
               control={createForm.control}

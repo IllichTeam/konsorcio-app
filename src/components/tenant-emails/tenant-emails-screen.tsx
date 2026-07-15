@@ -226,8 +226,8 @@ export function TenantEmailsScreen({ consorcioId }: TenantEmailsScreenProps) {
         </CardContent>
         <CardFooter className="text-sm text-muted-foreground">
           {filteredEmails.length === 1
-            ? "1 unidad mostrada"
-            : `${filteredEmails.length} unidades mostradas`}
+            ? "1 email mostrado"
+            : `${filteredEmails.length} emails mostrados`}
         </CardFooter>
       </Card>
 
