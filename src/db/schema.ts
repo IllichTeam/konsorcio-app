@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { integer, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
-import type { Recipient } from "@/lib/email/types";
+import type { Recipient } from "@/lib/schemas/email";
 
 import { user } from "./auth-schema";
 
