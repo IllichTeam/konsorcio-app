@@ -3,6 +3,7 @@
 import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -58,6 +59,14 @@ export function LoginForm() {
         control={control}
         name="password"
         label="Contraseña"
+        labelAction={
+          <Link
+            href="/recuperar-contrasena"
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            ¿Olvidaste tu contraseña?
+          </Link>
+        }
         type={showPassword ? "text" : "password"}
         autoComplete="current-password"
         placeholder="••••••••"

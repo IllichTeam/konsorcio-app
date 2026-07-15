@@ -1,0 +1,10 @@
+{
+  "setup-worktree-unix": [
+    "pnpm install",
+    "if [ -f \"$ROOT_WORKTREE_PATH/.env\" ]; then cp \"$ROOT_WORKTREE_PATH/.env\" .env; else cp .env.example .env; fi"
+  ],
+  "setup-worktree-windows": [
+    "pnpm install",
+    "if exist %ROOT_WORKTREE_PATH%\\.env (copy /Y %ROOT_WORKTREE_PATH%\\.env .env) else (copy /Y .env.example .env)"
+  ]
+}
