@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createConsorcio,
   createConsorcioComment,
+  deleteConsorcio,
   getConsorcioById,
   getConsorcioHistory,
   getConsorcios,
@@ -87,6 +88,21 @@ export function useUpdateConsorcioAmount() {
     onSuccess: (data) => {
       queryClient.setQueryData(queryKeys.consorcios.detail(data.id), data);
       void queryClient.invalidateQueries({ queryKey: queryKeys.consorcios.all });
+    },
+  });
+}
+
+export function useDeleteConsorcio() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteConsorcio,
+    onSuccess: (_data, id) => {
+      queryClient.setQueryData(queryKeys.consorcios.all, (current: Consorcio[] | undefined) =>
+        (current ?? []).filter((item) => item.id !== id),
+      );
+      queryClient.removeQueries({ queryKey: queryKeys.consorcios.detail(id) });
+      queryClient.removeQueries({ queryKey: queryKeys.consorcios.history(id) });
     },
   });
 }
