@@ -7,4 +7,8 @@ export const queryKeys = {
   profile: {
     current: ["profile", "current"] as const,
   },
+  emails: {
+    recipients: ["emails", "recipients"] as const,
+    history: ["emails", "history"] as const,
+  },
 } as const;

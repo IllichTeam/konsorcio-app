@@ -1,5 +1,9 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { integer, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+
+import type { Recipient } from "@/lib/email/types";
+
+import { user } from "./auth-schema";
 
 /**
  * better-auth tables (`user`, `session`, `account`, `verification`),
@@ -36,3 +40,28 @@ export type NuevoConsorcio = typeof consorcios.$inferInsert;
 // as its own exported `pgTable(...)` with its inferred `$inferSelect` /
 // `$inferInsert` types, following the `consorcios` table above as the
 // reference pattern.
+
+/**
+ * Email log - one row per email send attempt (single email or batch),
+ * recording who sent it, to whom, and the outcome reported by Resend.
+ */
+export const emailLog = pgTable("email_log", {
+  id: uuid("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  subject: text("subject").notNull(),
+  body: text("body").notNull(),
+  /** Recipients this email was sent to. */
+  recipients: jsonb("recipients").notNull().$type<Recipient[]>(),
+  recipientCount: integer("recipient_count").notNull(),
+  /** Outcome reported by Resend, e.g. "sent", "partial", or "failed". */
+  status: text("status").notNull(),
+  /** Resend message ids returned for each successfully sent email. */
+  resendIds: jsonb("resend_ids").$type<string[]>(),
+  error: text("error"),
+  sentByUserId: text("sent_by_user_id").references(() => user.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type EmailLog = typeof emailLog.$inferSelect;
+export type NewEmailLog = typeof emailLog.$inferInsert;

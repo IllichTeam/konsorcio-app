@@ -33,6 +33,14 @@ const envSchema = z.object({
    */
   ADMIN_EMAIL: z.string().email().optional(),
   ADMIN_PASSWORD: z.string().min(8).optional(),
+  /**
+   * Resend API key used to send transactional email. Optional at the schema
+   * level (like `BETTER_AUTH_SECRET`) so tooling that imports this module —
+   * drizzle-kit, the better-auth CLI — never throws; `src/lib/email/client.ts`
+   * asserts it is present before constructing the real `Resend` instance.
+   */
+  RESEND_API_KEY: z.string().optional(),
+  EMAIL_FROM: z.string().default("Konsorcio <onboarding@resend.dev>"),
 });
 
 export const env = envSchema.parse({
@@ -42,6 +50,8 @@ export const env = envSchema.parse({
   BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
   ADMIN_EMAIL: process.env.ADMIN_EMAIL,
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
+  RESEND_API_KEY: process.env.RESEND_API_KEY,
+  EMAIL_FROM: process.env.EMAIL_FROM,
 });
 
 export type Env = typeof env;
