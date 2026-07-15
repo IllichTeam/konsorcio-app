@@ -54,6 +54,42 @@ const MOCK_CONSORCIOS: ConsorcioDetail[] = [
     billingEmail: "consorcio.e@example.com",
     driveLink: "http://drive.google.com/e",
   },
+  {
+    id: "f",
+    name: "Consorcio F",
+    location: "Locatoria",
+    amount: 95_300,
+    paymentAlias: "alias_f",
+    billingEmail: "consorcio.f@example.com",
+    driveLink: "http://drive.google.com/f",
+  },
+  {
+    id: "g",
+    name: "Consorcio G",
+    location: "Locatoria",
+    amount: 118_750,
+    paymentAlias: "alias_g",
+    billingEmail: "consorcio.g@example.com",
+    driveLink: "http://drive.google.com/g",
+  },
+  {
+    id: "h",
+    name: "Consorcio H",
+    location: "Locatoria",
+    amount: 102_400,
+    paymentAlias: "alias_h",
+    billingEmail: "consorcio.h@example.com",
+    driveLink: "http://drive.google.com/h",
+  },
+  {
+    id: "i",
+    name: "Consorcio I",
+    location: "Locatoria",
+    amount: 141_200,
+    paymentAlias: "alias_i",
+    billingEmail: "consorcio.i@example.com",
+    driveLink: "http://drive.google.com/i",
+  },
 ];
 
 const MOCK_HISTORY: Record<string, ConsorcioHistoryEntry[]> = {
@@ -153,4 +189,16 @@ export async function updateConsorcioAmount(
 
   consorcio.amount = input.amount;
   return { ...consorcio };
+}
+
+/** Elimina un consorcio. Sustituir por DELETE /api/consorcios/:id. */
+export async function deleteConsorcio(id: string): Promise<void> {
+  const index = MOCK_CONSORCIOS.findIndex((item) => item.id === id);
+
+  if (index === -1) {
+    throw new Error("Consorcio no encontrado");
+  }
+
+  MOCK_CONSORCIOS.splice(index, 1);
+  delete MOCK_HISTORY[id];
 }
