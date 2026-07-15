@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import type { SessionUser } from "@/lib/auth/types";
+import type { SessionUser } from "@/lib/auth/session";
 
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 
