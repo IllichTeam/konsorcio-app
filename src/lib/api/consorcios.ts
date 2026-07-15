@@ -1,3 +1,4 @@
+import { deleteTenantEmailsByConsorcioId } from "@/lib/api/tenant-emails";
 import type {
   Consorcio,
   ConsorcioDetail,
@@ -201,4 +202,5 @@ export async function deleteConsorcio(id: string): Promise<void> {
 
   MOCK_CONSORCIOS.splice(index, 1);
   delete MOCK_HISTORY[id];
+  await deleteTenantEmailsByConsorcioId(id);
 }
