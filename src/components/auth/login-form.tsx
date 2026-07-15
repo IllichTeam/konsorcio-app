@@ -46,27 +46,19 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="grid gap-5">
+    <form onSubmit={handleSubmit(onSubmit)} noValidate autoComplete="on" className="grid gap-5">
       <FormInput
         control={control}
         name="email"
         label="Correo electrónico"
         type="email"
-        autoComplete="email"
+        autoComplete="username"
         placeholder="tu@correo.com"
       />
       <FormInput
         control={control}
         name="password"
         label="Contraseña"
-        labelAction={
-          <Link
-            href="/recuperar-contrasena"
-            className="text-sm text-muted-foreground hover:text-foreground"
-          >
-            ¿Olvidaste tu contraseña?
-          </Link>
-        }
         type={showPassword ? "text" : "password"}
         autoComplete="current-password"
         placeholder="••••••••"
@@ -83,9 +75,21 @@ export function LoginForm() {
           </Button>
         }
       />
-      <Button type="submit" disabled={formState.isSubmitting}>
+      <Button
+        type="submit"
+        disabled={formState.isSubmitting}
+        aria-busy={formState.isSubmitting || undefined}
+      >
         {formState.isSubmitting ? "Iniciando sesión…" : "Iniciar sesión"}
       </Button>
+      <p className="text-right">
+        <Link
+          href="/recuperar-contrasena"
+          className="text-sm text-muted-foreground hover:text-foreground"
+        >
+          ¿Olvidaste tu contraseña?
+        </Link>
+      </p>
     </form>
   );
 }
