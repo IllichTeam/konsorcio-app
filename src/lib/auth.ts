@@ -5,7 +5,7 @@ import { admin, emailOTP } from "better-auth/plugins";
 import { db } from "@/db";
 import * as schema from "@/db/schema";
 import { env } from "@/env";
-import { sendEmail } from "@/lib/email/send-email";
+import { sendOtpEmail } from "@/lib/email/send-otp-email";
 
 /**
  * Builds a better-auth instance backed by the given Drizzle database.
@@ -47,7 +47,7 @@ export function createAuth(database: Parameters<typeof drizzleAdapter>[0] = db) 
         allowedAttempts: 5,
         async sendVerificationOTP({ email, otp, type }) {
           if (type !== "forget-password") return;
-          await sendEmail({
+          await sendOtpEmail({
             to: email,
             subject: "Código de recuperación",
             text: `Tu código es: ${otp}`,

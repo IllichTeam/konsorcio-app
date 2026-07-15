@@ -13,7 +13,8 @@ type FormInputProps<T extends FieldValues> = {
   label: string;
   labelAction?: React.ReactNode;
   endAdornment?: React.ReactNode;
-} & Omit<React.ComponentProps<typeof Input>, "name">;
+  sanitize?: (value: string) => string;
+} & Omit<React.ComponentProps<typeof Input>, "name" | "onChange" | "value">;
 
 function FormInput<T extends FieldValues>({
   control,
@@ -22,6 +23,7 @@ function FormInput<T extends FieldValues>({
   labelAction,
   endAdornment,
   className,
+  sanitize,
   ...inputProps
 }: FormInputProps<T>) {
   const inputId = React.useId();
@@ -44,7 +46,14 @@ function FormInput<T extends FieldValues>({
               aria-describedby={fieldState.error ? errorId : undefined}
               className={cn(endAdornment && "pr-10", className)}
               {...inputProps}
-              {...field}
+              name={field.name}
+              ref={field.ref}
+              value={field.value ?? ""}
+              onBlur={field.onBlur}
+              onChange={(event) => {
+                const nextValue = sanitize ? sanitize(event.target.value) : event.target.value;
+                field.onChange(nextValue);
+              }}
             />
             {endAdornment}
           </div>
