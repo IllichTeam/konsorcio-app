@@ -1,8 +1,11 @@
+"use client";
+
 import type { ReactNode } from "react";
 
 import type { SessionUser } from "@/lib/auth/session";
 
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 type DashboardShellProps = {
   user: SessionUser;
@@ -11,9 +14,15 @@ type DashboardShellProps = {
 
 export function DashboardShell({ user, children }: DashboardShellProps) {
   return (
-    <div className="flex min-h-screen flex-col bg-background md:flex-row">
+    <SidebarProvider className="bg-background">
       <DashboardSidebar user={user} />
-      <main className="flex w-full flex-1 items-start justify-start p-6 md:p-10">{children}</main>
-    </div>
+      <SidebarInset>
+        <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-4 md:hidden">
+          <SidebarTrigger />
+          <span className="font-heading text-sm font-semibold text-primary">Konsorcio</span>
+        </header>
+        <div className="flex flex-1 flex-col items-start justify-start p-6 md:p-10">{children}</div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

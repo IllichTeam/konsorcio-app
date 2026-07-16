@@ -157,21 +157,8 @@ function Sidebar({
 }) {
   const { isMobile, state, openMobile, setOpenMobile } = useSidebar();
 
-  if (collapsible === "none") {
-    return (
-      <div
-        data-slot="sidebar"
-        className={cn(
-          "flex h-full w-(--sidebar-width) flex-col bg-sidebar text-sidebar-foreground",
-          className,
-        )}
-        {...props}
-      >
-        {children}
-      </div>
-    );
-  }
-
+  // Mobile must win over collapsible="none" so the drawer still works when
+  // desktop is configured to stay permanently expanded.
   if (isMobile) {
     return (
       <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
@@ -189,12 +176,29 @@ function Sidebar({
           side={side}
         >
           <SheetHeader className="sr-only">
-            <SheetTitle>Sidebar</SheetTitle>
-            <SheetDescription>Displays the mobile sidebar.</SheetDescription>
+            <SheetTitle>Menú de navegación</SheetTitle>
+            <SheetDescription>Navegación principal de la aplicación.</SheetDescription>
           </SheetHeader>
           <div className="flex h-full w-full flex-col">{children}</div>
         </SheetContent>
       </Sheet>
+    );
+  }
+
+  if (collapsible === "none") {
+    return (
+      <div
+        data-slot="sidebar"
+        className={cn(
+          // hidden below md avoids a hydration flash of the desktop sidebar on mobile
+          // before useIsMobile resolves to true
+          "hidden h-svh w-(--sidebar-width) flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex",
+          className,
+        )}
+        {...props}
+      >
+        {children}
+      </div>
     );
   }
 
@@ -261,7 +265,7 @@ function SidebarTrigger({ className, onClick, ...props }: React.ComponentProps<t
       {...props}
     >
       <PanelLeftIcon />
-      <span className="sr-only">Toggle Sidebar</span>
+      <span className="sr-only">Abrir o cerrar menú</span>
     </Button>
   );
 }
