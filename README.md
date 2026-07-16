@@ -30,7 +30,7 @@ pnpm dev               # http://localhost:3200
 **Smoke local → Supabase before deploy:**
 
 ```bash
-cp .env.supabase.example .env.supabase   # paste DB password into both URLs
+cp .env.supabase.example .env.supabase   # replace PROJECT_REF, REGION, PASSWORD
 pnpm db:migrate:prod
 pnpm db:seed:prod                        # if admin not provisioned yet
 pnpm dev:prod                            # http://localhost:3200
