@@ -29,6 +29,20 @@
       "when": 1784085373718,
       "tag": "0003_narrow_silver_fox",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1784200000000,
+      "tag": "0004_consorcios_expand",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1784201000000,
+      "tag": "0005_rename_consortiums",
+      "breakpoints": true
     }
   ]
 }

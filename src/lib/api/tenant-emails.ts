@@ -8,7 +8,7 @@ import { normalizeUnitFields } from "@/lib/tenant-email/format-unit";
 const MOCK_TENANT_EMAILS: TenantEmail[] = [
   {
     id: "te-1",
-    consorcioId: "a",
+    consortiumId: "a",
     floor: "1",
     departmentNumber: null,
     letter: "A",
@@ -17,7 +17,7 @@ const MOCK_TENANT_EMAILS: TenantEmail[] = [
   },
   {
     id: "te-2",
-    consorcioId: "a",
+    consortiumId: "a",
     floor: "1",
     departmentNumber: null,
     letter: "A",
@@ -26,7 +26,7 @@ const MOCK_TENANT_EMAILS: TenantEmail[] = [
   },
   {
     id: "te-3",
-    consorcioId: "a",
+    consortiumId: "a",
     floor: "3",
     departmentNumber: "2",
     letter: "B",
@@ -35,7 +35,7 @@ const MOCK_TENANT_EMAILS: TenantEmail[] = [
   },
   {
     id: "te-4",
-    consorcioId: "a",
+    consortiumId: "a",
     floor: "4",
     departmentNumber: "1",
     letter: null,
@@ -44,7 +44,7 @@ const MOCK_TENANT_EMAILS: TenantEmail[] = [
   },
   {
     id: "te-5",
-    consorcioId: "a",
+    consortiumId: "a",
     floor: "PB",
     departmentNumber: "1",
     letter: null,
@@ -53,7 +53,7 @@ const MOCK_TENANT_EMAILS: TenantEmail[] = [
   },
   {
     id: "te-6",
-    consorcioId: "a",
+    consortiumId: "a",
     floor: "2",
     departmentNumber: "3",
     letter: null,
@@ -62,7 +62,7 @@ const MOCK_TENANT_EMAILS: TenantEmail[] = [
   },
   {
     id: "te-7",
-    consorcioId: "a",
+    consortiumId: "a",
     floor: "5",
     departmentNumber: "4",
     letter: "C",
@@ -71,7 +71,7 @@ const MOCK_TENANT_EMAILS: TenantEmail[] = [
   },
   {
     id: "te-8",
-    consorcioId: "b",
+    consortiumId: "b",
     floor: "1",
     departmentNumber: "1",
     letter: null,
@@ -80,11 +80,11 @@ const MOCK_TENANT_EMAILS: TenantEmail[] = [
   },
 ];
 
-/** Lista emails de inquilinos de un consorcio. Sustituir por fetch o query Drizzle. */
-export async function getTenantEmails(consorcioId: string): Promise<TenantEmail[]> {
-  return MOCK_TENANT_EMAILS.filter((entry) => entry.consorcioId === consorcioId).map((entry) => ({
-    ...entry,
-  }));
+/** Lista tenant emails for a consortium. Sustituir por fetch o query Drizzle. */
+export async function getTenantEmails(consortiumId: string): Promise<TenantEmail[]> {
+  return MOCK_TENANT_EMAILS.filter((entry) => entry.consortiumId === consortiumId).map((entry) =>
+    Object.assign({}, entry),
+  );
 }
 
 /** Crea un email de unidad funcional. Sustituir por POST. */
@@ -93,7 +93,7 @@ export async function createTenantEmail(input: CreateTenantEmailInput): Promise<
 
   const newEntry: TenantEmail = {
     id: crypto.randomUUID(),
-    consorcioId: input.consorcioId,
+    consortiumId: input.consortiumId,
     floor: unit.floor,
     departmentNumber: unit.departmentNumber,
     letter: unit.letter,
@@ -108,7 +108,7 @@ export async function createTenantEmail(input: CreateTenantEmailInput): Promise<
 /** Actualiza email y tipo de contacto. Sustituir por PATCH. */
 export async function updateTenantEmail(input: UpdateTenantEmailInput): Promise<TenantEmail> {
   const entry = MOCK_TENANT_EMAILS.find(
-    (item) => item.id === input.id && item.consorcioId === input.consorcioId,
+    (item) => item.id === input.id && item.consortiumId === input.consortiumId,
   );
 
   if (!entry) {
@@ -122,9 +122,9 @@ export async function updateTenantEmail(input: UpdateTenantEmailInput): Promise<
 }
 
 /** Elimina un email. Sustituir por DELETE. */
-export async function deleteTenantEmail(consorcioId: string, id: string): Promise<void> {
+export async function deleteTenantEmail(consortiumId: string, id: string): Promise<void> {
   const index = MOCK_TENANT_EMAILS.findIndex(
-    (item) => item.id === id && item.consorcioId === consorcioId,
+    (item) => item.id === id && item.consortiumId === consortiumId,
   );
 
   if (index === -1) {
@@ -134,10 +134,10 @@ export async function deleteTenantEmail(consorcioId: string, id: string): Promis
   MOCK_TENANT_EMAILS.splice(index, 1);
 }
 
-/** Elimina todos los emails de un consorcio. Usado al borrar el consorcio. */
-export async function deleteTenantEmailsByConsorcioId(consorcioId: string): Promise<void> {
+/** Deletes all tenant emails for a consortium. Usado when deleting the consortium. */
+export async function deleteTenantEmailsByConsortiumId(consortiumId: string): Promise<void> {
   for (let index = MOCK_TENANT_EMAILS.length - 1; index >= 0; index -= 1) {
-    if (MOCK_TENANT_EMAILS[index]?.consorcioId === consorcioId) {
+    if (MOCK_TENANT_EMAILS[index]?.consortiumId === consortiumId) {
       MOCK_TENANT_EMAILS.splice(index, 1);
     }
   }

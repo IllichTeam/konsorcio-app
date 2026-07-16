@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 
-import { ConsorcioDetail } from "@/components/consorcios/consorcio-detail";
+import { ConsortiumDetail } from "@/components/consortiums/consortium-detail";
 
-type ConsorcioPageProps = {
+type ConsortiumPageProps = {
   params: Promise<{ id: string }>;
 };
 
-export async function generateMetadata({ params }: ConsorcioPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: ConsortiumPageProps): Promise<Metadata> {
   const { id } = await params;
 
   return {
@@ -14,8 +14,8 @@ export async function generateMetadata({ params }: ConsorcioPageProps): Promise<
   };
 }
 
-export default async function ConsorcioPage({ params }: ConsorcioPageProps) {
+export default async function ConsortiumPage({ params }: ConsortiumPageProps) {
   const { id } = await params;
 
-  return <ConsorcioDetail consorcioId={id} />;
+  return <ConsortiumDetail consortiumId={id} />;
 }

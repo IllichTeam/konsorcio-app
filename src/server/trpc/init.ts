@@ -1,5 +1,7 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 
+import { isSuperadmin } from "@/lib/auth/roles";
+
 import type { TRPCContext } from "./context";
 
 const t = initTRPC.context<TRPCContext>().create({
@@ -26,12 +28,13 @@ const enforceAuthenticated = t.middleware(({ ctx, next }) => {
 
 export const protectedProcedure = publicProcedure.use(enforceAuthenticated);
 
-const enforceAdmin = t.middleware(({ ctx, next }) => {
+/** Platform-only gate (`superadmin`). Used by Resend test routes, not consortium CRUD. */
+const enforceSuperadmin = t.middleware(({ ctx, next }) => {
   if (!ctx.session) {
     throw new TRPCError({ code: "UNAUTHORIZED", message: "No autorizado" });
   }
 
-  if (ctx.session.user.role !== "admin") {
+  if (!isSuperadmin(ctx.session.user.role)) {
     throw new TRPCError({ code: "FORBIDDEN", message: "Prohibido" });
   }
 
@@ -42,4 +45,4 @@ const enforceAdmin = t.middleware(({ ctx, next }) => {
   });
 });
 
-export const adminProcedure = publicProcedure.use(enforceAdmin);
+export const adminProcedure = publicProcedure.use(enforceSuperadmin);

@@ -19,17 +19,18 @@ import { toast } from "sonner";
 import { z } from "@/lib/zod";
 
 import {
-  useConsorcios,
-  useCreateConsorcioComment,
-  useDeleteConsorcio,
-} from "@/hooks/use-consorcios";
-import type { Consorcio } from "@/types/consorcio";
-import { ConsorcioFormDialog } from "@/components/consorcios/consorcio-form-dialog";
+  useConsortiums,
+  useCreateConsortiumComment,
+  useDeleteConsortium,
+} from "@/hooks/use-consortiums";
+import type { Consortium } from "@/types/consortium";
+import { ConsortiumFormDialog } from "@/components/consortiums/consortium-form-dialog";
 import { FormTextarea } from "@/components/form/form-textarea";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -48,25 +49,26 @@ const commentSchema = z.object({
 
 type CommentValues = z.infer<typeof commentSchema>;
 
-const CONSORCIOS_PER_PAGE = 6;
+const CONSORTIUMS_PER_PAGE = 6;
 
-type ConsorciosScreenProps = {
+type ConsortiumsScreenProps = {
   userName: string;
 };
 
-export function ConsorciosScreen({ userName }: ConsorciosScreenProps) {
-  const { data: consorcios = [], isLoading, isError } = useConsorcios();
-  const createComment = useCreateConsorcioComment();
-  const deleteConsorcio = useDeleteConsorcio();
+export function ConsortiumsScreen({ userName }: ConsortiumsScreenProps) {
+  const { data: consortiums = [], isLoading, isError } = useConsortiums();
+  const createComment = useCreateConsortiumComment();
+  const deleteConsortium = useDeleteConsortium();
   const [currentPage, setCurrentPage] = useState(1);
-  const [openConsorcio, setOpenConsorcio] = useState<Consorcio | null>(null);
+  const [openConsortium, setOpenConsortium] = useState<Consortium | null>(null);
   const [formDialogOpen, setFormDialogOpen] = useState(false);
-  const [editingConsorcioId, setEditingConsorcioId] = useState<string | null>(null);
+  const [editingConsortiumId, setEditingConsortiumId] = useState<string | null>(null);
+  const [consortiumPendingDelete, setConsortiumPendingDelete] = useState<Consortium | null>(null);
 
-  const totalPages = Math.max(1, Math.ceil(consorcios.length / CONSORCIOS_PER_PAGE));
-  const paginatedConsorcios = consorcios.slice(
-    (currentPage - 1) * CONSORCIOS_PER_PAGE,
-    currentPage * CONSORCIOS_PER_PAGE,
+  const totalPages = Math.max(1, Math.ceil(consortiums.length / CONSORTIUMS_PER_PAGE));
+  const paginatedConsortiums = consortiums.slice(
+    (currentPage - 1) * CONSORTIUMS_PER_PAGE,
+    currentPage * CONSORTIUMS_PER_PAGE,
   );
 
   useEffect(() => {
@@ -79,12 +81,12 @@ export function ConsorciosScreen({ userName }: ConsorciosScreenProps) {
   });
 
   function openCreateDialog() {
-    setEditingConsorcioId(null);
+    setEditingConsortiumId(null);
     setFormDialogOpen(true);
   }
 
-  function openEditDialog(consorcioId: string) {
-    setEditingConsorcioId(consorcioId);
+  function openEditDialog(consortiumId: string) {
+    setEditingConsortiumId(consortiumId);
     setFormDialogOpen(true);
   }
 
@@ -92,42 +94,47 @@ export function ConsorciosScreen({ userName }: ConsorciosScreenProps) {
     setFormDialogOpen(open);
 
     if (!open) {
-      setEditingConsorcioId(null);
+      setEditingConsortiumId(null);
     }
   }
 
   async function onSubmitComment(values: CommentValues) {
-    if (!openConsorcio) {
+    if (!openConsortium) {
       return;
     }
 
     try {
       await createComment.mutateAsync({
-        consorcioId: openConsorcio.id,
+        consortiumId: openConsortium.id,
         message: values.message,
       });
       toast.success("Comentario enviado");
       reset();
-      setOpenConsorcio(null);
+      setOpenConsortium(null);
     } catch {
       toast.error("No se pudo enviar el comentario");
     }
   }
 
-  async function handleDeleteConsorcio(consorcioId: string) {
+  async function handleConfirmDelete() {
+    if (!consortiumPendingDelete) {
+      return;
+    }
+
     try {
-      await deleteConsorcio.mutateAsync(consorcioId);
+      await deleteConsortium.mutateAsync({ id: consortiumPendingDelete.id });
       toast.success("Consorcio eliminado", {
         toasterId: "center",
         className: "!border-destructive !bg-destructive !text-white [&_[data-icon]]:!text-white",
       });
+      setConsortiumPendingDelete(null);
     } catch {
       toast.error("No se pudo eliminar el consorcio", { toasterId: "center" });
     }
   }
 
   if (isLoading) {
-    return <ConsorciosSkeleton />;
+    return <ConsortiumsSkeleton />;
   }
 
   if (isError) {
@@ -156,10 +163,10 @@ export function ConsorciosScreen({ userName }: ConsorciosScreenProps) {
       </div>
 
       <ul className="grid min-h-0 flex-1 grid-cols-1 gap-6 sm:grid-cols-2 sm:grid-rows-3 lg:grid-cols-3 lg:grid-rows-2">
-        {Array.from({ length: CONSORCIOS_PER_PAGE }, (_, index) => {
-          const consorcio = paginatedConsorcios[index];
+        {Array.from({ length: CONSORTIUMS_PER_PAGE }, (_, index) => {
+          const consortium = paginatedConsortiums[index];
 
-          if (!consorcio) {
+          if (!consortium) {
             return (
               <li
                 key={`empty-slot-${index}`}
@@ -170,10 +177,10 @@ export function ConsorciosScreen({ userName }: ConsorciosScreenProps) {
           }
 
           return (
-            <li key={consorcio.id} className="min-h-0">
+            <li key={consortium.id} className="min-h-0">
               <Link
-                href={`/consorcios/${consorcio.id}`}
-                className="@container/consorcio-card grid h-full min-h-48 w-full grid-rows-[auto_1fr_auto] rounded-lg border border-border bg-card p-4 text-center transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-0 sm:p-6"
+                href={`/consorcios/${consortium.id}`}
+                className="@container/consortium-card grid h-full min-h-48 w-full grid-rows-[auto_1fr_auto] rounded-lg border border-border bg-card p-4 text-center transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-0 sm:p-6"
               >
                 <div className="relative h-8 shrink-0">
                   <DropdownMenu>
@@ -183,7 +190,7 @@ export function ConsorciosScreen({ userName }: ConsorciosScreenProps) {
                           variant="ghost"
                           size="icon-sm"
                           className="absolute top-0 right-0 text-muted-foreground"
-                          aria-label={`Configurar ${consorcio.name}`}
+                          aria-label={`Configurar ${consortium.name}`}
                           onClick={(event) => event.preventDefault()}
                         >
                           <Settings className="size-5" aria-hidden="true" />
@@ -194,7 +201,7 @@ export function ConsorciosScreen({ userName }: ConsorciosScreenProps) {
                       <DropdownMenuItem
                         onClick={(event) => {
                           event.preventDefault();
-                          openEditDialog(consorcio.id);
+                          openEditDialog(consortium.id);
                         }}
                       >
                         <Pencil className="size-4" aria-hidden="true" />
@@ -204,7 +211,7 @@ export function ConsorciosScreen({ userName }: ConsorciosScreenProps) {
                         variant="destructive"
                         onClick={(event) => {
                           event.preventDefault();
-                          void handleDeleteConsorcio(consorcio.id);
+                          setConsortiumPendingDelete(consortium);
                         }}
                       >
                         <Trash2 className="size-4" aria-hidden="true" />
@@ -222,11 +229,11 @@ export function ConsorciosScreen({ userName }: ConsorciosScreenProps) {
                     />
                   </div>
                   <span className="shrink-0 text-lg font-semibold tracking-tight text-foreground">
-                    {consorcio.name}
+                    {consortium.name}
                   </span>
                   <span className="flex shrink-0 items-center gap-1 text-sm text-muted-foreground">
                     <MapPin className="size-4" aria-hidden="true" />
-                    {consorcio.location}
+                    {consortium.location}
                   </span>
                 </div>
 
@@ -240,7 +247,7 @@ export function ConsorciosScreen({ userName }: ConsorciosScreenProps) {
                       event.preventDefault();
                       event.stopPropagation();
                       reset();
-                      setOpenConsorcio(consorcio);
+                      setOpenConsortium(consortium);
                     }}
                   >
                     <MessageSquareText className="size-4" aria-hidden="true" />
@@ -303,19 +310,57 @@ export function ConsorciosScreen({ userName }: ConsorciosScreenProps) {
         </nav>
       ) : null}
 
-      <ConsorcioFormDialog
+      <ConsortiumFormDialog
         open={formDialogOpen}
         onOpenChange={handleFormDialogChange}
-        consorcioId={editingConsorcioId}
+        consortiumId={editingConsortiumId}
       />
 
       <Dialog
-        open={openConsorcio !== null}
-        onOpenChange={(open) => !open && setOpenConsorcio(null)}
+        open={consortiumPendingDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setConsortiumPendingDelete(null);
+          }
+        }}
+      >
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Eliminar consorcio</DialogTitle>
+            <DialogDescription>
+              ¿Seguro que querés eliminar{" "}
+              <span className="font-medium text-foreground">{consortiumPendingDelete?.name}</span>?
+              El consorcio dejará de mostrarse en la lista.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setConsortiumPendingDelete(null)}
+              disabled={deleteConsortium.isPending}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => void handleConfirmDelete()}
+              disabled={deleteConsortium.isPending}
+            >
+              {deleteConsortium.isPending ? "Eliminando…" : "Eliminar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={openConsortium !== null}
+        onOpenChange={(open) => !open && setOpenConsortium(null)}
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{openConsorcio?.name}</DialogTitle>
+            <DialogTitle>{openConsortium?.name}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit(onSubmitComment)} noValidate className="space-y-4">
             <FormTextarea
@@ -337,7 +382,7 @@ export function ConsorciosScreen({ userName }: ConsorciosScreenProps) {
   );
 }
 
-function ConsorciosSkeleton() {
+function ConsortiumsSkeleton() {
   return (
     <div className="flex min-h-[calc(100vh-5rem)] w-full max-w-7xl flex-col">
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">

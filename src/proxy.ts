@@ -13,9 +13,13 @@ function getLegacyDashboardRedirect(pathname: string): string | null {
     return "/perfil-de-usuario";
   }
 
-  const consorcioDetailMatch = pathname.match(/^\/dashboard\/consorcios\/([^/]+)$/);
-  if (consorcioDetailMatch) {
-    return `/consorcios/${consorcioDetailMatch[1]}`;
+  if (pathname === "/dashboard/consorcios") {
+    return "/consorcios";
+  }
+
+  const consortiumDetailMatch = pathname.match(/^\/dashboard\/consorcios\/([^/]+)$/);
+  if (consortiumDetailMatch) {
+    return `/consorcios/${consortiumDetailMatch[1]}`;
   }
 
   return null;

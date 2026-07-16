@@ -80,19 +80,19 @@ const emptyCreateValues: CreateFormValues = {
 type TenantEmailFormDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  consorcioId: string;
+  consortiumId: string;
   editingEntry?: TenantEmail | null;
 };
 
 export function TenantEmailFormDialog({
   open,
   onOpenChange,
-  consorcioId,
+  consortiumId,
   editingEntry = null,
 }: TenantEmailFormDialogProps) {
   const isEditMode = Boolean(editingEntry);
-  const createTenantEmail = useCreateTenantEmail(consorcioId);
-  const updateTenantEmail = useUpdateTenantEmail(consorcioId);
+  const createTenantEmail = useCreateTenantEmail(consortiumId);
+  const updateTenantEmail = useUpdateTenantEmail(consortiumId);
 
   const createForm = useForm<CreateFormValues>({
     resolver: zodResolver(createFormSchema),
@@ -134,7 +134,7 @@ export function TenantEmailFormDialog({
   async function onSubmitCreate(values: CreateFormValues) {
     try {
       await createTenantEmail.mutateAsync({
-        consorcioId,
+        consortiumId,
         floor: values.floor,
         departmentNumber: values.departmentNumber,
         letter: values.letter,
@@ -157,7 +157,7 @@ export function TenantEmailFormDialog({
     try {
       await updateTenantEmail.mutateAsync({
         id: editingEntry.id,
-        consorcioId,
+        consortiumId,
         email: values.email,
         contactType: values.contactType,
       });

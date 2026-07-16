@@ -7,6 +7,7 @@ import postgres from "postgres";
 
 import { env } from "@/env";
 
+import { SERVERLESS_POSTGRES_OPTIONS } from "./postgres-client-options";
 import * as schema from "./schema";
 
 /**
@@ -14,7 +15,8 @@ import * as schema from "./schema";
  *
  * - `DB_DRIVER=postgres` (or a `DATABASE_URL` with a `postgres(ql)://`
  *   protocol): postgres-js against a real Postgres instance (Supabase in
- *   production).
+ *   production). Runtime should use the Transaction Pooler URL (`:6543`);
+ *   Drizzle Kit migrations use `DIRECT_DATABASE_URL` separately.
  * - Anything else (default): PGlite, an embedded Postgres compiled to WASM,
  *   persisted to the local `./.pglite` directory. Used for local dev and as
  *   the base for the in-memory PGlite test helper.
@@ -39,7 +41,7 @@ function createPostgresDb() {
     );
   }
 
-  const client = postgres(env.DATABASE_URL);
+  const client = postgres(env.DATABASE_URL, SERVERLESS_POSTGRES_OPTIONS);
   return drizzlePostgres({ client, schema });
 }
 

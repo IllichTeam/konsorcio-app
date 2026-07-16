@@ -1,108 +1,97 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import {
-  createConsorcio,
-  createConsorcioComment,
-  deleteConsorcio,
-  getConsorcioById,
-  getConsorcioHistory,
-  getConsorcios,
-  updateConsorcio,
-  updateConsorcioAmount,
-} from "@/lib/api/consorcios";
+import { createConsortiumComment, getConsortiumHistory } from "@/lib/api/consortiums";
 import { queryKeys } from "@/lib/api/query-keys";
-import type { Consorcio } from "@/types/consorcio";
+import { useTRPC } from "@/lib/trpc/client";
 
-export function useConsorcios() {
-  return useQuery({
-    queryKey: queryKeys.consorcios.all,
-    queryFn: getConsorcios,
-  });
+export function useConsortiums() {
+  const trpc = useTRPC();
+
+  return useQuery(trpc.consortiums.list.queryOptions());
 }
 
-export function useConsorcio(id: string) {
+export function useConsortium(id: string) {
+  const trpc = useTRPC();
+
   return useQuery({
-    queryKey: queryKeys.consorcios.detail(id),
-    queryFn: () => getConsorcioById(id),
+    ...trpc.consortiums.byId.queryOptions({ id }),
     enabled: Boolean(id),
   });
 }
 
-export function useConsorcioHistory(id: string) {
+export function useConsortiumHistory(id: string) {
   return useQuery({
-    queryKey: queryKeys.consorcios.history(id),
-    queryFn: () => getConsorcioHistory(id),
+    queryKey: queryKeys.consortiums.history(id),
+    queryFn: () => getConsortiumHistory(id),
     enabled: Boolean(id),
   });
 }
 
-export function useCreateConsorcioComment() {
+export function useCreateConsortiumComment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: createConsorcioComment,
+    mutationFn: createConsortiumComment,
     onSuccess: (_data, variables) => {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.consorcios.history(variables.consorcioId),
+        queryKey: queryKeys.consortiums.history(variables.consortiumId),
       });
     },
   });
 }
 
-export function useCreateConsorcio() {
+export function useCreateConsortium() {
+  const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: createConsorcio,
-    onSuccess: (data) => {
-      queryClient.setQueryData(queryKeys.consorcios.detail(data.id), data);
-      queryClient.setQueryData(queryKeys.consorcios.all, (current: Consorcio[] | undefined) => [
-        ...(current ?? []),
-        { id: data.id, name: data.name, location: data.location },
-      ]);
-    },
-  });
+  return useMutation(
+    trpc.consortiums.create.mutationOptions({
+      onSuccess: () => {
+        void queryClient.invalidateQueries(trpc.consortiums.list.queryFilter());
+      },
+    }),
+  );
 }
 
-export function useUpdateConsorcio() {
+export function useUpdateConsortium() {
+  const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: updateConsorcio,
-    onSuccess: (data) => {
-      queryClient.setQueryData(queryKeys.consorcios.detail(data.id), data);
-      queryClient.setQueryData(queryKeys.consorcios.all, (current: Consorcio[] | undefined) =>
-        (current ?? []).map((item) =>
-          item.id === data.id ? { id: data.id, name: data.name, location: data.location } : item,
-        ),
-      );
-    },
-  });
+  return useMutation(
+    trpc.consortiums.update.mutationOptions({
+      onSuccess: (data) => {
+        void queryClient.invalidateQueries(trpc.consortiums.list.queryFilter());
+        void queryClient.invalidateQueries(trpc.consortiums.byId.queryFilter({ id: data.id }));
+      },
+    }),
+  );
 }
 
-export function useUpdateConsorcioAmount() {
+export function useUpdateConsortiumAmount() {
+  const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: updateConsorcioAmount,
-    onSuccess: (data) => {
-      queryClient.setQueryData(queryKeys.consorcios.detail(data.id), data);
-      void queryClient.invalidateQueries({ queryKey: queryKeys.consorcios.all });
-    },
-  });
+  return useMutation(
+    trpc.consortiums.updateAmount.mutationOptions({
+      onSuccess: (data) => {
+        void queryClient.invalidateQueries(trpc.consortiums.list.queryFilter());
+        void queryClient.invalidateQueries(trpc.consortiums.byId.queryFilter({ id: data.id }));
+      },
+    }),
+  );
 }
 
-export function useDeleteConsorcio() {
+export function useDeleteConsortium() {
+  const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: deleteConsorcio,
-    onSuccess: (_data, id) => {
-      queryClient.setQueryData(queryKeys.consorcios.all, (current: Consorcio[] | undefined) =>
-        (current ?? []).filter((item) => item.id !== id),
-      );
-      queryClient.removeQueries({ queryKey: queryKeys.consorcios.detail(id) });
-      queryClient.removeQueries({ queryKey: queryKeys.consorcios.history(id) });
-    },
-  });
+  return useMutation(
+    trpc.consortiums.delete.mutationOptions({
+      onSuccess: (_data, variables) => {
+        void queryClient.invalidateQueries(trpc.consortiums.list.queryFilter());
+        void queryClient.invalidateQueries(trpc.consortiums.byId.queryFilter({ id: variables.id }));
+        queryClient.removeQueries({ queryKey: queryKeys.consortiums.history(variables.id) });
+      },
+    }),
+  );
 }

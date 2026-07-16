@@ -1,6 +1,8 @@
 import { createAuthClient } from "better-auth/react";
 import { adminClient, emailOTPClient } from "better-auth/client/plugins";
 
+import { ac, authRoles } from "@/lib/auth/permissions";
+
 /**
  * better-auth client for use in Client Components.
  *
@@ -12,7 +14,13 @@ import { adminClient, emailOTPClient } from "better-auth/client/plugins";
  * `role`/`banned`/`banReason`/`banExpires` fields added to the session user.
  */
 export const authClient = createAuthClient({
-  plugins: [adminClient(), emailOTPClient()],
+  plugins: [
+    adminClient({
+      ac,
+      roles: authRoles,
+    }),
+    emailOTPClient(),
+  ],
 });
 
 export const { signIn, signUp, signOut, useSession } = authClient;

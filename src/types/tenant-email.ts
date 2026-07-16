@@ -2,7 +2,7 @@ export type TenantEmailContactType = "propietario" | "inquilino";
 
 export type TenantEmail = {
   id: string;
-  consorcioId: string;
+  consortiumId: string;
   floor: string | null;
   departmentNumber: string | null;
   letter: string | null;
@@ -11,7 +11,7 @@ export type TenantEmail = {
 };
 
 export type CreateTenantEmailInput = {
-  consorcioId: string;
+  consortiumId: string;
   floor?: string;
   departmentNumber?: string;
   letter?: string;
@@ -21,7 +21,7 @@ export type CreateTenantEmailInput = {
 
 export type UpdateTenantEmailInput = {
   id: string;
-  consorcioId: string;
+  consortiumId: string;
   email: string;
   contactType: TenantEmailContactType;
 };

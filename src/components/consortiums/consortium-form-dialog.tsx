@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "@/lib/zod";
 
-import { useConsorcio, useCreateConsorcio, useUpdateConsorcio } from "@/hooks/use-consorcios";
+import { useConsortium, useCreateConsortium, useUpdateConsortium } from "@/hooks/use-consortiums";
 import { FormInput } from "@/components/form/form-input";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const consorcioFormSchema = z.object({
+const consortiumFormSchema = z.object({
   name: z.string().min(1, "El nombre es obligatorio"),
   location: z.string().min(1, "La ubicación es obligatoria"),
   paymentAlias: z.string().min(1, "El alias de cobro es obligatorio"),
@@ -26,9 +26,9 @@ const consorcioFormSchema = z.object({
   driveLink: z.string().min(1, "El link de drive es obligatorio"),
 });
 
-type ConsorcioFormValues = z.infer<typeof consorcioFormSchema>;
+type ConsortiumFormValues = z.infer<typeof consortiumFormSchema>;
 
-const emptyValues: ConsorcioFormValues = {
+const emptyValues: ConsortiumFormValues = {
   name: "",
   location: "",
   paymentAlias: "",
@@ -36,41 +36,41 @@ const emptyValues: ConsorcioFormValues = {
   driveLink: "",
 };
 
-type ConsorcioFormDialogProps = {
+type ConsortiumFormDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  consorcioId?: string | null;
+  consortiumId?: string | null;
 };
 
-export function ConsorcioFormDialog({
+export function ConsortiumFormDialog({
   open,
   onOpenChange,
-  consorcioId = null,
-}: ConsorcioFormDialogProps) {
-  const isEditMode = Boolean(consorcioId);
-  const { data: consorcio, isLoading: isLoadingConsorcio } = useConsorcio(consorcioId ?? "");
-  const createConsorcio = useCreateConsorcio();
-  const updateConsorcio = useUpdateConsorcio();
-  const { control, handleSubmit, reset, formState } = useForm<ConsorcioFormValues>({
-    resolver: zodResolver(consorcioFormSchema),
+  consortiumId = null,
+}: ConsortiumFormDialogProps) {
+  const isEditMode = Boolean(consortiumId);
+  const { data: consortium, isLoading: isLoadingConsortium } = useConsortium(consortiumId ?? "");
+  const createConsortium = useCreateConsortium();
+  const updateConsortium = useUpdateConsortium();
+  const { control, handleSubmit, reset, formState } = useForm<ConsortiumFormValues>({
+    resolver: zodResolver(consortiumFormSchema),
     defaultValues: emptyValues,
   });
 
-  const isSaving = createConsorcio.isPending || updateConsorcio.isPending;
-  const isFormReady = !isEditMode || Boolean(consorcio);
+  const isSaving = createConsortium.isPending || updateConsortium.isPending;
+  const isFormReady = !isEditMode || Boolean(consortium);
 
   useEffect(() => {
     if (!open) {
       return;
     }
 
-    if (isEditMode && consorcio) {
+    if (isEditMode && consortium) {
       reset({
-        name: consorcio.name,
-        location: consorcio.location,
-        paymentAlias: consorcio.paymentAlias,
-        email: consorcio.billingEmail,
-        driveLink: consorcio.driveLink,
+        name: consortium.name,
+        location: consortium.location,
+        paymentAlias: consortium.paymentAlias,
+        email: consortium.billingEmail,
+        driveLink: consortium.driveLink,
       });
       return;
     }
@@ -78,7 +78,7 @@ export function ConsorcioFormDialog({
     if (!isEditMode) {
       reset(emptyValues);
     }
-  }, [open, isEditMode, consorcio, reset]);
+  }, [open, isEditMode, consortium, reset]);
 
   function handleClose(nextOpen: boolean) {
     if (!nextOpen) {
@@ -88,7 +88,7 @@ export function ConsorcioFormDialog({
     onOpenChange(nextOpen);
   }
 
-  async function onSubmit(values: ConsorcioFormValues) {
+  async function onSubmit(values: ConsortiumFormValues) {
     const payload = {
       name: values.name,
       location: values.location,
@@ -98,11 +98,11 @@ export function ConsorcioFormDialog({
     };
 
     try {
-      if (isEditMode && consorcioId) {
-        await updateConsorcio.mutateAsync({ id: consorcioId, ...payload });
+      if (isEditMode && consortiumId) {
+        await updateConsortium.mutateAsync({ id: consortiumId, ...payload });
         toast.success("Consorcio actualizado");
       } else {
-        await createConsorcio.mutateAsync(payload);
+        await createConsortium.mutateAsync(payload);
         toast.success("Consorcio creado", { toasterId: "center" });
       }
 
@@ -124,10 +124,10 @@ export function ConsorcioFormDialog({
           </DialogTitle>
         </DialogHeader>
 
-        {isEditMode && isLoadingConsorcio ? (
+        {isEditMode && isLoadingConsortium ? (
           <div className="grid gap-4">
-            {Array.from({ length: 5 }).map((_, index) => (
-              <Skeleton key={index} className="h-10 w-full" />
+            {(["name", "location", "alias", "email", "drive"] as const).map((field) => (
+              <Skeleton key={field} className="h-10 w-full" />
             ))}
           </div>
         ) : (
