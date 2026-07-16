@@ -34,7 +34,7 @@ Never commit real secrets. Copy from [`.env.example`](../.env.example).
 To test connection / migrations against the hosted DB without changing day-to-day
 PGlite `.env`:
 
-1. `cp .env.supabase.example .env.supabase` and replace `[PASSWORD]` in both URLs.
+1. `cp .env.supabase.example .env.supabase` and replace `PROJECT_REF`, `REGION`, and `[PASSWORD]` in both URLs.
 2. Run (loads `.env` then `.env.supabase` so auth/admin stay local, DB points at Supabase):
 
    ```bash
