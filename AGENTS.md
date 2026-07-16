@@ -7,7 +7,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Skills to apply during implementation
 
-Load these skills **only when moving to implementation** (writing or modifying code), not during analysis, exploration, or planning. If the work is delegated to a subagent, that subagent loads the skill relevant to its task. Do not load them preemptively on every turn — pull them in at the moment code is about to be written for the matching domain:
+Load these skills **only when moving to implementation** (writing or modifying code), not during analysis, exploration, or planning. If the work is delegated to a subagent, that subagent loads the skill relevant to its task. Do not load them preemptively on every turn — pull them in at the moment code is about to be written for the matching domain.
+
+**Never put a nested `AGENTS.md` inside a skill folder.** Cursor treats every `AGENTS.md` in the repo as an always-on workspace rule (that is what was inflating Rules ~26k tokens with `vercel-react-best-practices`). Skills expose a short `SKILL.md`; deep guides live as `REFERENCE.md` (or similar) and are read only when the skill is applied.
 
 - **Frontend code** (React components, Next.js pages, hooks, UI, data fetching, bundle/performance): apply `vercel-react-best-practices`.
 - **Backend / data layer** (database queries, fetching, models, ORM, schema, migrations):
@@ -49,3 +51,18 @@ Forms use react-hook-form + zod (`zodResolver`). Before implementing any form, c
 # Data fetching
 
 Client data loading goes through TanStack Query hooks in `src/hooks/`. Domain APIs live as tRPC procedures under `src/server/trpc/`; the client uses `@trpc/tanstack-react-query` (`queryOptions`, `mutationOptions`, `queryFilter`) so query keys stay inferred. Do **not** re-declare those keys in `src/lib/api/query-keys.ts`. Keep manual `query-keys.ts` entries only for modules still on the mock/`lib/api` layer. Never load remote data with `useEffect` + `useState`. Shared request/response Zod contracts belong in `src/lib/schemas/` and may be reused by forms when the UI shape matches the API; keep form-only schemas in the screen when the UI needs transformations (e.g. string amount → number).
+
+# Linear work log
+
+After finishing a meaningful task (feature, fix, migration, auth/config change, etc.), **ask** the user whether to search for or register a Linear issue before ending. Do not create or close issues silently.
+
+Purpose: keep a shared done-log in Linear so the other project participant (and their AI) can see what landed. This is tracking, not backlog grooming.
+
+Rules when the user agrees:
+
+1. Project: **proyecto toro** (team **Irada**).
+2. Search for an existing matching open/done issue first; reuse it if it fits.
+3. If creating: one short Spanish title only — same style as existing issues (e.g. `Configurar drizzle`, `CRUD emails de inquilinos`, `Recuperar contraseña con OTP`, `Migrar middleware a proxy`). No long descriptions, acceptance criteria, or essays.
+4. Mark the issue **Done**.
+
+Skip for trivial edits (typo, formatting-only, drive-by renames) unless the user asks.
