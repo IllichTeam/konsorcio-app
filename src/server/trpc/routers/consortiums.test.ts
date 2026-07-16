@@ -1,0 +1,203 @@
+import { eq } from "drizzle-orm";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+
+import * as schema from "@/db/schema";
+import { createTestDb, type TestDbHandle } from "@/db/testing";
+import type { Session } from "@/lib/auth/session";
+import { ROLES } from "@/lib/auth/roles";
+
+vi.mock("@/lib/auth/session", () => ({
+  getSession: vi.fn(),
+}));
+
+vi.mock("@/db", () => ({
+  db: new Proxy(
+    {},
+    {
+      get(_target, prop, _receiver) {
+        if (!testDb) {
+          throw new Error("testDb not initialized");
+        }
+        const value = Reflect.get(testDb, prop, testDb);
+        return typeof value === "function" ? value.bind(testDb) : value;
+      },
+    },
+  ),
+}));
+
+const { getSession } = await import("@/lib/auth/session");
+const { createCallerFactory } = await import("@/server/trpc/init");
+const { appRouter } = await import("@/server/trpc/routers/_app");
+const { createTRPCContext } = await import("@/server/trpc/context");
+
+const createCaller = createCallerFactory(appRouter);
+
+let handle: TestDbHandle;
+let testDb: TestDbHandle["db"];
+
+function fakeSession(role: "superadmin" | "admin", userId: string): Session {
+  return {
+    user: {
+      id: userId,
+      name: `${role} user`,
+      email: `${userId}@example.com`,
+      role,
+    },
+    session: {
+      id: "session-id",
+    },
+  } as unknown as Session;
+}
+
+async function callerFor(role: "superadmin" | "admin" | null, userId = `user-${role}`) {
+  vi.mocked(getSession).mockResolvedValueOnce(role ? fakeSession(role, userId) : null);
+  return createCaller(await createTRPCContext());
+}
+
+async function insertUser(id: string, role: string) {
+  await testDb.insert(schema.user).values({
+    id,
+    name: id,
+    email: `${id}@example.com`,
+    emailVerified: true,
+    role,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+}
+
+const sampleInput = {
+  name: "Torre Norte",
+  location: "CABA",
+  paymentAlias: "torre.norte",
+  billingEmail: "billing@example.com",
+  driveLink: "https://drive.google.com/torre-norte",
+};
+
+describe("consortiums tRPC router", () => {
+  beforeAll(async () => {
+    handle = await createTestDb();
+    testDb = handle.db;
+  });
+
+  afterAll(async () => {
+    await handle.client.close();
+  });
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    await testDb.delete(schema.consortiums);
+    await testDb.delete(schema.user);
+  });
+
+  it("rejects list when there is no session", async () => {
+    const caller = await callerFor(null);
+
+    await expect(caller.consortiums.list()).rejects.toMatchObject({
+      code: "UNAUTHORIZED",
+    });
+  });
+
+  it("creates a consortium owned by the authenticated admin", async () => {
+    await insertUser("user-admin", ROLES.admin);
+    const caller = await callerFor("admin", "user-admin");
+
+    const created = await caller.consortiums.create(sampleInput);
+
+    expect(created).toMatchObject({ ...sampleInput, amount: 0 });
+    expect(created.id).toEqual(expect.any(String));
+
+    const rows = await testDb.select().from(schema.consortiums);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.ownerId).toBe("user-admin");
+  });
+
+  it("lists only consortiums owned by the admin", async () => {
+    await insertUser("user-a", ROLES.admin);
+    await insertUser("user-b", ROLES.admin);
+
+    await testDb.insert(schema.consortiums).values([
+      { ...sampleInput, name: "Mine", ownerId: "user-a" },
+      { ...sampleInput, name: "Theirs", ownerId: "user-b", billingEmail: "other@example.com" },
+    ]);
+
+    const caller = await callerFor("admin", "user-a");
+    const list = await caller.consortiums.list();
+
+    expect(list).toEqual([{ id: expect.any(String), name: "Mine", location: "CABA" }]);
+  });
+
+  it("lets superadmin list all consortiums", async () => {
+    await insertUser("user-a", ROLES.admin);
+    await insertUser("user-super", ROLES.superadmin);
+
+    await testDb.insert(schema.consortiums).values([
+      { ...sampleInput, name: "A", ownerId: "user-a" },
+      {
+        ...sampleInput,
+        name: "B",
+        ownerId: "user-a",
+        billingEmail: "b@example.com",
+      },
+    ]);
+
+    const caller = await callerFor("superadmin", "user-super");
+    const list = await caller.consortiums.list();
+
+    expect(list).toHaveLength(2);
+  });
+
+  it("forbids an admin from updating another owner's consortium", async () => {
+    await insertUser("user-a", ROLES.admin);
+    await insertUser("user-b", ROLES.admin);
+
+    const [row] = await testDb
+      .insert(schema.consortiums)
+      .values({ ...sampleInput, ownerId: "user-a" })
+      .returning();
+
+    const caller = await callerFor("admin", "user-b");
+
+    await expect(
+      caller.consortiums.update({
+        id: row.id,
+        ...sampleInput,
+        name: "Hijacked",
+      }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+
+  it("soft-deletes a consortium and hides it from list", async () => {
+    await insertUser("user-admin", ROLES.admin);
+
+    const ownerCaller = await callerFor("admin", "user-admin");
+    const created = await ownerCaller.consortiums.create(sampleInput);
+
+    const deleteCaller = await callerFor("admin", "user-admin");
+    await deleteCaller.consortiums.delete({ id: created.id });
+
+    const listCaller = await callerFor("admin", "user-admin");
+    await expect(listCaller.consortiums.list()).resolves.toEqual([]);
+
+    const [row] = await testDb
+      .select()
+      .from(schema.consortiums)
+      .where(eq(schema.consortiums.id, created.id));
+
+    expect(row?.isDeleted).toBe(true);
+  });
+
+  it("updates amount for an owned consortium", async () => {
+    await insertUser("user-admin", ROLES.admin);
+    const ownerCaller = await callerFor("admin", "user-admin");
+    const created = await ownerCaller.consortiums.create(sampleInput);
+
+    const amountCaller = await callerFor("admin", "user-admin");
+    const updated = await amountCaller.consortiums.updateAmount({
+      id: created.id,
+      amount: 150_000,
+    });
+
+    expect(updated.amount).toBe(150_000);
+  });
+});

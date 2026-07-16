@@ -33,10 +33,27 @@ Sober, compact, precise — Linear/Apple-inspired. Rules for every screen:
 
 Two languages, strictly separated:
 
-- **Spanish** — everything the end user reads: UI copy, labels, button text, placeholders, headings, empty states, toasts/notifications, and any validation or error message surfaced in the interface (e.g. zod messages that render in a form, or an API error meant to be shown).
-- **English** — everything else, always: code identifiers (variables, functions, components, types, hooks), comments, JSDoc, file and directory names, config files, env var names, git commit messages, database/schema field names, enum values, query keys, route segments, and internal/server log messages (`console.*`, thrown `Error` text not shown to the user).
+- **Spanish** — everything the end user sees or reads:
+  - UI copy (labels, buttons, placeholders, headings, empty states, toasts)
+  - Validation / API error messages shown in the interface
+  - **URL route segments** the user navigates (`/consorcios`, `/emails-inquilinos`, `/perfil-de-usuario`)
+- **English** — everything that is part of the program, not the user-facing surface:
+  - code identifiers (variables, functions, components, types, hooks)
+  - comments, JSDoc, file and directory names under `src/`
+  - config / env var names, git commit messages
+  - **database table and column names**, Drizzle schema exports
+  - enum values, query keys, tRPC procedure paths
+  - internal/server log messages (`console.*`, thrown `Error` text not shown to the user)
 
-Rule of thumb: if a string is rendered to the user, it's Spanish; if it's part of the program or its configuration, it's English. Do not translate identifiers or config to Spanish, and do not hardcode English UI copy.
+**Database / domain naming (English only in code & DB):**
+
+- Table names: English plural `snake_case` — e.g. `consortiums`, not `consorcios`; columns/fields like `owner_id`, `billing_email`.
+- Drizzle exports, tRPC routers, hooks, types, and `src/` folders use the English domain noun (`consortium` / `consortiums`).
+- Do **not** put Spanish product words into schema or identifiers. The brand "Konsorcio" and Spanish UI/URLs are fine; they must not leak into the database or TypeScript names.
+
+**URLs stay Spanish.** App Router folders under `src/app` that define public paths should match the Spanish URL (`consorcios/`, not `consortiums/`). Internal component folders under `src/components/` stay English (`consortiums/`).
+
+Rule of thumb: if a human reads it in the browser (URL bar, screen, toast, form error), it's Spanish; if only developers/tools touch it, it's English. Do not hardcode English UI copy.
 
 **Zod validation messages are user-facing → Spanish.** A global Spanish locale is configured in `src/lib/zod.ts` via `z.config(z.locales.es())`, so default messages come out in Spanish automatically. **Always import Zod from `@/lib/zod`** (`import { z } from "@/lib/zod"`), never from `"zod"` directly — otherwise the locale may not be applied. Only pass an explicit `message` when the default wording isn't good enough for a field; that message must be in Spanish.
 

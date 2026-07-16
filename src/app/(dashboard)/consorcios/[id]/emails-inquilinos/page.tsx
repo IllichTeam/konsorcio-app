@@ -17,5 +17,5 @@ export async function generateMetadata({ params }: TenantEmailsPageProps): Promi
 export default async function TenantEmailsPage({ params }: TenantEmailsPageProps) {
   const { id } = await params;
 
-  return <TenantEmailsScreen consorcioId={id} />;
+  return <TenantEmailsScreen consortiumId={id} />;
 }

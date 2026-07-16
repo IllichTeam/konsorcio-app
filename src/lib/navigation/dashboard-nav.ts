@@ -21,7 +21,7 @@ export const dashboardNavGroups: DashboardNavGroup[] = [
     label: "Dashboard",
     children: [
       { label: "Resumen", href: `/${slugify("Resumen")}` },
-      { label: "Consorcios", href: `/${slugify("Consorcios")}` },
+      { label: "Consorcios", href: "/consorcios" },
       { label: "Reportes", href: `/${slugify("Reportes")}` },
       // TODO: DashboardNavChild has no role field yet — this item should only
       // be shown to admins once nav items support role gating. The route

@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { db } from "@/db";
 import { env } from "@/env";
 import { createAuth } from "@/lib/auth";
+import { ROLES } from "@/lib/auth/roles";
 
 export interface SeedAdminInput {
   email: string;
@@ -19,19 +20,19 @@ export interface SeedAdminResult {
 type Database = Parameters<typeof createAuth>[0];
 
 /**
- * Idempotently provisions the single permanent admin account.
+ * Idempotently provisions the single permanent superadmin account.
  *
- * - Admin doesn't exist yet -> created with `role: "admin"` and a
+ * - Superadmin doesn't exist yet -> created with `role: "superadmin"` and a
  *   `credential` account holding the hashed password.
- * - Admin already exists -> `role` is (re-)set to `"admin"` and its password
- *   is reset to `password`. The env value is always the source of truth, so
- *   re-running this (e.g. after rotating `ADMIN_PASSWORD`) rotates the
- *   admin's password rather than leaving the old one in place.
+ * - Superadmin already exists -> `role` is (re-)set to `"superadmin"` and its
+ *   password is reset to `password`. The env value is always the source of
+ *   truth, so re-running this (e.g. after rotating `ADMIN_PASSWORD`) rotates
+ *   the password rather than leaving the old one in place.
  *
  * Bootstrap problem this solves: `emailAndPassword.disableSignUp: true`
  * blocks public sign-up, and the `admin` plugin's `createUser` endpoint
- * requires an authenticated admin session — a chicken-and-egg problem for
- * the very first admin. Instead of going through the HTTP API, this reaches
+ * requires an authenticated superadmin session — a chicken-and-egg problem for
+ * the very first account. Instead of going through the HTTP API, this reaches
  * into `auth.$context` (the same internal context better-auth's own route
  * handlers use — see `better-auth/dist/plugins/admin/routes.mjs`'s
  * `createUser` endpoint and `better-auth/dist/api/routes/sign-up.mjs`) to
@@ -59,7 +60,7 @@ export async function seedAdmin(
       email: normalizedEmail,
       name,
       emailVerified: true,
-      role: "admin",
+      role: ROLES.superadmin,
     });
 
     await ctx.internalAdapter.linkAccount({
@@ -78,8 +79,8 @@ export async function seedAdmin(
   // know about it.
   const currentRole = (user as { role?: string | null }).role;
 
-  if (currentRole !== "admin") {
-    await ctx.internalAdapter.updateUser(user.id, { role: "admin" });
+  if (currentRole !== ROLES.superadmin) {
+    await ctx.internalAdapter.updateUser(user.id, { role: ROLES.superadmin });
   }
 
   const credentialAccount = accounts.find((account) => account.providerId === "credential");
@@ -106,8 +107,9 @@ export async function seedAdmin(
  *
  * Uses the app's real `db` from `src/db/index.ts`, so it respects
  * `DB_DRIVER`: pglite locally, or Supabase Postgres in production via
- * `DB_DRIVER=postgres DATABASE_URL=... pnpm db:seed`. Requires migrations to
- * already be applied to the target database (`pnpm db:migrate`).
+ * `DB_DRIVER=postgres DATABASE_URL=... pnpm db:seed` (runtime / Transaction
+ * Pooler URL — not `DIRECT_DATABASE_URL`). Requires migrations to already be
+ * applied (`pnpm db:migrate` with `DIRECT_DATABASE_URL`).
  */
 async function main() {
   if (!env.ADMIN_EMAIL || !env.ADMIN_PASSWORD) {

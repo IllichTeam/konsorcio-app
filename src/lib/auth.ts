@@ -5,6 +5,8 @@ import { admin, emailOTP } from "better-auth/plugins";
 import { db } from "@/db";
 import * as schema from "@/db/schema";
 import { env } from "@/env";
+import { ac, authRoles } from "@/lib/auth/permissions";
+import { ROLES } from "@/lib/auth/roles";
 import { sendOtpEmail } from "@/lib/email/send-otp-email";
 
 /**
@@ -26,7 +28,7 @@ export function createAuth(database: Parameters<typeof drizzleAdapter>[0] = db) 
       enabled: true,
       // Public self sign-up is disabled: the only account provisioning path
       // is the idempotent admin seed (`src/db/seed-admin.ts`). Accounts for
-      // any other user are created by an admin via the `admin` plugin.
+      // any other user are created by a superadmin via the `admin` plugin.
       disableSignUp: true,
     },
     // Keep CSRF origin checks working across local ports (dev default is 3200).
@@ -37,10 +39,13 @@ export function createAuth(database: Parameters<typeof drizzleAdapter>[0] = db) 
         "/email-otp/send-verification-otp": { window: 60, max: 1 },
       },
     },
-    // Default `admin`/`user` roles. Permission statements/access control are
-    // deliberately left unconfigured here (deferred to a later task).
     plugins: [
-      admin(),
+      admin({
+        ac,
+        roles: authRoles,
+        adminRoles: [ROLES.superadmin],
+        defaultRole: ROLES.admin,
+      }),
       emailOTP({
         otpLength: 6,
         expiresIn: 600,

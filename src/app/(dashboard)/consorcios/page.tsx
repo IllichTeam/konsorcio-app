@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 
 import { getSession } from "@/lib/auth/session";
-import { ConsorciosScreen } from "@/components/consorcios/consorcios-screen";
+import { ConsortiumsScreen } from "@/components/consortiums/consortiums-screen";
 
 export const metadata: Metadata = {
   title: "Consorcios — Konsorcio",
 };
 
-export default async function ConsorciosPage() {
+export default async function ConsortiumsPage() {
   const session = await getSession();
 
-  return <ConsorciosScreen userName={session?.user.name ?? "Administrador"} />;
+  return <ConsortiumsScreen userName={session?.user.name ?? "Administrador"} />;
 }

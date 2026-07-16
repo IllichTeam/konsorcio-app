@@ -7,14 +7,21 @@ import { z } from "@/lib/zod";
  * - "pglite": embedded Postgres via WASM, used in local dev and tests. No
  *   `DATABASE_URL` required.
  * - "postgres": postgres-js against a real Postgres instance (Supabase in
- *   production). Requires `DATABASE_URL`.
+ *   production). Requires `DATABASE_URL` (Transaction Pooler for runtime).
  *
- * `DATABASE_URL` is intentionally optional here so the app never throws on
- * boot in pglite mode; `src/db/index.ts` is responsible for asserting it is
- * present when `DB_DRIVER === "postgres"`.
+ * `DATABASE_URL` / `DIRECT_DATABASE_URL` are intentionally optional here so
+ * the app never throws on boot in pglite mode; `src/db/index.ts` asserts
+ * `DATABASE_URL` when `DB_DRIVER === "postgres"`. Drizzle Kit
+ * (`drizzle.config.ts`) uses `DIRECT_DATABASE_URL` for migrate/push/studio.
  */
 const envSchema = z.object({
   DATABASE_URL: z.string().optional(),
+  /**
+   * Direct Postgres or Session Pooler (`:5432`) URL for Drizzle Kit
+   * migrations. Not read by the app runtime — only by `drizzle.config.ts`.
+   * Optional here so importing `@/env` in the Next.js process never requires it.
+   */
+  DIRECT_DATABASE_URL: z.string().optional(),
   DB_DRIVER: z.enum(["pglite", "postgres"]).default("pglite"),
   /**
    * better-auth encryption/signing secret. Optional at the schema level so
@@ -54,6 +61,7 @@ const envSchema = z.object({
 
 export const env = envSchema.parse({
   DATABASE_URL: process.env.DATABASE_URL,
+  DIRECT_DATABASE_URL: process.env.DIRECT_DATABASE_URL,
   DB_DRIVER: process.env.DB_DRIVER,
   BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
   BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,

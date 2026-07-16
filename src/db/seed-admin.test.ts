@@ -24,7 +24,7 @@ describe("seedAdmin (PGlite)", () => {
     await handle.client.close();
   });
 
-  it("creates the admin user with role admin when it doesn't exist", async () => {
+  it("creates the admin user with role superadmin when it doesn't exist", async () => {
     const result = await seedAdmin(handle.db, {
       email: "admin-create@konsorcio.local",
       password: "correct-horse-battery-staple",
@@ -38,7 +38,10 @@ describe("seedAdmin (PGlite)", () => {
       .where(eq(schema.user.email, "admin-create@konsorcio.local"));
 
     expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({ email: "admin-create@konsorcio.local", role: "admin" });
+    expect(rows[0]).toMatchObject({
+      email: "admin-create@konsorcio.local",
+      role: "superadmin",
+    });
   });
 
   it("allows signing in with the seeded credentials, proving the password hash is correct", async () => {
@@ -84,7 +87,7 @@ describe("seedAdmin (PGlite)", () => {
     // Still exactly one user row (no duplicate created on re-run).
     const rows = await handle.db.select().from(schema.user).where(eq(schema.user.email, email));
     expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({ role: "admin" });
+    expect(rows[0]).toMatchObject({ role: "superadmin" });
   });
 
   it("rejects public sign-up because disableSignUp is enabled", async () => {

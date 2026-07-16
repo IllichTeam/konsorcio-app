@@ -9,36 +9,36 @@ import {
 import { queryKeys } from "@/lib/api/query-keys";
 import type { TenantEmail } from "@/types/tenant-email";
 
-export function useTenantEmails(consorcioId: string) {
+export function useTenantEmails(consortiumId: string) {
   return useQuery({
-    queryKey: queryKeys.tenantEmails.byConsorcio(consorcioId),
-    queryFn: () => getTenantEmails(consorcioId),
-    enabled: Boolean(consorcioId),
+    queryKey: queryKeys.tenantEmails.byConsortium(consortiumId),
+    queryFn: () => getTenantEmails(consortiumId),
+    enabled: Boolean(consortiumId),
   });
 }
 
-export function useCreateTenantEmail(consorcioId: string) {
+export function useCreateTenantEmail(consortiumId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: createTenantEmail,
     onSuccess: (data) => {
       queryClient.setQueryData(
-        queryKeys.tenantEmails.byConsorcio(consorcioId),
+        queryKeys.tenantEmails.byConsortium(consortiumId),
         (current: TenantEmail[] | undefined) => [...(current ?? []), data],
       );
     },
   });
 }
 
-export function useUpdateTenantEmail(consorcioId: string) {
+export function useUpdateTenantEmail(consortiumId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: updateTenantEmail,
     onSuccess: (data) => {
       queryClient.setQueryData(
-        queryKeys.tenantEmails.byConsorcio(consorcioId),
+        queryKeys.tenantEmails.byConsortium(consortiumId),
         (current: TenantEmail[] | undefined) =>
           (current ?? []).map((item) => (item.id === data.id ? data : item)),
       );
@@ -46,14 +46,14 @@ export function useUpdateTenantEmail(consorcioId: string) {
   });
 }
 
-export function useDeleteTenantEmail(consorcioId: string) {
+export function useDeleteTenantEmail(consortiumId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => deleteTenantEmail(consorcioId, id),
+    mutationFn: (id: string) => deleteTenantEmail(consortiumId, id),
     onSuccess: (_data, id) => {
       queryClient.setQueryData(
-        queryKeys.tenantEmails.byConsorcio(consorcioId),
+        queryKeys.tenantEmails.byConsortium(consortiumId),
         (current: TenantEmail[] | undefined) => (current ?? []).filter((item) => item.id !== id),
       );
     },

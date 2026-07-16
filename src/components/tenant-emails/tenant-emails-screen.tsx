@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { ArrowLeft, Mail, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { useConsorcio } from "@/hooks/use-consorcios";
+import { useConsortium } from "@/hooks/use-consortiums";
 import { useDeleteTenantEmail, useTenantEmails } from "@/hooks/use-tenant-emails";
 import { formatFunctionalUnit } from "@/lib/tenant-email/format-unit";
 import { ContactTypeBadge, UnitBadge } from "@/components/tenant-emails/tenant-email-badges";
@@ -33,21 +33,21 @@ import {
 import type { TenantEmail } from "@/types/tenant-email";
 
 type TenantEmailsScreenProps = {
-  consorcioId: string;
+  consortiumId: string;
 };
 
-export function TenantEmailsScreen({ consorcioId }: TenantEmailsScreenProps) {
+export function TenantEmailsScreen({ consortiumId }: TenantEmailsScreenProps) {
   const {
-    data: consorcio,
-    isLoading: isConsorcioLoading,
-    isError: isConsorcioError,
-  } = useConsorcio(consorcioId);
+    data: consortium,
+    isLoading: isConsortiumLoading,
+    isError: isConsortiumError,
+  } = useConsortium(consortiumId);
   const {
     data: tenantEmails = [],
     isLoading: isEmailsLoading,
     isError: isEmailsError,
-  } = useTenantEmails(consorcioId);
-  const deleteTenantEmail = useDeleteTenantEmail(consorcioId);
+  } = useTenantEmails(consortiumId);
+  const deleteTenantEmail = useDeleteTenantEmail(consortiumId);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [formDialogOpen, setFormDialogOpen] = useState(false);
@@ -97,17 +97,17 @@ export function TenantEmailsScreen({ consorcioId }: TenantEmailsScreenProps) {
     }
   }
 
-  if (isConsorcioLoading || isEmailsLoading) {
+  if (isConsortiumLoading || isEmailsLoading) {
     return <TenantEmailsSkeleton />;
   }
 
-  if (isConsorcioError || isEmailsError || !consorcio) {
+  if (isConsortiumError || isEmailsError || !consortium) {
     return (
       <div className="w-full space-y-4">
         <Button
           variant="ghost"
           size="sm"
-          render={<Link href={`/consorcios/${consorcioId}`} />}
+          render={<Link href={`/consorcios/${consortiumId}`} />}
           className="-ml-2"
         >
           <ArrowLeft className="size-4" aria-hidden="true" />
@@ -123,7 +123,7 @@ export function TenantEmailsScreen({ consorcioId }: TenantEmailsScreenProps) {
       <Button
         variant="ghost"
         size="sm"
-        render={<Link href={`/consorcios/${consorcioId}`} />}
+        render={<Link href={`/consorcios/${consortiumId}`} />}
         className="-ml-2 w-fit text-muted-foreground"
       >
         <ArrowLeft className="size-4" aria-hidden="true" />
@@ -132,7 +132,7 @@ export function TenantEmailsScreen({ consorcioId }: TenantEmailsScreenProps) {
 
       <div className="mt-4 space-y-1">
         <h1 className="text-xl font-semibold tracking-tight text-balance text-foreground">
-          Emails de inquilinos · {consorcio.name}
+          Emails de inquilinos · {consortium.name}
         </h1>
         <p className="text-sm text-muted-foreground">
           Cada email pertenece a una unidad funcional (piso, departamento y letra).
@@ -234,7 +234,7 @@ export function TenantEmailsScreen({ consorcioId }: TenantEmailsScreenProps) {
       <TenantEmailFormDialog
         open={formDialogOpen}
         onOpenChange={handleFormDialogChange}
-        consorcioId={consorcioId}
+        consortiumId={consortiumId}
         editingEntry={editingEntry}
       />
 

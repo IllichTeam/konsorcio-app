@@ -39,7 +39,7 @@ const { createTRPCContext } = await import("@/server/trpc/context");
 
 const createCaller = createCallerFactory(appRouter);
 
-function fakeSession(role: "admin" | "user"): Session {
+function fakeSession(role: "superadmin" | "admin" | "tenant"): Session {
   return {
     user: {
       id: `user-${role}`,
@@ -53,7 +53,7 @@ function fakeSession(role: "admin" | "user"): Session {
   } as unknown as Session;
 }
 
-async function callerFor(role: "admin" | "user" | null) {
+async function callerFor(role: "superadmin" | "admin" | "tenant" | null) {
   vi.mocked(getSession).mockResolvedValueOnce(role ? fakeSession(role) : null);
   return createCaller(await createTRPCContext());
 }
@@ -87,8 +87,8 @@ describe("emails tRPC router", () => {
       expect(listRecipients).not.toHaveBeenCalled();
     });
 
-    it("rejects when the session user is not an admin", async () => {
-      const caller = await callerFor("user");
+    it("rejects when the session user is not a superadmin", async () => {
+      const caller = await callerFor("admin");
 
       await expect(caller.emails.recipients()).rejects.toMatchObject({
         code: "FORBIDDEN",
@@ -97,9 +97,9 @@ describe("emails tRPC router", () => {
       expect(listRecipients).not.toHaveBeenCalled();
     });
 
-    it("returns recipients for an admin session", async () => {
+    it("returns recipients for a superadmin session", async () => {
       vi.mocked(listRecipients).mockResolvedValueOnce(sampleRecipients);
-      const caller = await callerFor("admin");
+      const caller = await callerFor("superadmin");
 
       await expect(caller.emails.recipients()).resolves.toEqual(sampleRecipients);
     });
@@ -114,7 +114,7 @@ describe("emails tRPC router", () => {
       });
     });
 
-    it("returns serialized email logs for an admin", async () => {
+    it("returns serialized email logs for a superadmin", async () => {
       const createdAt = new Date("2026-01-15T12:00:00.000Z");
       selectOrderByLimitMock.mockResolvedValueOnce([
         {
@@ -126,11 +126,11 @@ describe("emails tRPC router", () => {
           status: "sent",
           resendIds: ["resend-1"],
           error: null,
-          sentByUserId: "user-admin",
+          sentByUserId: "user-superadmin",
           createdAt,
         },
       ]);
-      const caller = await callerFor("admin");
+      const caller = await callerFor("superadmin");
 
       await expect(caller.emails.history()).resolves.toEqual([
         {
@@ -142,7 +142,7 @@ describe("emails tRPC router", () => {
           status: "sent",
           resendIds: ["resend-1"],
           error: null,
-          sentByUserId: "user-admin",
+          sentByUserId: "user-superadmin",
           createdAt: createdAt.toISOString(),
         },
       ]);
@@ -159,8 +159,8 @@ describe("emails tRPC router", () => {
       expect(sendEmail).not.toHaveBeenCalled();
     });
 
-    it("rejects when the session user is not an admin", async () => {
-      const caller = await callerFor("user");
+    it("rejects when the session user is not a superadmin", async () => {
+      const caller = await callerFor("admin");
 
       await expect(caller.emails.send(validInput)).rejects.toMatchObject({
         code: "FORBIDDEN",
@@ -169,7 +169,7 @@ describe("emails tRPC router", () => {
     });
 
     it("rejects when subject is missing", async () => {
-      const caller = await callerFor("admin");
+      const caller = await callerFor("superadmin");
 
       await expect(caller.emails.send({ ...validInput, subject: "" })).rejects.toMatchObject({
         code: "BAD_REQUEST",
@@ -178,7 +178,7 @@ describe("emails tRPC router", () => {
     });
 
     it("rejects when recipients is empty", async () => {
-      const caller = await callerFor("admin");
+      const caller = await callerFor("superadmin");
 
       await expect(caller.emails.send({ ...validInput, recipients: [] })).rejects.toMatchObject({
         code: "BAD_REQUEST",
@@ -187,7 +187,7 @@ describe("emails tRPC router", () => {
     });
 
     it("rejects when a recipient email is invalid", async () => {
-      const caller = await callerFor("admin");
+      const caller = await callerFor("superadmin");
 
       await expect(
         caller.emails.send({
@@ -200,7 +200,7 @@ describe("emails tRPC router", () => {
       expect(sendEmail).not.toHaveBeenCalled();
     });
 
-    it("sends the email and logs it for an admin session", async () => {
+    it("sends the email and logs it for a superadmin session", async () => {
       const result: SendEmailResult = {
         status: "sent",
         sent: 1,
@@ -208,7 +208,7 @@ describe("emails tRPC router", () => {
         resendIds: ["resend-1"],
       };
       vi.mocked(sendEmail).mockResolvedValueOnce(result);
-      const caller = await callerFor("admin");
+      const caller = await callerFor("superadmin");
 
       await expect(caller.emails.send(validInput)).resolves.toEqual({
         status: "sent",
@@ -226,7 +226,7 @@ describe("emails tRPC router", () => {
           status: "sent",
           resendIds: ["resend-1"],
           error: null,
-          sentByUserId: "user-admin",
+          sentByUserId: "user-superadmin",
         }),
       );
     });
@@ -240,7 +240,7 @@ describe("emails tRPC router", () => {
         error: "Resend error",
       };
       vi.mocked(sendEmail).mockResolvedValueOnce(result);
-      const caller = await callerFor("admin");
+      const caller = await callerFor("superadmin");
 
       await expect(caller.emails.send(validInput)).rejects.toMatchObject({
         code: "BAD_GATEWAY",
@@ -257,7 +257,7 @@ describe("emails tRPC router", () => {
       };
       vi.mocked(sendEmail).mockResolvedValueOnce(result);
       insertValuesMock.mockRejectedValueOnce(new Error("db down"));
-      const caller = await callerFor("admin");
+      const caller = await callerFor("superadmin");
 
       await expect(caller.emails.send(validInput)).resolves.toEqual({
         status: "sent",

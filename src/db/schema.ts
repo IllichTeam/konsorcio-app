@@ -1,5 +1,14 @@
 import { sql } from "drizzle-orm";
-import { integer, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  index,
+  integer,
+  jsonb,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from "drizzle-orm/pg-core";
 
 import type { Recipient } from "@/lib/schemas/email";
 
@@ -16,29 +25,38 @@ import { user } from "./auth-schema";
 export * from "./auth-schema";
 
 /**
- * Consorcios - top-level entity representing a "consorcio" managed in the
- * app. Bootstrap table for the domain schema.
- *
- * Add further domain tables below this one, in their own exported
- * `pgTable(...)` blocks, following this same style (uuid surrogate PK,
- * snake_case columns, `createdAt`/`updatedAt` timestamps).
+ * Consortiums — top-level entity owned by an authenticated user (`ownerId`).
+ * Soft-deleted rows keep `isDeleted = true` and are excluded from list/detail.
  */
-export const consorcios = pgTable("consorcios", {
-  id: uuid("id")
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  nombre: text("nombre").notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+export const consortiums = pgTable(
+  "consortiums",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    name: text("name").notNull(),
+    location: text("location").notNull(),
+    paymentAlias: text("payment_alias").notNull(),
+    billingEmail: text("billing_email").notNull(),
+    driveLink: text("drive_link").notNull(),
+    amount: integer("amount").notNull().default(0),
+    ownerId: text("owner_id")
+      .notNull()
+      .references(() => user.id),
+    isDeleted: boolean("is_deleted").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("consortiums_owner_id_idx").on(table.ownerId)],
+);
 
-export type Consorcio = typeof consorcios.$inferSelect;
-export type NuevoConsorcio = typeof consorcios.$inferInsert;
+export type ConsortiumRow = typeof consortiums.$inferSelect;
+export type NewConsortium = typeof consortiums.$inferInsert;
 
 // --- Domain tables ---
-// Add new domain tables (e.g. unidades, propietarios, gastos) below, each
+// Add new domain tables (e.g. units, owners, expenses) below, each
 // as its own exported `pgTable(...)` with its inferred `$inferSelect` /
-// `$inferInsert` types, following the `consorcios` table above as the
+// `$inferInsert` types, following the `consortiums` table above as the
 // reference pattern.
 
 /**

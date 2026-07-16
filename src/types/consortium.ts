@@ -1,40 +1,23 @@
-export type Consorcio = {
+export type Consortium = {
   id: string;
   name: string;
   location: string;
 };
 
-export type ConsorcioDetail = Consorcio & {
+export type ConsortiumDetail = Consortium & {
   amount: number;
   paymentAlias: string;
   billingEmail: string;
   driveLink: string;
 };
 
-export type ConsorcioHistoryEntry = {
+export type ConsortiumHistoryEntry = {
   id: number;
   timestamp: string;
   description: string;
 };
 
-export type CreateConsorcioCommentInput = {
-  consorcioId: string;
+export type CreateConsortiumCommentInput = {
+  consortiumId: string;
   message: string;
-};
-
-export type CreateConsorcioInput = {
-  name: string;
-  location: string;
-  paymentAlias: string;
-  billingEmail: string;
-  driveLink: string;
-};
-
-export type UpdateConsorcioInput = CreateConsorcioInput & {
-  id: string;
-};
-
-export type UpdateConsorcioAmountInput = {
-  consorcioId: string;
-  amount: number;
 };

@@ -11,12 +11,12 @@ import { z } from "@/lib/zod";
 import { defaultAuthenticatedPath } from "@/lib/navigation/dashboard-nav";
 
 import {
-  useConsorcio,
-  useConsorcioHistory,
-  useUpdateConsorcioAmount,
-} from "@/hooks/use-consorcios";
+  useConsortium,
+  useConsortiumHistory,
+  useUpdateConsortiumAmount,
+} from "@/hooks/use-consortiums";
 import { FormInput } from "@/components/form/form-input";
-import { ConsorcioFormDialog } from "@/components/consorcios/consorcio-form-dialog";
+import { ConsortiumFormDialog } from "@/components/consortiums/consortium-form-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -51,14 +51,14 @@ const amountSchema = z.object({
 
 type AmountValues = z.infer<typeof amountSchema>;
 
-type ConsorcioDetailProps = {
-  consorcioId: string;
+type ConsortiumDetailProps = {
+  consortiumId: string;
 };
 
-export function ConsorcioDetail({ consorcioId }: ConsorcioDetailProps) {
-  const { data: consorcio, isLoading, isError } = useConsorcio(consorcioId);
-  const { data: history = [], isLoading: isHistoryLoading } = useConsorcioHistory(consorcioId);
-  const updateAmount = useUpdateConsorcioAmount();
+export function ConsortiumDetail({ consortiumId }: ConsortiumDetailProps) {
+  const { data: consortium, isLoading, isError } = useConsortium(consortiumId);
+  const { data: history = [], isLoading: isHistoryLoading } = useConsortiumHistory(consortiumId);
+  const updateAmount = useUpdateConsortiumAmount();
   const [editOpen, setEditOpen] = useState(false);
   const [formDialogOpen, setFormDialogOpen] = useState(false);
 
@@ -69,7 +69,10 @@ export function ConsorcioDetail({ consorcioId }: ConsorcioDetailProps) {
 
   async function onSubmitAmount(values: AmountValues) {
     try {
-      await updateAmount.mutateAsync({ consorcioId, amount: Number(values.amount) });
+      await updateAmount.mutateAsync({
+        id: consortiumId,
+        amount: Math.trunc(Number(values.amount)),
+      });
       toast.success("Monto actualizado");
       setEditOpen(false);
     } catch {
@@ -78,10 +81,10 @@ export function ConsorcioDetail({ consorcioId }: ConsorcioDetailProps) {
   }
 
   if (isLoading) {
-    return <ConsorcioDetailSkeleton />;
+    return <ConsortiumDetailSkeleton />;
   }
 
-  if (isError || !consorcio) {
+  if (isError || !consortium) {
     return (
       <div className="w-full space-y-4">
         <Button
@@ -112,17 +115,17 @@ export function ConsorcioDetail({ consorcioId }: ConsorcioDetailProps) {
 
       <div className="mt-4 space-y-2">
         <h1 className="text-xl font-semibold tracking-tight text-balance text-foreground">
-          {consorcio.name}
+          {consortium.name}
         </h1>
         <p className="text-3xl font-bold tracking-tight text-foreground">
-          {currencyFormatter.format(consorcio.amount)}
+          {currencyFormatter.format(consortium.amount)}
         </p>
         <Button
           variant="outline"
           size="sm"
           className="mt-2 w-fit"
           onClick={() => {
-            reset({ amount: String(consorcio.amount) });
+            reset({ amount: String(consortium.amount) });
             setEditOpen(true);
           }}
         >
@@ -136,7 +139,7 @@ export function ConsorcioDetail({ consorcioId }: ConsorcioDetailProps) {
           <Button
             variant="outline"
             className="w-fit"
-            render={<Link href={`/consorcios/${consorcioId}/emails-inquilinos`} />}
+            render={<Link href={`/consorcios/${consortiumId}/emails-inquilinos`} />}
           >
             <Mail className="size-4" aria-hidden="true" />
             Emails de inquilinos
@@ -151,22 +154,22 @@ export function ConsorcioDetail({ consorcioId }: ConsorcioDetailProps) {
       <dl className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-3">
         <div className="space-y-1">
           <dt className="text-base font-bold text-foreground">Alias de cobro</dt>
-          <dd className="text-sm text-foreground">{consorcio.paymentAlias}</dd>
+          <dd className="text-sm text-foreground">{consortium.paymentAlias}</dd>
         </div>
         <div className="space-y-1">
           <dt className="text-base font-bold text-foreground">Email</dt>
-          <dd className="text-sm text-foreground">{consorcio.billingEmail}</dd>
+          <dd className="text-sm text-foreground">{consortium.billingEmail}</dd>
         </div>
         <div className="space-y-1">
           <dt className="text-base font-bold text-foreground">Link del drive</dt>
           <dd className="text-sm text-foreground">
             <a
-              href={consorcio.driveLink}
+              href={consortium.driveLink}
               target="_blank"
               rel="noopener noreferrer"
               className="break-all text-primary hover:underline"
             >
-              {consorcio.driveLink}
+              {consortium.driveLink}
             </a>
           </dd>
         </div>
@@ -200,10 +203,10 @@ export function ConsorcioDetail({ consorcioId }: ConsorcioDetailProps) {
         )}
       </div>
 
-      <ConsorcioFormDialog
+      <ConsortiumFormDialog
         open={formDialogOpen}
         onOpenChange={setFormDialogOpen}
-        consorcioId={consorcioId}
+        consortiumId={consortiumId}
       />
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
@@ -235,7 +238,7 @@ export function ConsorcioDetail({ consorcioId }: ConsorcioDetailProps) {
   );
 }
 
-function ConsorcioDetailSkeleton() {
+function ConsortiumDetailSkeleton() {
   return (
     <div className="w-full space-y-4">
       <Skeleton className="h-8 w-40" />
