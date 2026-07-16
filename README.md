@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Konsorcio
 
-## Getting Started
+Next.js app for consortium management. Local development uses **PGlite**;
+production uses **Supabase Postgres** on Vercel.
 
-First, run the development server:
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+cp .env.example .env   # fill BETTER_AUTH_SECRET at minimum for auth
+pnpm db:migrate        # applies drizzle/ to local .pglite (default DB_DRIVER)
+pnpm db:seed           # optional — needs ADMIN_EMAIL / ADMIN_PASSWORD
+pnpm dev               # http://localhost:3200
 ```
 
-Open [http://localhost:3200](http://localhost:3200) with your browser to see the result.
+## Database
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Script                 | Purpose                                                                                    |
+| ---------------------- | ------------------------------------------------------------------------------------------ |
+| `pnpm db:generate`     | Emit SQL under `drizzle/` from `src/db/schema.ts`                                          |
+| `pnpm db:migrate`      | Apply pending migrations (PGlite locally; `DIRECT_DATABASE_URL` when `DB_DRIVER=postgres`) |
+| `pnpm db:push`         | Schema push — **local / prototype only**, never production                                 |
+| `pnpm db:seed`         | Idempotent admin user                                                                      |
+| `pnpm db:studio`       | Drizzle Studio                                                                             |
+| `pnpm db:migrate:prod` | Migrate against Supabase (loads `.env` then `.env.supabase`)                               |
+| `pnpm db:seed:prod`    | Seed admin against Supabase                                                                |
+| `pnpm db:studio:prod`  | Studio against Supabase                                                                    |
+| `pnpm dev:prod`        | `next dev` against Supabase (smoke connection before deploy)                               |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**Smoke local → Supabase before deploy:**
 
-## Learn More
+```bash
+cp .env.supabase.example .env.supabase   # paste DB password into both URLs
+pnpm db:migrate:prod
+pnpm db:seed:prod                        # if admin not provisioned yet
+pnpm dev:prod                            # http://localhost:3200
+```
 
-To learn more about Next.js, take a look at the following resources:
+Keep day-to-day `.env` on `DB_DRIVER=pglite`. Do **not** put production URLs in
+`.env` — a set `DATABASE_URL` can switch the runtime to Postgres even when
+`DB_DRIVER=pglite`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**Production migrations are manual.** Do not run them in `next build` or from
+Preview deploys.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Typical production schema change:
 
-## Deploy on Vercel
+1. Edit `src/db/schema.ts` → `pnpm db:generate` → review and commit `drizzle/`.
+2. Apply: `pnpm dlx vercel@latest env run -e production -- pnpm db:migrate`
+   (requires `DB_DRIVER=postgres` and `DIRECT_DATABASE_URL` in Vercel Production).
+3. Deploy the app that depends on the new schema.
+4. For breaking renames/drops, use expand/contract (see runbook).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Connection split (production):**
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `DATABASE_URL` — Transaction Pooler (`:6543`) for the running app (and Preview).
+- `DIRECT_DATABASE_URL` — Direct or Session Pooler (`:5432`) for Drizzle Kit only.
+
+Full operator checklist, bootstrap-from-empty, backup/restore, and provider
+switch: **[docs/database-operations.md](docs/database-operations.md)**.
+
+## Scripts
+
+```bash
+pnpm dev
+pnpm dev:prod
+pnpm build
+pnpm start
+pnpm lint
+pnpm test
+pnpm format
+```
