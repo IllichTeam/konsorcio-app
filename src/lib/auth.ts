@@ -9,6 +9,20 @@ import { ac, authRoles } from "@/lib/auth/permissions";
 import { ROLES } from "@/lib/auth/roles";
 import { sendOtpEmail } from "@/lib/email/send-otp-email";
 
+function getTrustedOrigins(): string[] {
+  const origins = [
+    "http://localhost:*",
+    "http://127.0.0.1:*",
+    env.BETTER_AUTH_URL.replace(/\/$/, ""),
+  ];
+
+  if (process.env.VERCEL_URL) {
+    origins.push(`https://${process.env.VERCEL_URL}`);
+  }
+
+  return [...new Set(origins)];
+}
+
 /**
  * Builds a better-auth instance backed by the given Drizzle database.
  *
@@ -31,8 +45,7 @@ export function createAuth(database: Parameters<typeof drizzleAdapter>[0] = db) 
       // any other user are created by a superadmin via the `admin` plugin.
       disableSignUp: true,
     },
-    // Keep CSRF origin checks working across local ports (dev default is 3200).
-    trustedOrigins: ["http://localhost:*", "http://127.0.0.1:*"],
+    trustedOrigins: getTrustedOrigins(),
     rateLimit: {
       customRules: {
         "/email-otp/request-password-reset": { window: 60, max: 1 },
