@@ -16,7 +16,9 @@ export default async function DashboardLayout({
   const session = await getSession();
 
   if (!session) {
-    redirect("/");
+    // Cookie mutation is not allowed in layouts — clear via Route Handler
+    // so the proxy stops treating a stale cookie as authenticated.
+    redirect("/api/session/clear");
   }
 
   return <DashboardShell user={session.user}>{children}</DashboardShell>;
