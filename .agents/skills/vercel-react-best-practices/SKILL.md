@@ -148,4 +148,6 @@ Each rule file contains:
 
 ## Full Compiled Document
 
-For the complete guide with all rules expanded: `AGENTS.md`
+For the complete guide with all rules expanded: `REFERENCE.md`
+
+(Named `REFERENCE.md` on purpose — Cursor auto-injects any `AGENTS.md` in the repo as an always-on rule. Do not rename this file back to `AGENTS.md`.)
