@@ -17,15 +17,16 @@ For day-to-day product docs, see the root [README](../README.md).
 
 ### Environment variables
 
-| Variable                         | Who reads it      | Purpose                                                                                               |
-| -------------------------------- | ----------------- | ----------------------------------------------------------------------------------------------------- |
-| `DB_DRIVER`                      | App + Drizzle Kit | `pglite` (local) or `postgres` (hosted)                                                               |
-| `DATABASE_URL`                   | App runtime       | Transaction-mode pooler (`:6543` on Supabase). Serverless client uses `prepare: false` and `max: 1`   |
-| `DIRECT_DATABASE_URL`            | Drizzle Kit only  | Direct Postgres or session-mode pooler (`:5432`). Used by `pnpm db:migrate` / `db:push` / `db:studio` |
-| `BETTER_AUTH_SECRET`             | App               | Session signing (≥ 32 chars)                                                                          |
-| `BETTER_AUTH_URL`                | App               | Canonical public URL                                                                                  |
-| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | `pnpm db:seed`    | Idempotent first admin                                                                                |
-| `RESEND_API_KEY` / `EMAIL_FROM`  | App               | Transactional email                                                                                   |
+| Variable                         | Who reads it          | Purpose                                                                                               |
+| -------------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------- |
+| `DB_DRIVER`                      | App + Drizzle Kit     | `pglite` (local) or `postgres` (hosted)                                                               |
+| `DATABASE_URL`                   | App runtime           | Transaction-mode pooler (`:6543` on Supabase). Serverless client uses `prepare: false` and `max: 1`   |
+| `DIRECT_DATABASE_URL`            | Drizzle Kit only      | Direct Postgres or session-mode pooler (`:5432`). Used by `pnpm db:migrate` / `db:push` / `db:studio` |
+| `BETTER_AUTH_SECRET`             | App                   | Session signing (≥ 32 chars)                                                                          |
+| `BETTER_AUTH_URL`                | App                   | Canonical public URL                                                                                  |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | `pnpm db:seed`        | Idempotent first admin                                                                                |
+| (CLI flags)                      | `pnpm db:create-user` | Additional users: `--email` / `--password` / optional `--name` / `--role`                             |
+| `RESEND_API_KEY` / `EMAIL_FROM`  | App                   | Transactional email                                                                                   |
 
 Never commit real secrets. Copy from [`.env.example`](../.env.example).
 
@@ -109,6 +110,26 @@ ADMIN_EMAIL='admin@example.com' \
 ADMIN_PASSWORD='...' \
 pnpm db:seed
 ```
+
+`db:seed` only bootstraps / resets the permanent **superadmin** (`ADMIN_EMAIL` /
+`ADMIN_PASSWORD`). It does not create arbitrary accounts.
+
+### 4b. Create additional users (CLI)
+
+Public self sign-up is disabled. To provision another email/password user:
+
+```bash
+# Local (PGlite / .env)
+pnpm db:create-user -- --email u@example.com --password 'secreto123' --role admin
+
+# Production (.env + .env.supabase)
+pnpm db:create-user:prod -- --email u@example.com --password 'secreto123' --role tenant
+```
+
+Optional flags: `--name`, `--role` (`admin` | `tenant` | `superadmin`; default
+`admin`). Password min length is 8. If the email already exists the command
+prints `NO OK …` and exits `1` (it does **not** reset the password). Success
+prints `OK userId=… email=… role=… created=true` and exits `0`.
 
 ### 5. Smoke checks after migrate / deploy
 
