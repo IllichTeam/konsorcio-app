@@ -14,6 +14,10 @@ export const sendEmailInputSchema = z.object({
   subject: z.string().min(1, "El asunto es obligatorio"),
   body: z.string().min(1, "El mensaje es obligatorio"),
   recipients: z.array(recipientSchema).min(1, "Selecciona al menos un destinatario"),
+  /** Building / consortium name shown in the email body. */
+  consortium: z.string().min(1).optional(),
+  /** Sign-off line (e.g. "Administración Edificio Rivadavia"). */
+  sender: z.string().min(1).optional(),
 });
 
 /** Public send outcome returned to the client (excludes provider ids). */
