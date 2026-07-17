@@ -21,9 +21,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 const consortiumFormSchema = z.object({
   name: z.string().min(1, "El nombre es obligatorio"),
   location: z.string().min(1, "La ubicación es obligatoria"),
-  paymentAlias: z.string().min(1, "El alias de cobro es obligatorio"),
-  email: z.email("Correo inválido"),
-  driveLink: z.string().min(1, "El link de drive es obligatorio"),
+  paymentAlias: z.string(),
+  email: z.union([z.email("Correo inválido"), z.literal("")]),
+  driveLink: z.string(),
 });
 
 type ConsortiumFormValues = z.infer<typeof consortiumFormSchema>;
@@ -68,9 +68,9 @@ export function ConsortiumFormDialog({
       reset({
         name: consortium.name,
         location: consortium.location,
-        paymentAlias: consortium.paymentAlias,
-        email: consortium.billingEmail,
-        driveLink: consortium.driveLink,
+        paymentAlias: consortium.paymentAlias ?? "",
+        email: consortium.billingEmail ?? "",
+        driveLink: consortium.driveLink ?? "",
       });
       return;
     }
@@ -92,9 +92,9 @@ export function ConsortiumFormDialog({
     const payload = {
       name: values.name,
       location: values.location,
-      paymentAlias: values.paymentAlias,
-      billingEmail: values.email,
-      driveLink: values.driveLink,
+      paymentAlias: values.paymentAlias.trim() === "" ? null : values.paymentAlias,
+      billingEmail: values.email.trim() === "" ? null : values.email,
+      driveLink: values.driveLink.trim() === "" ? null : values.driveLink,
     };
 
     try {

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { createConsortiumComment, getConsortiumHistory } from "@/lib/api/consortiums";
+import { getConsortiumHistory } from "@/lib/api/consortiums";
 import { queryKeys } from "@/lib/api/query-keys";
 import { useTRPC } from "@/lib/trpc/client";
 
@@ -28,16 +28,9 @@ export function useConsortiumHistory(id: string) {
 }
 
 export function useCreateConsortiumComment() {
-  const queryClient = useQueryClient();
+  const trpc = useTRPC();
 
-  return useMutation({
-    mutationFn: createConsortiumComment,
-    onSuccess: (_data, variables) => {
-      void queryClient.invalidateQueries({
-        queryKey: queryKeys.consortiums.history(variables.consortiumId),
-      });
-    },
-  });
+  return useMutation(trpc.consortiums.sendComment.mutationOptions());
 }
 
 export function useCreateConsortium() {

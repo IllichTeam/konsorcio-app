@@ -6,18 +6,13 @@ export type Consortium = {
 
 export type ConsortiumDetail = Consortium & {
   amount: number;
-  paymentAlias: string;
-  billingEmail: string;
-  driveLink: string;
+  paymentAlias: string | null;
+  billingEmail: string | null;
+  driveLink: string | null;
 };
 
 export type ConsortiumHistoryEntry = {
   id: number;
   timestamp: string;
   description: string;
-};
-
-export type CreateConsortiumCommentInput = {
-  consortiumId: string;
-  message: string;
 };

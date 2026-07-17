@@ -10,6 +10,15 @@ vi.mock("@/lib/auth/session", () => ({
   getSession: vi.fn(),
 }));
 
+// appRouter pulls emails + consortiums routers that import `server-only` modules.
+vi.mock("@/lib/email/send", () => ({
+  sendEmail: vi.fn(),
+}));
+
+vi.mock("@/lib/email/recipients", () => ({
+  listRecipients: vi.fn(),
+}));
+
 vi.mock("@/db", () => ({
   db: new Proxy(
     {},
@@ -26,6 +35,7 @@ vi.mock("@/db", () => ({
 }));
 
 const { getSession } = await import("@/lib/auth/session");
+const { sendEmail } = await import("@/lib/email/send");
 const { createCallerFactory } = await import("@/server/trpc/init");
 const { appRouter } = await import("@/server/trpc/routers/_app");
 const { createTRPCContext } = await import("@/server/trpc/context");
@@ -199,5 +209,54 @@ describe("consortiums tRPC router", () => {
     });
 
     expect(updated.amount).toBe(150_000);
+  });
+
+  it("creates a consortium with nullable alias/email/drive", async () => {
+    await insertUser("user-admin", ROLES.admin);
+    const caller = await callerFor("admin", "user-admin");
+
+    const created = await caller.consortiums.create({
+      name: "Sin extras",
+      location: "CABA",
+      paymentAlias: null,
+      billingEmail: null,
+      driveLink: null,
+    });
+
+    expect(created).toMatchObject({
+      name: "Sin extras",
+      paymentAlias: null,
+      billingEmail: null,
+      driveLink: null,
+    });
+  });
+
+  it("sendComment emails via NotificacionConsorcio pipeline", async () => {
+    await insertUser("user-admin", ROLES.admin);
+    const ownerCaller = await callerFor("admin", "user-admin");
+    const created = await ownerCaller.consortiums.create(sampleInput);
+
+    vi.mocked(sendEmail).mockResolvedValueOnce({
+      status: "sent",
+      sent: 1,
+      failed: 0,
+      resendIds: ["re_test"],
+    });
+
+    const commentCaller = await callerFor("admin", "user-admin");
+    await expect(
+      commentCaller.consortiums.sendComment({
+        id: created.id,
+        message: "Hola vecinos",
+      }),
+    ).resolves.toBeUndefined();
+
+    expect(sendEmail).toHaveBeenCalledWith({
+      subject: `Comentario — ${created.name}`,
+      body: "Hola vecinos",
+      recipients: [{ email: sampleInput.billingEmail, name: "Vecino/a" }],
+      consortium: created.name,
+      sender: "Administración",
+    });
   });
 });

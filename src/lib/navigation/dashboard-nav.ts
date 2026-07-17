@@ -16,7 +16,8 @@ function slugify(label: string): string {
     .replace(/\s+/g, "-");
 }
 
-export const dashboardNavGroups: DashboardNavGroup[] = [
+/** Full nav — used for auth path protection even when demo mode hides items. */
+const allDashboardNavGroups: DashboardNavGroup[] = [
   {
     label: "Dashboard",
     children: [
@@ -39,7 +40,19 @@ export const dashboardNavGroups: DashboardNavGroup[] = [
   },
 ];
 
-export const dashboardNavHrefs = dashboardNavGroups.flatMap((group) =>
+const demoDashboardNavGroups: DashboardNavGroup[] = [
+  {
+    label: "Dashboard",
+    children: [{ label: "Consorcios", href: "/consorcios" }],
+  },
+];
+
+/** Visible sidebar groups — filtered when `NEXT_PUBLIC_DEMO_MODE=true`. */
+export const dashboardNavGroups: DashboardNavGroup[] =
+  process.env.NEXT_PUBLIC_DEMO_MODE === "true" ? demoDashboardNavGroups : allDashboardNavGroups;
+
+/** All dashboard hrefs (never filtered) — proxy auth must protect every route. */
+export const dashboardNavHrefs = allDashboardNavGroups.flatMap((group) =>
   group.children.map((child) => child.href),
 );
 

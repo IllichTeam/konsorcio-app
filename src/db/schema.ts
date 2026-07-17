@@ -36,9 +36,9 @@ export const consortiums = pgTable(
       .default(sql`gen_random_uuid()`),
     name: text("name").notNull(),
     location: text("location").notNull(),
-    paymentAlias: text("payment_alias").notNull(),
-    billingEmail: text("billing_email").notNull(),
-    driveLink: text("drive_link").notNull(),
+    paymentAlias: text("payment_alias"),
+    billingEmail: text("billing_email"),
+    driveLink: text("drive_link"),
     amount: integer("amount").notNull().default(0),
     ownerId: text("owner_id")
       .notNull()

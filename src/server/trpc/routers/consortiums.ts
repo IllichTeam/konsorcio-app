@@ -2,18 +2,25 @@ import { and, eq } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
 import { db } from "@/db";
-import { consortiums, type ConsortiumRow } from "@/db/schema";
+import { consortiums, emailLog, type ConsortiumRow } from "@/db/schema";
+import { env } from "@/env";
 import { isSuperadmin } from "@/lib/auth/roles";
+import { sendEmail } from "@/lib/email/send";
 import {
   consortiumDetailSchema,
   consortiumIdInputSchema,
   consortiumListItemSchema,
   createConsortiumInputSchema,
+  sendConsortiumCommentInputSchema,
   updateConsortiumAmountInputSchema,
   updateConsortiumInputSchema,
 } from "@/lib/schemas/consortium";
 import { z } from "@/lib/zod";
 import { createTRPCRouter, protectedProcedure } from "@/server/trpc/init";
+
+const COMMENT_RECIPIENT_NAME = "Vecino/a";
+const COMMENT_SENDER = "Administración";
+const COMMENT_EMAIL_FALLBACK = "demo@konsorcio.app";
 
 function toDetail(row: ConsortiumRow) {
   return {
@@ -174,6 +181,56 @@ export const consortiumsRouter = createTRPCRouter({
 
       if (!row) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Consorcio no encontrado" });
+      }
+    }),
+
+  /**
+   * Sends a card comment as a `NotificacionConsorcio` email to the consortium
+   * billing address (or a placeholder that still resolves via EMAIL_OVERRIDE_TO).
+   */
+  sendComment: protectedProcedure
+    .input(sendConsortiumCommentInputSchema)
+    .output(z.void())
+    .mutation(async ({ ctx, input }) => {
+      const consortium = await findAccessibleConsortium(
+        input.id,
+        ctx.session.user.id,
+        ctx.session.user.role,
+      );
+
+      const intendedEmail =
+        consortium.billingEmail ?? env.EMAIL_OVERRIDE_TO ?? COMMENT_EMAIL_FALLBACK;
+      const recipients = [{ email: intendedEmail, name: COMMENT_RECIPIENT_NAME }];
+      const subject = `Comentario — ${consortium.name}`;
+
+      const result = await sendEmail({
+        subject,
+        body: input.message,
+        recipients,
+        consortium: consortium.name,
+        sender: COMMENT_SENDER,
+      });
+
+      try {
+        await db.insert(emailLog).values({
+          subject,
+          body: input.message,
+          recipients,
+          recipientCount: recipients.length,
+          status: result.status,
+          resendIds: result.resendIds,
+          error: result.error ?? null,
+          sentByUserId: ctx.session.user.id,
+        });
+      } catch (loggingError) {
+        console.error("Failed to persist email log", loggingError);
+      }
+
+      if (result.status === "failed") {
+        throw new TRPCError({
+          code: "BAD_GATEWAY",
+          message: "No se pudo enviar el correo",
+        });
       }
     }),
 });

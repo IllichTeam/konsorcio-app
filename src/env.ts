@@ -57,6 +57,11 @@ const envSchema = z.object({
    * Unset once the domain is verified to restore real recipients.
    */
   EMAIL_OVERRIDE_TO: z.string().email().optional(),
+  /**
+   * Client (`NEXT_PUBLIC_`): when true, controlled demo mode — sidebar shows
+   * only Consorcios and unfinished detail actions are hidden. Default false.
+   */
+  NEXT_PUBLIC_DEMO_MODE: z.preprocess((val) => val === "true" || val === true, z.boolean()),
 });
 
 export const env = envSchema.parse({
@@ -70,6 +75,7 @@ export const env = envSchema.parse({
   RESEND_API_KEY: process.env.RESEND_API_KEY,
   EMAIL_FROM: process.env.EMAIL_FROM,
   EMAIL_OVERRIDE_TO: process.env.EMAIL_OVERRIDE_TO || undefined,
+  NEXT_PUBLIC_DEMO_MODE: process.env.NEXT_PUBLIC_DEMO_MODE,
 });
 
 export type Env = typeof env;

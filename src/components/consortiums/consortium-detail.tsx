@@ -132,18 +132,22 @@ export function ConsortiumDetail({ consortiumId }: ConsortiumDetailProps) {
           Cambiar monto de caja
         </Button>
         <div className="flex flex-wrap gap-3 pt-2">
-          <Button className="w-fit">
-            <FileText className="size-4" aria-hidden="true" />
-            Enviar expensa mensual
-          </Button>
-          <Button
-            variant="outline"
-            className="w-fit"
-            render={<Link href={`/consorcios/${consortiumId}/emails-inquilinos`} />}
-          >
-            <Mail className="size-4" aria-hidden="true" />
-            Emails de inquilinos
-          </Button>
+          {process.env.NEXT_PUBLIC_DEMO_MODE !== "true" ? (
+            <>
+              <Button className="w-fit">
+                <FileText className="size-4" aria-hidden="true" />
+                Enviar expensa mensual
+              </Button>
+              <Button
+                variant="outline"
+                className="w-fit"
+                render={<Link href={`/consorcios/${consortiumId}/emails-inquilinos`} />}
+              >
+                <Mail className="size-4" aria-hidden="true" />
+                Emails de inquilinos
+              </Button>
+            </>
+          ) : null}
           <Button variant="outline" className="w-fit" onClick={() => setFormDialogOpen(true)}>
             <Pencil className="size-4" aria-hidden="true" />
             Editar consorcio
@@ -154,23 +158,27 @@ export function ConsortiumDetail({ consortiumId }: ConsortiumDetailProps) {
       <dl className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-3">
         <div className="space-y-1">
           <dt className="text-base font-bold text-foreground">Alias de cobro</dt>
-          <dd className="text-sm text-foreground">{consortium.paymentAlias}</dd>
+          <dd className="text-sm text-foreground">{consortium.paymentAlias ?? "—"}</dd>
         </div>
         <div className="space-y-1">
           <dt className="text-base font-bold text-foreground">Email</dt>
-          <dd className="text-sm text-foreground">{consortium.billingEmail}</dd>
+          <dd className="text-sm text-foreground">{consortium.billingEmail ?? "—"}</dd>
         </div>
         <div className="space-y-1">
           <dt className="text-base font-bold text-foreground">Link del drive</dt>
           <dd className="text-sm text-foreground">
-            <a
-              href={consortium.driveLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="break-all text-primary hover:underline"
-            >
-              {consortium.driveLink}
-            </a>
+            {consortium.driveLink ? (
+              <a
+                href={consortium.driveLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="break-all text-primary hover:underline"
+              >
+                {consortium.driveLink}
+              </a>
+            ) : (
+              "—"
+            )}
           </dd>
         </div>
       </dl>

@@ -105,7 +105,7 @@ export function ConsortiumsScreen({ userName }: ConsortiumsScreenProps) {
 
     try {
       await createComment.mutateAsync({
-        consortiumId: openConsortium.id,
+        id: openConsortium.id,
         message: values.message,
       });
       toast.success("Comentario enviado");
@@ -153,8 +153,8 @@ export function ConsortiumsScreen({ userName }: ConsortiumsScreenProps) {
 
         <Button
           type="button"
-          variant="outline"
-          className="bg-transparent font-semibold tracking-wide"
+          variant="default"
+          className="font-semibold tracking-wide"
           onClick={openCreateDialog}
         >
           <Plus className="size-4" aria-hidden="true" />

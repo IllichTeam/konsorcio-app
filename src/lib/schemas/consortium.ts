@@ -4,9 +4,9 @@ import { z } from "@/lib/zod";
 export const consortiumWriteSchema = z.object({
   name: z.string().min(1, "El nombre es obligatorio"),
   location: z.string().min(1, "La ubicación es obligatoria"),
-  paymentAlias: z.string().min(1, "El alias de cobro es obligatorio"),
-  billingEmail: z.email("Correo inválido"),
-  driveLink: z.string().min(1, "El link de drive es obligatorio"),
+  paymentAlias: z.string().nullable(),
+  billingEmail: z.email("Correo inválido").nullable(),
+  driveLink: z.string().nullable(),
 });
 
 export const createConsortiumInputSchema = consortiumWriteSchema;
@@ -24,6 +24,12 @@ export const consortiumIdInputSchema = z.object({
   id: z.string().uuid(),
 });
 
+/** Send a comment email for a consortium card. */
+export const sendConsortiumCommentInputSchema = z.object({
+  id: z.string().uuid(),
+  message: z.string().trim().min(1, "Escribe un comentario"),
+});
+
 /** List card shape. */
 export const consortiumListItemSchema = z.object({
   id: z.string().uuid(),
@@ -34,13 +40,14 @@ export const consortiumListItemSchema = z.object({
 /** Full detail returned by byId / mutations. */
 export const consortiumDetailSchema = consortiumListItemSchema.extend({
   amount: z.number().int(),
-  paymentAlias: z.string(),
-  billingEmail: z.string(),
-  driveLink: z.string(),
+  paymentAlias: z.string().nullable(),
+  billingEmail: z.string().nullable(),
+  driveLink: z.string().nullable(),
 });
 
 export type CreateConsortiumInput = z.infer<typeof createConsortiumInputSchema>;
 export type UpdateConsortiumInput = z.infer<typeof updateConsortiumInputSchema>;
 export type UpdateConsortiumAmountInput = z.infer<typeof updateConsortiumAmountInputSchema>;
+export type SendConsortiumCommentInput = z.infer<typeof sendConsortiumCommentInputSchema>;
 export type ConsortiumListItem = z.infer<typeof consortiumListItemSchema>;
 export type ConsortiumDetailDto = z.infer<typeof consortiumDetailSchema>;
