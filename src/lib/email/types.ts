@@ -9,6 +9,10 @@ export type SendEmailInput = {
   subject: string;
   body: string;
   recipients: Recipient[];
+  /** Building / consortium name shown in the email body. */
+  consorcio?: string;
+  /** Sign-off line (e.g. "Administración Edificio Rivadavia"). */
+  remitente?: string;
 };
 
 /** Outcome of a send attempt, aggregated across all recipients. */

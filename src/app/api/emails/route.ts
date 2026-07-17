@@ -15,6 +15,8 @@ const sendEmailSchema = z.object({
   subject: z.string().min(1),
   body: z.string().min(1),
   recipients: z.array(recipientSchema).min(1),
+  consorcio: z.string().min(1).optional(),
+  remitente: z.string().min(1).optional(),
 });
 
 /**

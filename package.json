@@ -17,11 +17,13 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx --env-file=.env src/db/seed-admin.ts",
+    "email": "email dev --dir emails --port 3001",
     "email:dev": "email dev --dir src/emails --port 3001"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
     "@hookform/resolvers": "^5.4.0",
+    "@react-email/components": "^1.0.12",
     "@tanstack/react-query": "^5.101.2",
     "better-auth": "^1.6.23",
     "class-variance-authority": "^0.7.1",
@@ -48,6 +50,7 @@
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.4",
+    "@react-email/ui": "6.8.1",
     "@tailwindcss/postcss": "^4",
     "@tanstack/react-query-devtools": "^5.101.2",
     "@testing-library/dom": "^10.4.1",

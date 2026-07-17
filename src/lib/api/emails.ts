@@ -13,6 +13,8 @@ export type SendEmailInput = {
   subject: string;
   body: string;
   recipients: Recipient[];
+  consorcio?: string;
+  remitente?: string;
 };
 
 /** Lists app users as candidate recipients. GET /api/emails/recipients. */
