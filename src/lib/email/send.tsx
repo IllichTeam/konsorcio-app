@@ -3,7 +3,7 @@ import "server-only";
 import { render } from "react-email";
 
 import { env } from "@/env";
-import { NotificationEmail } from "@/emails/notification-email";
+import { NotificacionConsorcio } from "@/emails/notificacion-consorcio";
 
 import { getResendClient } from "./client";
 import { isEmailToOverridden, resolveEmailTo } from "./resolve-to";
@@ -31,12 +31,23 @@ export function chunk<T>(items: T[], size: number): T[][] {
 }
 
 /**
- * Renders a personalized `NotificationEmail` for `recipient` and builds the
- * corresponding Resend batch email payload.
+ * Renders a personalized `NotificacionConsorcio` for `recipient` and builds
+ * the corresponding Resend batch email payload.
  */
-async function buildBatchEmail(recipient: Recipient, subject: string, body: string) {
+async function buildBatchEmail(
+  recipient: Recipient,
+  subject: string,
+  body: string,
+  consortium?: string,
+  sender?: string,
+) {
   const html = await render(
-    <NotificationEmail recipientName={recipient.name} subject={subject} body={body} />,
+    <NotificacionConsorcio
+      nombre={recipient.name}
+      mensaje={body}
+      consorcio={consortium}
+      remitente={sender}
+    />,
   );
 
   const resolvedSubject = isEmailToOverridden() ? `[para: ${recipient.email}] ${subject}` : subject;
@@ -59,7 +70,7 @@ async function buildBatchEmail(recipient: Recipient, subject: string, body: stri
  * of the recipients.
  */
 export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult> {
-  const { subject, body, recipients } = input;
+  const { subject, body, recipients, consortium, sender } = input;
 
   if (recipients.length === 0) {
     return { status: "failed", sent: 0, failed: 0, resendIds: [], error: "No recipients" };
@@ -72,7 +83,9 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
   async function sendChunk(recipientChunk: Recipient[]) {
     try {
       const batchEmails = await Promise.all(
-        recipientChunk.map((recipient) => buildBatchEmail(recipient, subject, body)),
+        recipientChunk.map((recipient) =>
+          buildBatchEmail(recipient, subject, body, consortium, sender),
+        ),
       );
 
       const { data, error } = await resend.batch.send(batchEmails);

@@ -29,10 +29,10 @@ vi.mock("react-email", () => ({
   render: renderMock,
 }));
 
-// Mocking `render` means the real `NotificationEmail` component body never
+// Mocking `render` means the real `NotificacionConsorcio` component body never
 // executes, but the module import chain still needs to resolve.
-vi.mock("@/emails/notification-email", () => ({
-  NotificationEmail: (props: unknown) => props,
+vi.mock("@/emails/notificacion-consorcio", () => ({
+  NotificacionConsorcio: (props: unknown) => props,
 }));
 
 import type { Recipient } from "@/lib/email/types";
@@ -129,20 +129,32 @@ describe("sendEmail", () => {
 
     expect(renderMock).toHaveBeenCalledTimes(2);
     const firstProps = renderMock.mock.calls[0][0] as {
-      props: { recipientName?: string; subject: string; body: string };
+      props: {
+        nombre?: string;
+        mensaje: string;
+        consorcio?: string;
+        remitente?: string;
+      };
     };
     const secondProps = renderMock.mock.calls[1][0] as {
-      props: { recipientName?: string; subject: string; body: string };
+      props: {
+        nombre?: string;
+        mensaje: string;
+        consorcio?: string;
+        remitente?: string;
+      };
     };
     expect(firstProps.props).toEqual({
-      recipientName: "User 0",
-      subject: "Recordatorio",
-      body: "Cuerpo del mensaje",
+      nombre: "User 0",
+      mensaje: "Cuerpo del mensaje",
+      consorcio: undefined,
+      remitente: undefined,
     });
     expect(secondProps.props).toEqual({
-      recipientName: "User 1",
-      subject: "Recordatorio",
-      body: "Cuerpo del mensaje",
+      nombre: "User 1",
+      mensaje: "Cuerpo del mensaje",
+      consorcio: undefined,
+      remitente: undefined,
     });
   });
 
