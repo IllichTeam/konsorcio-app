@@ -1,14 +1,20 @@
 import type { Metadata } from "next";
+import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 
-import { getSession } from "@/lib/auth/session";
 import { ConsortiumsScreen } from "@/components/consortiums/consortiums-screen";
+import { getQueryClient, trpc } from "@/server/trpc/server-caller";
 
 export const metadata: Metadata = {
   title: "Consorcios — Konsorcio",
 };
 
 export default async function ConsortiumsPage() {
-  const session = await getSession();
+  const queryClient = getQueryClient();
+  await queryClient.prefetchQuery(trpc.consortiums.list.queryOptions());
 
-  return <ConsortiumsScreen userName={session?.user.name ?? "Administrador"} />;
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <ConsortiumsScreen />
+    </HydrationBoundary>
+  );
 }

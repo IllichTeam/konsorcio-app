@@ -134,7 +134,16 @@ describe("consortiums tRPC router", () => {
     const caller = await callerFor("admin", "user-a");
     const list = await caller.consortiums.list();
 
-    expect(list).toEqual([{ id: expect.any(String), name: "Mine", location: "CABA" }]);
+    expect(list).toEqual([
+      {
+        id: expect.any(String),
+        name: "Mine",
+        location: "CABA",
+        paymentAlias: sampleInput.paymentAlias,
+        billingEmail: sampleInput.billingEmail,
+        driveLink: sampleInput.driveLink,
+      },
+    ]);
   });
 
   it("lets superadmin list all consortiums", async () => {

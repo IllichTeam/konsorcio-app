@@ -2,7 +2,41 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { getConsortiumHistory } from "@/lib/api/consortiums";
 import { queryKeys } from "@/lib/api/query-keys";
+import type { ConsortiumDetailDto, ConsortiumListItem } from "@/lib/schemas/consortium";
 import { useTRPC } from "@/lib/trpc/client";
+
+function toListItem(detail: ConsortiumDetailDto): ConsortiumListItem {
+  return {
+    id: detail.id,
+    name: detail.name,
+    location: detail.location,
+    paymentAlias: detail.paymentAlias,
+    billingEmail: detail.billingEmail,
+    driveLink: detail.driveLink,
+  };
+}
+
+function upsertListItem(
+  queryClient: ReturnType<typeof useQueryClient>,
+  listQueryKey: readonly unknown[],
+  item: ConsortiumListItem,
+) {
+  queryClient.setQueryData<ConsortiumListItem[]>(listQueryKey, (current) => {
+    if (!current) {
+      return [item];
+    }
+
+    const index = current.findIndex((row) => row.id === item.id);
+
+    if (index === -1) {
+      return [...current, item];
+    }
+
+    const next = [...current];
+    next[index] = item;
+    return next;
+  });
+}
 
 export function useConsortiums() {
   const trpc = useTRPC();
@@ -39,8 +73,10 @@ export function useCreateConsortium() {
 
   return useMutation(
     trpc.consortiums.create.mutationOptions({
-      onSuccess: () => {
-        void queryClient.invalidateQueries(trpc.consortiums.list.queryFilter());
+      onSuccess: (data) => {
+        const listItem = toListItem(data);
+        upsertListItem(queryClient, trpc.consortiums.list.queryKey(), listItem);
+        queryClient.setQueryData(trpc.consortiums.byId.queryKey({ id: data.id }), data);
       },
     }),
   );
@@ -53,8 +89,9 @@ export function useUpdateConsortium() {
   return useMutation(
     trpc.consortiums.update.mutationOptions({
       onSuccess: (data) => {
-        void queryClient.invalidateQueries(trpc.consortiums.list.queryFilter());
-        void queryClient.invalidateQueries(trpc.consortiums.byId.queryFilter({ id: data.id }));
+        const listItem = toListItem(data);
+        upsertListItem(queryClient, trpc.consortiums.list.queryKey(), listItem);
+        queryClient.setQueryData(trpc.consortiums.byId.queryKey({ id: data.id }), data);
       },
     }),
   );
@@ -67,8 +104,9 @@ export function useUpdateConsortiumAmount() {
   return useMutation(
     trpc.consortiums.updateAmount.mutationOptions({
       onSuccess: (data) => {
-        void queryClient.invalidateQueries(trpc.consortiums.list.queryFilter());
-        void queryClient.invalidateQueries(trpc.consortiums.byId.queryFilter({ id: data.id }));
+        const listItem = toListItem(data);
+        upsertListItem(queryClient, trpc.consortiums.list.queryKey(), listItem);
+        queryClient.setQueryData(trpc.consortiums.byId.queryKey({ id: data.id }), data);
       },
     }),
   );
@@ -81,8 +119,11 @@ export function useDeleteConsortium() {
   return useMutation(
     trpc.consortiums.delete.mutationOptions({
       onSuccess: (_data, variables) => {
-        void queryClient.invalidateQueries(trpc.consortiums.list.queryFilter());
-        void queryClient.invalidateQueries(trpc.consortiums.byId.queryFilter({ id: variables.id }));
+        queryClient.setQueryData<ConsortiumListItem[]>(
+          trpc.consortiums.list.queryKey(),
+          (current) => (current ?? []).filter((row) => row.id !== variables.id),
+        );
+        queryClient.removeQueries(trpc.consortiums.byId.queryFilter({ id: variables.id }));
         queryClient.removeQueries({ queryKey: queryKeys.consortiums.history(variables.id) });
       },
     }),

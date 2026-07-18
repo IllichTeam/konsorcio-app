@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   title: "Panel — Konsorcio",
 };
 
+/** Prefer São Paulo (near Supabase). Project default also set in vercel.json. */
+export const preferredRegion = "gru1";
+
 export default async function DashboardLayout({
   children,
 }: Readonly<{

@@ -1,37 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
 
 import { Toaster } from "@/components/ui/sonner";
 import { TRPCProvider } from "@/lib/trpc/client";
+import { getBrowserQueryClient } from "@/lib/trpc/query-client";
 import type { AppRouter } from "@/server/trpc/routers/_app";
-
-function makeQueryClient() {
-  return new QueryClient({
-    defaultOptions: {
-      queries: {
-        staleTime: 60 * 1000,
-      },
-    },
-  });
-}
-
-let browserQueryClient: QueryClient | undefined;
-
-function getQueryClient() {
-  if (typeof window === "undefined") {
-    return makeQueryClient();
-  }
-
-  if (!browserQueryClient) {
-    browserQueryClient = makeQueryClient();
-  }
-
-  return browserQueryClient;
-}
 
 function getBaseUrl() {
   if (typeof window !== "undefined") {
@@ -46,7 +23,7 @@ function getBaseUrl() {
 }
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  const queryClient = getQueryClient();
+  const queryClient = getBrowserQueryClient();
   const [trpcClient] = useState(() =>
     createTRPCClient<AppRouter>({
       links: [

@@ -215,6 +215,7 @@ export function ConsortiumDetail({ consortiumId }: ConsortiumDetailProps) {
         open={formDialogOpen}
         onOpenChange={setFormDialogOpen}
         consortiumId={consortiumId}
+        initialConsortium={consortium}
       />
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { z } from "@/lib/zod";
 
 import { useConsortium, useCreateConsortium, useUpdateConsortium } from "@/hooks/use-consortiums";
+import type { ConsortiumListItem } from "@/lib/schemas/consortium";
 import { FormInput } from "@/components/form/form-input";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,15 +41,20 @@ type ConsortiumFormDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   consortiumId?: string | null;
+  /** When provided (e.g. from list row), skips `byId` fetch. */
+  initialConsortium?: ConsortiumListItem | null;
 };
 
 export function ConsortiumFormDialog({
   open,
   onOpenChange,
   consortiumId = null,
+  initialConsortium = null,
 }: ConsortiumFormDialogProps) {
   const isEditMode = Boolean(consortiumId);
-  const { data: consortium, isLoading: isLoadingConsortium } = useConsortium(consortiumId ?? "");
+  const fetchId = initialConsortium ? "" : (consortiumId ?? "");
+  const { data: fetchedConsortium, isLoading: isLoadingConsortium } = useConsortium(fetchId);
+  const consortium = initialConsortium ?? fetchedConsortium;
   const createConsortium = useCreateConsortium();
   const updateConsortium = useUpdateConsortium();
   const { control, handleSubmit, reset, formState } = useForm<ConsortiumFormValues>({
@@ -124,7 +130,7 @@ export function ConsortiumFormDialog({
           </DialogTitle>
         </DialogHeader>
 
-        {isEditMode && isLoadingConsortium ? (
+        {isEditMode && !initialConsortium && isLoadingConsortium ? (
           <div className="grid gap-4">
             {(["name", "location", "alias", "email", "drive"] as const).map((field) => (
               <Skeleton key={field} className="h-10 w-full" />

@@ -1,0 +1,821 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Variante 2 — Consola · Selección de consorcios</title>
+    <link rel="preconnect" href="https://fonts.bunny.net" />
+    <link
+      href="https://fonts.bunny.net/css?family=geist:400,500,600,700|geist-mono:400,500"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+      @theme {
+        --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+        --font-mono: "Geist Mono", ui-monospace, monospace;
+
+        --color-background: oklch(0.962 0.004 255);
+        --color-foreground: oklch(0.21 0.02 250);
+        --color-card: oklch(0.995 0.002 255);
+        --color-muted: oklch(0.935 0.006 255);
+        --color-muted-foreground: oklch(0.5 0.015 250);
+        --color-border: oklch(0.895 0.006 255);
+        --color-border-strong: oklch(0.86 0.006 255);
+
+        --color-primary: oklch(0.5 0.134 242.749);
+        --color-primary-foreground: oklch(0.985 0.006 247.9);
+        --color-accent: oklch(0.93 0.028 242.749);
+
+        --color-sidebar: oklch(0.945 0.005 255);
+        --color-sidebar-border: oklch(0.885 0.006 255);
+        --color-ring: oklch(0.5 0.134 242.749);
+
+        /* Semantic state tokens (discreet, Supabase-flavored) */
+        --color-ok: oklch(0.62 0.11 155);
+        --color-ok-soft: oklch(0.93 0.04 155);
+        --color-warn: oklch(0.72 0.12 75);
+        --color-warn-soft: oklch(0.94 0.05 85);
+        --color-danger: oklch(0.58 0.16 25);
+        --color-danger-soft: oklch(0.94 0.045 25);
+
+        --radius-sm: 0.375rem;
+        --radius-md: 0.5rem;
+        --radius-lg: 0.625rem;
+      }
+
+      body {
+        font-family: var(--font-sans);
+      }
+
+      .tnum {
+        font-variant-numeric: tabular-nums;
+      }
+
+      .project-card {
+        transition:
+          border-color 140ms ease,
+          background-color 140ms ease;
+      }
+      .project-card:hover {
+        border-color: var(--color-border-strong);
+        background-color: oklch(0.998 0.002 255);
+      }
+
+      /* CSS-only overflow menu (no JS) */
+      .menu-wrap .menu-pop {
+        opacity: 0;
+        transform: translateY(-2px);
+        pointer-events: none;
+        transition:
+          opacity 120ms ease,
+          transform 120ms ease;
+      }
+      .menu-wrap:hover .menu-pop,
+      .menu-wrap:focus-within .menu-pop {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+      }
+    </style>
+  </head>
+  <body class="bg-background text-foreground antialiased">
+    <div class="flex min-h-screen">
+      <!-- Sidebar -->
+      <aside
+        class="hidden w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar md:flex"
+      >
+        <div class="flex h-14 items-center gap-2.5 border-b border-sidebar-border px-4">
+          <div
+            class="flex size-7 items-center justify-center rounded-md bg-primary text-xs font-semibold text-primary-foreground"
+          >
+            K
+          </div>
+          <span class="text-sm font-semibold tracking-tight">Konsorcio</span>
+        </div>
+
+        <nav class="flex flex-1 flex-col gap-4 p-3 text-sm">
+          <div>
+            <p class="px-2.5 pb-1.5 text-[11px] font-medium tracking-wide text-muted-foreground">
+              Dashboard
+            </p>
+            <a
+              href="#"
+              aria-current="page"
+              class="flex items-center gap-2.5 rounded-md bg-accent px-2.5 py-1.5 font-medium text-foreground"
+            >
+              <svg class="size-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-5h6v5M9 10h.01M15 10h.01M9 13.5h.01M15 13.5h.01" />
+              </svg>
+              Consorcios
+            </a>
+          </div>
+
+          <div>
+            <p class="px-2.5 pb-1.5 text-[11px] font-medium tracking-wide text-muted-foreground">
+              Configuración
+            </p>
+            <a
+              href="#"
+              class="flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a1.5 1.5 0 013 0l.2.9a1.5 1.5 0 002.1 1.05l.85-.35a1.5 1.5 0 011.9 2.05l-.45.8a1.5 1.5 0 00.7 2.15l.85.35a1.5 1.5 0 010 2.9l-.85.35a1.5 1.5 0 00-.7 2.15l.45.8a1.5 1.5 0 01-1.9 2.05l-.85-.35a1.5 1.5 0 00-2.1 1.05l-.2.9a1.5 1.5 0 01-3 0" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              Preferencias
+            </a>
+            <a
+              href="#"
+              class="flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+              </svg>
+              Emails inquilinos
+            </a>
+          </div>
+        </nav>
+
+        <div class="border-t border-sidebar-border p-3">
+          <div class="flex items-center gap-2.5">
+            <div
+              class="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-xs font-semibold text-foreground"
+            >
+              MG
+            </div>
+            <div class="min-w-0">
+              <p class="truncate text-xs font-medium">Martín Gómez</p>
+              <p class="truncate text-xs text-muted-foreground">martin@administracionmg.com.ar</p>
+            </div>
+          </div>
+          <a
+            href="#"
+            class="mt-2.5 flex items-center gap-2 rounded-md px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M18 15l3-3m0 0l-3-3m3 3H9" />
+            </svg>
+            Cerrar sesión
+          </a>
+        </div>
+      </aside>
+
+      <!-- Main -->
+      <main class="flex min-w-0 flex-1 flex-col">
+        <!-- Header -->
+        <header
+          class="flex flex-col gap-3 border-b border-border bg-card px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-8"
+        >
+          <div>
+            <h1 class="text-base font-semibold tracking-tight">Selección de consorcios</h1>
+            <p class="mt-0.5 text-sm text-muted-foreground">
+              Bienvenido, Martín · período <span class="font-medium text-foreground">Julio 2026</span>
+            </p>
+          </div>
+
+          <a
+            href="#"
+            class="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-md bg-primary px-3.5 text-sm font-medium text-primary-foreground transition-colors hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          >
+            <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Agregar nuevo consorcio
+          </a>
+        </header>
+
+        <div class="mx-auto w-full max-w-7xl px-5 py-6 sm:px-8">
+          <!-- Portfolio stats row -->
+          <section aria-label="Resumen del portfolio" class="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border lg:grid-cols-5">
+            <div class="bg-card p-4">
+              <p class="text-xs text-muted-foreground">Consorcios</p>
+              <p class="mt-1 text-2xl font-semibold tracking-tight tnum">8</p>
+              <p class="mt-0.5 text-xs text-muted-foreground tnum">324 unidades</p>
+            </div>
+            <div class="bg-card p-4">
+              <p class="text-xs text-muted-foreground">Expensas emitidas</p>
+              <p class="mt-1 text-2xl font-semibold tracking-tight tnum">$1.308.487</p>
+              <p class="mt-0.5 text-xs text-muted-foreground">7 de 8 emitidas</p>
+            </div>
+            <div class="bg-card p-4">
+              <p class="text-xs text-muted-foreground">Cobranza promedio</p>
+              <div class="mt-1 flex items-baseline gap-1.5">
+                <p class="text-2xl font-semibold tracking-tight tnum">81%</p>
+                <span class="text-xs font-medium text-ok">+4 pts</span>
+              </div>
+              <div class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                <div class="h-full rounded-full bg-primary" style="width: 81%"></div>
+              </div>
+            </div>
+            <div class="bg-card p-4">
+              <p class="text-xs text-muted-foreground">Con deudas altas</p>
+              <p class="mt-1 flex items-center gap-2 text-2xl font-semibold tracking-tight tnum">
+                <span class="inline-block size-2 rounded-full bg-warn"></span>3
+              </p>
+              <p class="mt-0.5 text-xs text-muted-foreground">requieren seguimiento</p>
+            </div>
+            <div class="col-span-2 bg-card p-4 lg:col-span-1">
+              <p class="text-xs text-muted-foreground">Notificaciones</p>
+              <p class="mt-1 flex items-center gap-2 text-2xl font-semibold tracking-tight tnum">
+                <span class="inline-block size-2 rounded-full bg-primary"></span>12
+              </p>
+              <p class="mt-0.5 text-xs text-muted-foreground">reclamos sin responder</p>
+            </div>
+          </section>
+
+          <!-- Toolbar -->
+          <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p class="text-sm text-muted-foreground">
+              <span class="font-medium text-foreground">8 consorcios</span> · ordenados por atención requerida
+            </p>
+            <div class="flex flex-wrap items-center gap-1.5 text-xs">
+              <span class="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2 py-1">
+                <span class="size-2 rounded-full bg-ok"></span>Al día
+              </span>
+              <span class="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2 py-1">
+                <span class="size-2 rounded-full bg-warn"></span>Con deudas
+              </span>
+              <span class="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2 py-1">
+                <span class="size-2 rounded-full bg-muted-foreground"></span>Sin emitir
+              </span>
+            </div>
+          </div>
+
+          <!-- Project cards grid -->
+          <ul
+            role="list"
+            class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
+          >
+            <!-- Card: warning / con deudas -->
+            <li>
+              <a
+                href="#"
+                class="project-card group flex h-full flex-col rounded-lg border border-border bg-card p-4 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+              >
+                <div class="flex items-start gap-3">
+                  <div class="flex size-9 shrink-0 items-center justify-center rounded-md bg-accent text-xs font-semibold text-primary">
+                    SF
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <p class="truncate text-sm font-semibold tracking-tight">Av. Santa Fe 2154</p>
+                    <p class="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground">
+                      <svg class="size-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                      </svg>
+                      Recoleta
+                    </p>
+                  </div>
+                  <span class="menu-wrap relative -mt-1 -mr-1">
+                    <button
+                      type="button"
+                      class="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                      aria-label="Configurar Av. Santa Fe 2154"
+                    >
+                      <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75h.008v.008H12V6.75zM12 12h.008v.008H12V12zm0 5.25h.008v.008H12v-.008z" />
+                      </svg>
+                    </button>
+                    <div class="menu-pop absolute top-full right-0 z-20 mt-1 w-40 rounded-md border border-border bg-card py-1 shadow-sm">
+                      <span class="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-muted">
+                        <svg class="size-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" /></svg>
+                        Editar consorcio
+                      </span>
+                      <span class="flex items-center gap-2 px-3 py-1.5 text-sm text-danger hover:bg-muted">
+                        <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
+                        Eliminar consorcio
+                      </span>
+                    </div>
+                  </span>
+                </div>
+
+                <div class="mt-3">
+                  <span class="inline-flex items-center gap-1.5 rounded-md bg-warn-soft px-2 py-0.5 text-xs font-medium text-warn">
+                    <span class="size-1.5 rounded-full bg-warn"></span>Con deudas
+                  </span>
+                </div>
+
+                <dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-border pt-4">
+                  <div>
+                    <dt class="text-xs text-muted-foreground">Unidades</dt>
+                    <dd class="mt-0.5 text-sm font-medium tnum">48</dd>
+                  </div>
+                  <div>
+                    <dt class="text-xs text-muted-foreground">Expensas Julio</dt>
+                    <dd class="mt-0.5 text-sm font-medium tnum">$184.320,50</dd>
+                  </div>
+                  <div class="col-span-2">
+                    <div class="flex items-center justify-between">
+                      <dt class="text-xs text-muted-foreground">Cobrado</dt>
+                      <dd class="text-xs font-medium tnum text-warn">61%</dd>
+                    </div>
+                    <div class="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                      <div class="h-full rounded-full bg-warn" style="width: 61%"></div>
+                    </div>
+                  </div>
+                </dl>
+
+                <div class="mt-4 flex items-center justify-between border-t border-border pt-3">
+                  <span class="inline-flex items-center gap-1.5 text-xs text-danger">
+                    <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
+                    5 reclamos
+                  </span>
+                  <span
+                    class="inline-flex items-center gap-1.5 rounded-md border border-border bg-transparent px-2.5 py-1 text-xs font-medium text-foreground group-hover:border-border-strong"
+                  >
+                    <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" /></svg>
+                    Enviar comentario
+                  </span>
+                </div>
+              </a>
+            </li>
+
+            <!-- Card: sin emitir -->
+            <li>
+              <a
+                href="#"
+                class="project-card group flex h-full flex-col rounded-lg border border-border bg-card p-4 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+              >
+                <div class="flex items-start gap-3">
+                  <div class="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted text-xs font-semibold text-muted-foreground">
+                    LI
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <p class="truncate text-sm font-semibold tracking-tight">Libertador 4310</p>
+                    <p class="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground">
+                      <svg class="size-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>
+                      Núñez
+                    </p>
+                  </div>
+                  <span class="menu-wrap relative -mt-1 -mr-1">
+                    <button type="button" class="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none" aria-label="Configurar Libertador 4310">
+                      <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75h.008v.008H12V6.75zM12 12h.008v.008H12V12zm0 5.25h.008v.008H12v-.008z" /></svg>
+                    </button>
+                    <div class="menu-pop absolute top-full right-0 z-20 mt-1 w-40 rounded-md border border-border bg-card py-1 shadow-sm">
+                      <span class="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-muted"><svg class="size-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" /></svg>Editar consorcio</span>
+                      <span class="flex items-center gap-2 px-3 py-1.5 text-sm text-danger hover:bg-muted"><svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166M18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916" /></svg>Eliminar consorcio</span>
+                    </div>
+                  </span>
+                </div>
+
+                <div class="mt-3">
+                  <span class="inline-flex items-center gap-1.5 rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                    <span class="size-1.5 rounded-full bg-muted-foreground"></span>Expensas sin emitir
+                  </span>
+                </div>
+
+                <dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-border pt-4">
+                  <div>
+                    <dt class="text-xs text-muted-foreground">Unidades</dt>
+                    <dd class="mt-0.5 text-sm font-medium tnum">24</dd>
+                  </div>
+                  <div>
+                    <dt class="text-xs text-muted-foreground">Expensas Julio</dt>
+                    <dd class="mt-0.5 text-sm text-muted-foreground">Sin emitir</dd>
+                  </div>
+                  <div class="col-span-2">
+                    <div class="flex items-center justify-between">
+                      <dt class="text-xs text-muted-foreground">Cobrado</dt>
+                      <dd class="text-xs font-medium text-muted-foreground">—</dd>
+                    </div>
+                    <div class="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                      <div class="h-full rounded-full bg-border-strong" style="width: 0%"></div>
+                    </div>
+                  </div>
+                </dl>
+
+                <div class="mt-4 flex items-center justify-between border-t border-border pt-3">
+                  <span class="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    Cierre 05/08
+                  </span>
+                  <span class="inline-flex items-center gap-1.5 rounded-md border border-border bg-transparent px-2.5 py-1 text-xs font-medium text-foreground group-hover:border-border-strong">
+                    <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" /></svg>
+                    Enviar comentario
+                  </span>
+                </div>
+              </a>
+            </li>
+
+            <!-- Card: al día -->
+            <li>
+              <a
+                href="#"
+                class="project-card group flex h-full flex-col rounded-lg border border-border bg-card p-4 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+              >
+                <div class="flex items-start gap-3">
+                  <div class="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted text-xs font-semibold text-muted-foreground">
+                    AP
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <p class="truncate text-sm font-semibold tracking-tight">Torre Alem Plaza</p>
+                    <p class="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground">
+                      <svg class="size-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>
+                      Retiro
+                    </p>
+                  </div>
+                  <span class="menu-wrap relative -mt-1 -mr-1">
+                    <button type="button" class="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none" aria-label="Configurar Torre Alem Plaza">
+                      <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75h.008v.008H12V6.75zM12 12h.008v.008H12V12zm0 5.25h.008v.008H12v-.008z" /></svg>
+                    </button>
+                    <div class="menu-pop absolute top-full right-0 z-20 mt-1 w-40 rounded-md border border-border bg-card py-1 shadow-sm">
+                      <span class="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-muted"><svg class="size-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" /></svg>Editar consorcio</span>
+                      <span class="flex items-center gap-2 px-3 py-1.5 text-sm text-danger hover:bg-muted"><svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166M18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916" /></svg>Eliminar consorcio</span>
+                    </div>
+                  </span>
+                </div>
+
+                <div class="mt-3">
+                  <span class="inline-flex items-center gap-1.5 rounded-md bg-ok-soft px-2 py-0.5 text-xs font-medium text-ok">
+                    <span class="size-1.5 rounded-full bg-ok"></span>Al día
+                  </span>
+                </div>
+
+                <dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-border pt-4">
+                  <div>
+                    <dt class="text-xs text-muted-foreground">Unidades</dt>
+                    <dd class="mt-0.5 text-sm font-medium tnum">72</dd>
+                  </div>
+                  <div>
+                    <dt class="text-xs text-muted-foreground">Expensas Julio</dt>
+                    <dd class="mt-0.5 text-sm font-medium tnum">$318.450,00</dd>
+                  </div>
+                  <div class="col-span-2">
+                    <div class="flex items-center justify-between">
+                      <dt class="text-xs text-muted-foreground">Cobrado</dt>
+                      <dd class="text-xs font-medium tnum text-ok">96%</dd>
+                    </div>
+                    <div class="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                      <div class="h-full rounded-full bg-ok" style="width: 96%"></div>
+                    </div>
+                  </div>
+                </dl>
+
+                <div class="mt-4 flex items-center justify-between border-t border-border pt-3">
+                  <span class="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    Sin pendientes
+                  </span>
+                  <span class="inline-flex items-center gap-1.5 rounded-md border border-border bg-transparent px-2.5 py-1 text-xs font-medium text-foreground group-hover:border-border-strong">
+                    <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" /></svg>
+                    Enviar comentario
+                  </span>
+                </div>
+              </a>
+            </li>
+
+            <!-- Card: con deudas -->
+            <li>
+              <a
+                href="#"
+                class="project-card group flex h-full flex-col rounded-lg border border-border bg-card p-4 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+              >
+                <div class="flex items-start gap-3">
+                  <div class="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted text-xs font-semibold text-muted-foreground">
+                    CÓ
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <p class="truncate text-sm font-semibold tracking-tight">Av. Córdoba 3456</p>
+                    <p class="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground">
+                      <svg class="size-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>
+                      Palermo
+                    </p>
+                  </div>
+                  <span class="menu-wrap relative -mt-1 -mr-1">
+                    <button type="button" class="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none" aria-label="Configurar Av. Córdoba 3456">
+                      <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75h.008v.008H12V6.75zM12 12h.008v.008H12V12zm0 5.25h.008v.008H12v-.008z" /></svg>
+                    </button>
+                    <div class="menu-pop absolute top-full right-0 z-20 mt-1 w-40 rounded-md border border-border bg-card py-1 shadow-sm">
+                      <span class="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-muted"><svg class="size-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" /></svg>Editar consorcio</span>
+                      <span class="flex items-center gap-2 px-3 py-1.5 text-sm text-danger hover:bg-muted"><svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166M18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916" /></svg>Eliminar consorcio</span>
+                    </div>
+                  </span>
+                </div>
+
+                <div class="mt-3">
+                  <span class="inline-flex items-center gap-1.5 rounded-md bg-warn-soft px-2 py-0.5 text-xs font-medium text-warn">
+                    <span class="size-1.5 rounded-full bg-warn"></span>Con deudas
+                  </span>
+                </div>
+
+                <dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-border pt-4">
+                  <div>
+                    <dt class="text-xs text-muted-foreground">Unidades</dt>
+                    <dd class="mt-0.5 text-sm font-medium tnum">36</dd>
+                  </div>
+                  <div>
+                    <dt class="text-xs text-muted-foreground">Expensas Julio</dt>
+                    <dd class="mt-0.5 text-sm font-medium tnum">$142.780,25</dd>
+                  </div>
+                  <div class="col-span-2">
+                    <div class="flex items-center justify-between">
+                      <dt class="text-xs text-muted-foreground">Cobrado</dt>
+                      <dd class="text-xs font-medium tnum text-warn">68%</dd>
+                    </div>
+                    <div class="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                      <div class="h-full rounded-full bg-warn" style="width: 68%"></div>
+                    </div>
+                  </div>
+                </dl>
+
+                <div class="mt-4 flex items-center justify-between border-t border-border pt-3">
+                  <span class="inline-flex items-center gap-1.5 text-xs text-danger">
+                    <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
+                    3 reclamos
+                  </span>
+                  <span class="inline-flex items-center gap-1.5 rounded-md border border-border bg-transparent px-2.5 py-1 text-xs font-medium text-foreground group-hover:border-border-strong">
+                    <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" /></svg>
+                    Enviar comentario
+                  </span>
+                </div>
+              </a>
+            </li>
+
+            <!-- Card: al día -->
+            <li>
+              <a
+                href="#"
+                class="project-card group flex h-full flex-col rounded-lg border border-border bg-card p-4 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+              >
+                <div class="flex items-start gap-3">
+                  <div class="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted text-xs font-semibold text-muted-foreground">
+                    CA
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <p class="truncate text-sm font-semibold tracking-tight">Av. Cabildo 2104</p>
+                    <p class="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground">
+                      <svg class="size-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>
+                      Belgrano
+                    </p>
+                  </div>
+                  <span class="menu-wrap relative -mt-1 -mr-1">
+                    <button type="button" class="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none" aria-label="Configurar Av. Cabildo 2104">
+                      <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75h.008v.008H12V6.75zM12 12h.008v.008H12V12zm0 5.25h.008v.008H12v-.008z" /></svg>
+                    </button>
+                    <div class="menu-pop absolute top-full right-0 z-20 mt-1 w-40 rounded-md border border-border bg-card py-1 shadow-sm">
+                      <span class="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-muted"><svg class="size-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" /></svg>Editar consorcio</span>
+                      <span class="flex items-center gap-2 px-3 py-1.5 text-sm text-danger hover:bg-muted"><svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166M18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916" /></svg>Eliminar consorcio</span>
+                    </div>
+                  </span>
+                </div>
+
+                <div class="mt-3">
+                  <span class="inline-flex items-center gap-1.5 rounded-md bg-ok-soft px-2 py-0.5 text-xs font-medium text-ok">
+                    <span class="size-1.5 rounded-full bg-ok"></span>Al día
+                  </span>
+                </div>
+
+                <dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-border pt-4">
+                  <div>
+                    <dt class="text-xs text-muted-foreground">Unidades</dt>
+                    <dd class="mt-0.5 text-sm font-medium tnum">40</dd>
+                  </div>
+                  <div>
+                    <dt class="text-xs text-muted-foreground">Expensas Julio</dt>
+                    <dd class="mt-0.5 text-sm font-medium tnum">$127.640,80</dd>
+                  </div>
+                  <div class="col-span-2">
+                    <div class="flex items-center justify-between">
+                      <dt class="text-xs text-muted-foreground">Cobrado</dt>
+                      <dd class="text-xs font-medium tnum text-ok">91%</dd>
+                    </div>
+                    <div class="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                      <div class="h-full rounded-full bg-ok" style="width: 91%"></div>
+                    </div>
+                  </div>
+                </dl>
+
+                <div class="mt-4 flex items-center justify-between border-t border-border pt-3">
+                  <span class="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
+                    1 reclamo
+                  </span>
+                  <span class="inline-flex items-center gap-1.5 rounded-md border border-border bg-transparent px-2.5 py-1 text-xs font-medium text-foreground group-hover:border-border-strong">
+                    <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" /></svg>
+                    Enviar comentario
+                  </span>
+                </div>
+              </a>
+            </li>
+
+            <!-- Card: al día -->
+            <li>
+              <a
+                href="#"
+                class="project-card group flex h-full flex-col rounded-lg border border-border bg-card p-4 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+              >
+                <div class="flex items-start gap-3">
+                  <div class="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted text-xs font-semibold text-muted-foreground">
+                    RI
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <p class="truncate text-sm font-semibold tracking-tight">Av. Rivadavia 5870</p>
+                    <p class="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground">
+                      <svg class="size-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>
+                      Caballito
+                    </p>
+                  </div>
+                  <span class="menu-wrap relative -mt-1 -mr-1">
+                    <button type="button" class="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none" aria-label="Configurar Av. Rivadavia 5870">
+                      <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75h.008v.008H12V6.75zM12 12h.008v.008H12V12zm0 5.25h.008v.008H12v-.008z" /></svg>
+                    </button>
+                    <div class="menu-pop absolute top-full right-0 z-20 mt-1 w-40 rounded-md border border-border bg-card py-1 shadow-sm">
+                      <span class="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-muted"><svg class="size-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" /></svg>Editar consorcio</span>
+                      <span class="flex items-center gap-2 px-3 py-1.5 text-sm text-danger hover:bg-muted"><svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166M18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916" /></svg>Eliminar consorcio</span>
+                    </div>
+                  </span>
+                </div>
+
+                <div class="mt-3">
+                  <span class="inline-flex items-center gap-1.5 rounded-md bg-ok-soft px-2 py-0.5 text-xs font-medium text-ok">
+                    <span class="size-1.5 rounded-full bg-ok"></span>Al día
+                  </span>
+                </div>
+
+                <dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-border pt-4">
+                  <div>
+                    <dt class="text-xs text-muted-foreground">Unidades</dt>
+                    <dd class="mt-0.5 text-sm font-medium tnum">28</dd>
+                  </div>
+                  <div>
+                    <dt class="text-xs text-muted-foreground">Expensas Julio</dt>
+                    <dd class="mt-0.5 text-sm font-medium tnum">$98.915,60</dd>
+                  </div>
+                  <div class="col-span-2">
+                    <div class="flex items-center justify-between">
+                      <dt class="text-xs text-muted-foreground">Cobrado</dt>
+                      <dd class="text-xs font-medium tnum text-ok">88%</dd>
+                    </div>
+                    <div class="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                      <div class="h-full rounded-full bg-ok" style="width: 88%"></div>
+                    </div>
+                  </div>
+                </dl>
+
+                <div class="mt-4 flex items-center justify-between border-t border-border pt-3">
+                  <span class="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    Sin pendientes
+                  </span>
+                  <span class="inline-flex items-center gap-1.5 rounded-md border border-border bg-transparent px-2.5 py-1 text-xs font-medium text-foreground group-hover:border-border-strong">
+                    <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" /></svg>
+                    Enviar comentario
+                  </span>
+                </div>
+              </a>
+            </li>
+
+            <!-- Card: con deudas -->
+            <li>
+              <a
+                href="#"
+                class="project-card group flex h-full flex-col rounded-lg border border-border bg-card p-4 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+              >
+                <div class="flex items-start gap-3">
+                  <div class="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted text-xs font-semibold text-muted-foreground">
+                    JU
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <p class="truncate text-sm font-semibold tracking-tight">Juncal 2840</p>
+                    <p class="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground">
+                      <svg class="size-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>
+                      Recoleta
+                    </p>
+                  </div>
+                  <span class="menu-wrap relative -mt-1 -mr-1">
+                    <button type="button" class="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none" aria-label="Configurar Juncal 2840">
+                      <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75h.008v.008H12V6.75zM12 12h.008v.008H12V12zm0 5.25h.008v.008H12v-.008z" /></svg>
+                    </button>
+                    <div class="menu-pop absolute top-full right-0 z-20 mt-1 w-40 rounded-md border border-border bg-card py-1 shadow-sm">
+                      <span class="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-muted"><svg class="size-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" /></svg>Editar consorcio</span>
+                      <span class="flex items-center gap-2 px-3 py-1.5 text-sm text-danger hover:bg-muted"><svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166M18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916" /></svg>Eliminar consorcio</span>
+                    </div>
+                  </span>
+                </div>
+
+                <div class="mt-3">
+                  <span class="inline-flex items-center gap-1.5 rounded-md bg-warn-soft px-2 py-0.5 text-xs font-medium text-warn">
+                    <span class="size-1.5 rounded-full bg-warn"></span>Con deudas
+                  </span>
+                </div>
+
+                <dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-border pt-4">
+                  <div>
+                    <dt class="text-xs text-muted-foreground">Unidades</dt>
+                    <dd class="mt-0.5 text-sm font-medium tnum">56</dd>
+                  </div>
+                  <div>
+                    <dt class="text-xs text-muted-foreground">Expensas Julio</dt>
+                    <dd class="mt-0.5 text-sm font-medium tnum">$241.090,75</dd>
+                  </div>
+                  <div class="col-span-2">
+                    <div class="flex items-center justify-between">
+                      <dt class="text-xs text-muted-foreground">Cobrado</dt>
+                      <dd class="text-xs font-medium tnum text-warn">73%</dd>
+                    </div>
+                    <div class="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                      <div class="h-full rounded-full bg-warn" style="width: 73%"></div>
+                    </div>
+                  </div>
+                </dl>
+
+                <div class="mt-4 flex items-center justify-between border-t border-border pt-3">
+                  <span class="inline-flex items-center gap-1.5 text-xs text-danger">
+                    <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
+                    2 reclamos
+                  </span>
+                  <span class="inline-flex items-center gap-1.5 rounded-md border border-border bg-transparent px-2.5 py-1 text-xs font-medium text-foreground group-hover:border-border-strong">
+                    <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" /></svg>
+                    Enviar comentario
+                  </span>
+                </div>
+              </a>
+            </li>
+
+            <!-- Card: al día -->
+            <li>
+              <a
+                href="#"
+                class="project-card group flex h-full flex-col rounded-lg border border-border bg-card p-4 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+              >
+                <div class="flex items-start gap-3">
+                  <div class="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted text-xs font-semibold text-muted-foreground">
+                    MO
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <p class="truncate text-sm font-semibold tracking-tight">Monroe 3122</p>
+                    <p class="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground">
+                      <svg class="size-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>
+                      Belgrano
+                    </p>
+                  </div>
+                  <span class="menu-wrap relative -mt-1 -mr-1">
+                    <button type="button" class="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none" aria-label="Configurar Monroe 3122">
+                      <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75h.008v.008H12V6.75zM12 12h.008v.008H12V12zm0 5.25h.008v.008H12v-.008z" /></svg>
+                    </button>
+                    <div class="menu-pop absolute top-full right-0 z-20 mt-1 w-40 rounded-md border border-border bg-card py-1 shadow-sm">
+                      <span class="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-muted"><svg class="size-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" /></svg>Editar consorcio</span>
+                      <span class="flex items-center gap-2 px-3 py-1.5 text-sm text-danger hover:bg-muted"><svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166M18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916" /></svg>Eliminar consorcio</span>
+                    </div>
+                  </span>
+                </div>
+
+                <div class="mt-3">
+                  <span class="inline-flex items-center gap-1.5 rounded-md bg-ok-soft px-2 py-0.5 text-xs font-medium text-ok">
+                    <span class="size-1.5 rounded-full bg-ok"></span>Al día
+                  </span>
+                </div>
+
+                <dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-border pt-4">
+                  <div>
+                    <dt class="text-xs text-muted-foreground">Unidades</dt>
+                    <dd class="mt-0.5 text-sm font-medium tnum">12</dd>
+                  </div>
+                  <div>
+                    <dt class="text-xs text-muted-foreground">Expensas Julio</dt>
+                    <dd class="mt-0.5 text-sm font-medium tnum">$54.210,00</dd>
+                  </div>
+                  <div class="col-span-2">
+                    <div class="flex items-center justify-between">
+                      <dt class="text-xs text-muted-foreground">Cobrado</dt>
+                      <dd class="text-xs font-medium tnum text-ok">100%</dd>
+                    </div>
+                    <div class="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                      <div class="h-full rounded-full bg-ok" style="width: 100%"></div>
+                    </div>
+                  </div>
+                </dl>
+
+                <div class="mt-4 flex items-center justify-between border-t border-border pt-3">
+                  <span class="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    Sin pendientes
+                  </span>
+                  <span class="inline-flex items-center gap-1.5 rounded-md border border-border bg-transparent px-2.5 py-1 text-xs font-medium text-foreground group-hover:border-border-strong">
+                    <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" /></svg>
+                    Enviar comentario
+                  </span>
+                </div>
+              </a>
+            </li>
+
+            <!-- Add-new card (empty state / getting started) -->
+            <li>
+              <a
+                href="#"
+                class="flex h-full min-h-[220px] flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-transparent p-4 text-center text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+              >
+                <span class="flex size-9 items-center justify-center rounded-md border border-border bg-card">
+                  <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                </span>
+                <span class="text-sm font-medium">Agregar nuevo consorcio</span>
+                <span class="text-xs">Cargá el edificio y sus unidades para empezar a emitir expensas.</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

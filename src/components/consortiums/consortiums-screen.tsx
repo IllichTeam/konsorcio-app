@@ -25,6 +25,7 @@ import {
 } from "@/hooks/use-consortiums";
 import type { Consortium } from "@/types/consortium";
 import { ConsortiumFormDialog } from "@/components/consortiums/consortium-form-dialog";
+import { useDashboardUser } from "@/components/dashboard/dashboard-user-context";
 import { FormTextarea } from "@/components/form/form-textarea";
 import { Button } from "@/components/ui/button";
 import {
@@ -51,18 +52,16 @@ type CommentValues = z.infer<typeof commentSchema>;
 
 const CONSORTIUMS_PER_PAGE = 6;
 
-type ConsortiumsScreenProps = {
-  userName: string;
-};
-
-export function ConsortiumsScreen({ userName }: ConsortiumsScreenProps) {
+export function ConsortiumsScreen() {
+  const user = useDashboardUser();
+  const userName = user.name || "Administrador";
   const { data: consortiums = [], isLoading, isError } = useConsortiums();
   const createComment = useCreateConsortiumComment();
   const deleteConsortium = useDeleteConsortium();
   const [currentPage, setCurrentPage] = useState(1);
   const [openConsortium, setOpenConsortium] = useState<Consortium | null>(null);
   const [formDialogOpen, setFormDialogOpen] = useState(false);
-  const [editingConsortiumId, setEditingConsortiumId] = useState<string | null>(null);
+  const [editingConsortium, setEditingConsortium] = useState<Consortium | null>(null);
   const [consortiumPendingDelete, setConsortiumPendingDelete] = useState<Consortium | null>(null);
 
   const totalPages = Math.max(1, Math.ceil(consortiums.length / CONSORTIUMS_PER_PAGE));
@@ -81,12 +80,12 @@ export function ConsortiumsScreen({ userName }: ConsortiumsScreenProps) {
   });
 
   function openCreateDialog() {
-    setEditingConsortiumId(null);
+    setEditingConsortium(null);
     setFormDialogOpen(true);
   }
 
-  function openEditDialog(consortiumId: string) {
-    setEditingConsortiumId(consortiumId);
+  function openEditDialog(consortium: Consortium) {
+    setEditingConsortium(consortium);
     setFormDialogOpen(true);
   }
 
@@ -94,7 +93,7 @@ export function ConsortiumsScreen({ userName }: ConsortiumsScreenProps) {
     setFormDialogOpen(open);
 
     if (!open) {
-      setEditingConsortiumId(null);
+      setEditingConsortium(null);
     }
   }
 
@@ -201,7 +200,7 @@ export function ConsortiumsScreen({ userName }: ConsortiumsScreenProps) {
                       <DropdownMenuItem
                         onClick={(event) => {
                           event.preventDefault();
-                          openEditDialog(consortium.id);
+                          openEditDialog(consortium);
                         }}
                       >
                         <Pencil className="size-4" aria-hidden="true" />
@@ -313,7 +312,8 @@ export function ConsortiumsScreen({ userName }: ConsortiumsScreenProps) {
       <ConsortiumFormDialog
         open={formDialogOpen}
         onOpenChange={handleFormDialogChange}
-        consortiumId={editingConsortiumId}
+        consortiumId={editingConsortium?.id ?? null}
+        initialConsortium={editingConsortium}
       />
 
       <Dialog

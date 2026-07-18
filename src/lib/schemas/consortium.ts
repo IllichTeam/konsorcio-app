@@ -30,19 +30,19 @@ export const sendConsortiumCommentInputSchema = z.object({
   message: z.string().trim().min(1, "Escribe un comentario"),
 });
 
-/** List card shape. */
+/** List card + edit-form shape (amount stays on detail only). */
 export const consortiumListItemSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
   location: z.string(),
+  paymentAlias: z.string().nullable(),
+  billingEmail: z.string().nullable(),
+  driveLink: z.string().nullable(),
 });
 
 /** Full detail returned by byId / mutations. */
 export const consortiumDetailSchema = consortiumListItemSchema.extend({
   amount: z.number().int(),
-  paymentAlias: z.string().nullable(),
-  billingEmail: z.string().nullable(),
-  driveLink: z.string().nullable(),
 });
 
 export type CreateConsortiumInput = z.infer<typeof createConsortiumInputSchema>;

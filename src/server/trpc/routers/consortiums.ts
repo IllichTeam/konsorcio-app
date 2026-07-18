@@ -22,23 +22,35 @@ const COMMENT_RECIPIENT_NAME = "Vecino/a";
 const COMMENT_SENDER = "Administración";
 const COMMENT_EMAIL_FALLBACK = "demo@konsorcio.app";
 
-function toDetail(row: ConsortiumRow) {
+const listColumns = {
+  id: consortiums.id,
+  name: consortiums.name,
+  location: consortiums.location,
+  paymentAlias: consortiums.paymentAlias,
+  billingEmail: consortiums.billingEmail,
+  driveLink: consortiums.driveLink,
+} as const;
+
+const detailColumns = {
+  ...listColumns,
+  amount: consortiums.amount,
+} as const;
+
+function toListItem(row: Pick<ConsortiumRow, keyof typeof listColumns>) {
   return {
     id: row.id,
     name: row.name,
     location: row.location,
-    amount: row.amount,
     paymentAlias: row.paymentAlias,
     billingEmail: row.billingEmail,
     driveLink: row.driveLink,
   };
 }
 
-function toListItem(row: ConsortiumRow) {
+function toDetail(row: ConsortiumRow) {
   return {
-    id: row.id,
-    name: row.name,
-    location: row.location,
+    ...toListItem(row),
+    amount: row.amount,
   };
 }
 
@@ -70,12 +82,10 @@ async function findAccessibleConsortium(
 
 export const consortiumsRouter = createTRPCRouter({
   list: protectedProcedure.output(z.array(consortiumListItemSchema)).query(async ({ ctx }) => {
-    const rows = await db
-      .select()
+    return db
+      .select(listColumns)
       .from(consortiums)
       .where(ownershipFilter(ctx.session.user.id, ctx.session.user.role));
-
-    return rows.map(toListItem);
   }),
 
   byId: protectedProcedure
@@ -83,7 +93,7 @@ export const consortiumsRouter = createTRPCRouter({
     .output(consortiumDetailSchema.nullable())
     .query(async ({ ctx, input }) => {
       const [row] = await db
-        .select()
+        .select(detailColumns)
         .from(consortiums)
         .where(
           and(
@@ -93,7 +103,7 @@ export const consortiumsRouter = createTRPCRouter({
         )
         .limit(1);
 
-      return row ? toDetail(row) : null;
+      return row ?? null;
     }),
 
   create: protectedProcedure
@@ -120,8 +130,6 @@ export const consortiumsRouter = createTRPCRouter({
     .input(updateConsortiumInputSchema)
     .output(consortiumDetailSchema)
     .mutation(async ({ ctx, input }) => {
-      await findAccessibleConsortium(input.id, ctx.session.user.id, ctx.session.user.role);
-
       const [row] = await db
         .update(consortiums)
         .set({
@@ -132,7 +140,12 @@ export const consortiumsRouter = createTRPCRouter({
           driveLink: input.driveLink,
           updatedAt: new Date(),
         })
-        .where(and(eq(consortiums.id, input.id), eq(consortiums.isDeleted, false)))
+        .where(
+          and(
+            eq(consortiums.id, input.id),
+            ownershipFilter(ctx.session.user.id, ctx.session.user.role),
+          ),
+        )
         .returning();
 
       if (!row) {
@@ -146,15 +159,18 @@ export const consortiumsRouter = createTRPCRouter({
     .input(updateConsortiumAmountInputSchema)
     .output(consortiumDetailSchema)
     .mutation(async ({ ctx, input }) => {
-      await findAccessibleConsortium(input.id, ctx.session.user.id, ctx.session.user.role);
-
       const [row] = await db
         .update(consortiums)
         .set({
           amount: input.amount,
           updatedAt: new Date(),
         })
-        .where(and(eq(consortiums.id, input.id), eq(consortiums.isDeleted, false)))
+        .where(
+          and(
+            eq(consortiums.id, input.id),
+            ownershipFilter(ctx.session.user.id, ctx.session.user.role),
+          ),
+        )
         .returning();
 
       if (!row) {
@@ -168,15 +184,18 @@ export const consortiumsRouter = createTRPCRouter({
     .input(consortiumIdInputSchema)
     .output(z.void())
     .mutation(async ({ ctx, input }) => {
-      await findAccessibleConsortium(input.id, ctx.session.user.id, ctx.session.user.role);
-
       const [row] = await db
         .update(consortiums)
         .set({
           isDeleted: true,
           updatedAt: new Date(),
         })
-        .where(and(eq(consortiums.id, input.id), eq(consortiums.isDeleted, false)))
+        .where(
+          and(
+            eq(consortiums.id, input.id),
+            ownershipFilter(ctx.session.user.id, ctx.session.user.role),
+          ),
+        )
         .returning();
 
       if (!row) {

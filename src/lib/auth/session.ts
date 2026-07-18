@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { cookies, headers } from "next/headers";
 
 import { auth } from "@/lib/auth";
@@ -5,10 +6,11 @@ import { auth } from "@/lib/auth";
 /**
  * Reads the current better-auth session from the incoming request's
  * cookies. Returns `null` when there is no active (or valid) session.
+ * Wrapped in React.cache for per-request dedupe across layout/pages.
  */
-export async function getSession() {
+export const getSession = cache(async () => {
   return auth.api.getSession({ headers: await headers() });
-}
+});
 
 const SESSION_COOKIE_BASE_NAMES = [
   "better-auth.session_token",

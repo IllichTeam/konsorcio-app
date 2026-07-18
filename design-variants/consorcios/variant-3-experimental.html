@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Variante 3 — Experimental · Consorcios</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-sans/style.min.css"
+      rel="stylesheet"
+    />
+    <style type="text/tailwindcss">
+      @theme {
+        --font-display: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+        --font-sans: "Geist Sans", ui-sans-serif, system-ui, sans-serif;
+
+        --color-canvas: oklch(0.94 0.008 250);
+        --color-ink: oklch(0.18 0.02 250);
+        --color-ink-soft: oklch(0.48 0.02 250);
+        --color-chrome: oklch(0.22 0.018 255);
+        --color-chrome-elevated: oklch(0.28 0.02 255);
+        --color-chrome-border: oklch(0.34 0.02 255);
+        --color-surface: oklch(0.985 0.004 255);
+        --color-surface-border: oklch(0.88 0.01 255);
+        --color-accent: oklch(0.52 0.12 242);
+        --color-accent-fg: oklch(0.99 0.004 250);
+        --color-sidebar: oklch(0.955 0.006 255);
+        --color-sidebar-border: oklch(0.9 0.008 255);
+        --color-warm-veil: oklch(0.28 0.04 55);
+
+        --radius-card: 0.75rem;
+        --shadow-lift: 0 10px 28px -18px oklch(0.35 0.04 250 / 0.45);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body class="min-h-screen bg-canvas font-sans text-ink antialiased">
+    <div class="flex min-h-screen">
+      <!-- Sidebar hint -->
+      <aside
+        class="hidden w-56 shrink-0 flex-col border-r border-sidebar-border bg-sidebar px-4 py-5 md:flex"
+        aria-label="Navegación"
+      >
+        <div class="mb-8 px-2">
+          <p class="font-display text-[15px] font-semibold tracking-tight text-ink">Konsorcio</p>
+          <p class="mt-0.5 text-xs text-ink-soft">Admin</p>
+        </div>
+
+        <nav class="flex flex-1 flex-col gap-1">
+          <a
+            href="#"
+            class="flex items-center gap-2.5 rounded-md bg-white/70 px-2.5 py-2 text-sm font-medium text-ink ring-1 ring-surface-border"
+            aria-current="page"
+          >
+            <svg
+              class="size-4 text-accent"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              aria-hidden="true"
+            >
+              <path d="M3 21h18" />
+              <path d="M5 21V7l7-4 7 4v14" />
+              <path d="M9 21v-6h6v6" />
+            </svg>
+            Consorcios
+          </a>
+          <a
+            href="#"
+            class="flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm text-ink-soft transition-colors hover:bg-white/50 hover:text-ink"
+          >
+            <svg
+              class="size-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              aria-hidden="true"
+            >
+              <path d="M4 4h16v16H4z" />
+              <path d="M8 8h8M8 12h8M8 16h5" />
+            </svg>
+            Notificaciones
+          </a>
+          <a
+            href="#"
+            class="flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm text-ink-soft transition-colors hover:bg-white/50 hover:text-ink"
+          >
+            <svg
+              class="size-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="8" r="3.5" />
+              <path d="M5 19c1.5-3 4-4.5 7-4.5s5.5 1.5 7 4.5" />
+            </svg>
+            Perfil de usuario
+          </a>
+        </nav>
+
+        <div class="mt-auto border-t border-sidebar-border pt-4 px-2">
+          <p class="text-xs font-medium text-ink">María González</p>
+          <p class="text-[11px] text-ink-soft">Administradora</p>
+        </div>
+      </aside>
+
+      <!-- Main -->
+      <main class="flex min-w-0 flex-1 flex-col">
+        <header
+          class="flex flex-col gap-4 border-b border-surface-border bg-surface/80 px-5 py-5 backdrop-blur-sm sm:flex-row sm:items-end sm:justify-between sm:px-8"
+        >
+          <div>
+            <p class="mb-1 text-[11px] font-medium tracking-wide text-ink-soft md:hidden">
+              Admin · Consorcios
+            </p>
+            <h1 class="font-display text-xl font-semibold tracking-tight text-ink sm:text-[1.35rem]">
+              Selección de consorcios
+            </h1>
+            <p class="mt-1 text-sm text-ink-soft">Bienvenida, María González</p>
+          </div>
+
+          <a
+            href="#"
+            class="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-accent px-3.5 text-sm font-medium text-accent-fg transition-[filter,transform] hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+          >
+            <svg
+              class="size-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            Agregar nuevo consorcio
+          </a>
+        </header>
+
+        <div class="flex-1 px-5 py-6 sm:px-8 sm:py-8">
+          <ul class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+            <!-- Card 1 -->
+            <li>
+              <a
+                href="#"
+                class="group block overflow-hidden rounded-[var(--radius-card)] border border-chrome-border bg-chrome transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-chrome-elevated hover:shadow-[var(--shadow-lift)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+              >
+                <div class="relative aspect-[16/10] overflow-hidden">
+                  <img
+                    src="https://picsum.photos/seed/salguero-1685/640/360"
+                    alt=""
+                    width="640"
+                    height="360"
+                    class="size-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                  />
+                  <!-- Warm veil + readable bottom -->
+                  <div
+                    class="pointer-events-none absolute inset-0 bg-gradient-to-t from-warm-veil/90 via-chrome/25 to-transparent opacity-90 transition-opacity duration-200 group-hover:opacity-100"
+                    aria-hidden="true"
+                  ></div>
+
+                  <!-- Hover actions -->
+                  <div
+                    class="absolute top-2.5 right-2.5 flex gap-1.5 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100"
+                  >
+                    <span
+                      class="inline-flex size-8 items-center justify-center rounded-md border border-white/15 bg-chrome/70 text-white/90 backdrop-blur-sm"
+                      title="Configurar"
+                      aria-label="Configurar Salguero 1685"
+                    >
+                      <svg
+                        class="size-3.5"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.75"
+                        aria-hidden="true"
+                      >
+                        <circle cx="12" cy="12" r="3" />
+                        <path
+                          d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V20a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H4a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H10a1.7 1.7 0 0 0 1-1.5V4a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V10c.3.6.9 1 1.5 1H20a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"
+                        />
+                      </svg>
+                    </span>
+                    <span
+                      class="inline-flex size-8 items-center justify-center rounded-md border border-white/15 bg-chrome/70 text-white/90 backdrop-blur-sm"
+                      title="Enviar comentario"
+                      aria-label="Enviar comentario"
+                    >
+                      <svg
+                        class="size-3.5"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.75"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"
+                        />
+                      </svg>
+                    </span>
+                  </div>
+
+                  <div class="absolute inset-x-0 bottom-0 p-3.5 sm:p-4">
+                    <h2 class="font-display text-[15px] font-semibold tracking-tight text-white">
+                      Salguero 1685
+                    </h2>
+                    <p class="mt-1 flex items-center gap-1 text-xs text-white/75">
+                      <svg
+                        class="size-3.5 shrink-0"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.75"
+                        aria-hidden="true"
+                      >
+                        <path d="M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11z" />
+                        <circle cx="12" cy="10" r="2.5" />
+                      </svg>
+                      Palermo, CABA
+                    </p>
+                  </div>
+                </div>
+              </a>
+            </li>
+
+            <!-- Card 2 -->
+            <li>
+              <a
+                href="#"
+                class="group block overflow-hidden rounded-[var(--radius-card)] border border-chrome-border bg-chrome transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-chrome-elevated hover:shadow-[var(--shadow-lift)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+              >
+                <div class="relative aspect-[16/10] overflow-hidden">
+                  <img
+                    src="https://picsum.photos/seed/cabildo-2847/640/360"
+                    alt=""
+                    width="640"
+                    height="360"
+                    class="size-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                  />
+                  <div
+                    class="pointer-events-none absolute inset-0 bg-gradient-to-t from-warm-veil/90 via-chrome/25 to-transparent opacity-90 transition-opacity duration-200 group-hover:opacity-100"
+                    aria-hidden="true"
+                  ></div>
+                  <div
+                    class="absolute top-2.5 right-2.5 flex gap-1.5 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100"
+                  >
+                    <span
+                      class="inline-flex size-8 items-center justify-center rounded-md border border-white/15 bg-chrome/70 text-white/90 backdrop-blur-sm"
+                      title="Configurar"
+                      aria-label="Configurar Cabildo 2847"
+                    >
+                      <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                        <circle cx="12" cy="12" r="3" />
+                        <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V20a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H4a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H10a1.7 1.7 0 0 0 1-1.5V4a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V10c.3.6.9 1 1.5 1H20a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
+                      </svg>
+                    </span>
+                    <span
+                      class="inline-flex size-8 items-center justify-center rounded-md border border-white/15 bg-chrome/70 text-white/90 backdrop-blur-sm"
+                      title="Enviar comentario"
+                      aria-label="Enviar comentario"
+                    >
+                      <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                        <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
+                      </svg>
+                    </span>
+                  </div>
+                  <div class="absolute inset-x-0 bottom-0 p-3.5 sm:p-4">
+                    <h2 class="font-display text-[15px] font-semibold tracking-tight text-white">
+                      Cabildo 2847
+                    </h2>
+                    <p class="mt-1 flex items-center gap-1 text-xs text-white/75">
+                      <svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                        <path d="M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11z" />
+                        <circle cx="12" cy="10" r="2.5" />
+                      </svg>
+                      Belgrano, CABA
+                    </p>
+                  </div>
+                </div>
+              </a>
+            </li>
+
+            <!-- Card 3 -->
+            <li>
+              <a
+                href="#"
+                class="group block overflow-hidden rounded-[var(--radius-card)] border border-chrome-border bg-chrome transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-chrome-elevated hover:shadow-[var(--shadow-lift)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+              >
+                <div class="relative aspect-[16/10] overflow-hidden">
+                  <img
+                    src="https://picsum.photos/seed/santa-fe-3120/640/360"
+                    alt=""
+                    width="640"
+                    height="360"
+                    class="size-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                  />
+                  <div
+                    class="pointer-events-none absolute inset-0 bg-gradient-to-t from-warm-veil/90 via-chrome/25 to-transparent opacity-90 transition-opacity duration-200 group-hover:opacity-100"
+                    aria-hidden="true"
+                  ></div>
+                  <div
+                    class="absolute top-2.5 right-2.5 flex gap-1.5 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100"
+                  >
+                    <span
+                      class="inline-flex size-8 items-center justify-center rounded-md border border-white/15 bg-chrome/70 text-white/90 backdrop-blur-sm"
+                      title="Configurar"
+                      aria-label="Configurar Santa Fe 3120"
+                    >
+                      <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                        <circle cx="12" cy="12" r="3" />
+                        <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V20a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H4a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H10a1.7 1.7 0 0 0 1-1.5V4a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V10c.3.6.9 1 1.5 1H20a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
+                      </svg>
+                    </span>
+                    <span
+                      class="inline-flex size-8 items-center justify-center rounded-md border border-white/15 bg-chrome/70 text-white/90 backdrop-blur-sm"
+                      title="Enviar comentario"
+                      aria-label="Enviar comentario"
+                    >
+                      <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                        <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
+                      </svg>
+                    </span>
+                  </div>
+                  <div class="absolute inset-x-0 bottom-0 p-3.5 sm:p-4">
+                    <h2 class="font-display text-[15px] font-semibold tracking-tight text-white">
+                      Santa Fe 3120
+                    </h2>
+                    <p class="mt-1 flex items-center gap-1 text-xs text-white/75">
+                      <svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                        <path d="M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11z" />
+                        <circle cx="12" cy="10" r="2.5" />
+                      </svg>
+                      Recoleta, CABA
+                    </p>
+                  </div>
+                </div>
+              </a>
+            </li>
+
+            <!-- Card 4 -->
+            <li>
+              <a
+                href="#"
+                class="group block overflow-hidden rounded-[var(--radius-card)] border border-chrome-border bg-chrome transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-chrome-elevated hover:shadow-[var(--shadow-lift)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+              >
+                <div class="relative aspect-[16/10] overflow-hidden">
+                  <img
+                    src="https://picsum.photos/seed/libertador-4501/640/360"
+                    alt=""
+                    width="640"
+                    height="360"
+                    class="size-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                  />
+                  <div
+                    class="pointer-events-none absolute inset-0 bg-gradient-to-t from-warm-veil/90 via-chrome/25 to-transparent opacity-90 transition-opacity duration-200 group-hover:opacity-100"
+                    aria-hidden="true"
+                  ></div>
+                  <div
+                    class="absolute top-2.5 right-2.5 flex gap-1.5 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100"
+                  >
+                    <span
+                      class="inline-flex size-8 items-center justify-center rounded-md border border-white/15 bg-chrome/70 text-white/90 backdrop-blur-sm"
+                      title="Configurar"
+                      aria-label="Configurar Libertador 4501"
+                    >
+                      <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                        <circle cx="12" cy="12" r="3" />
+                        <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V20a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H4a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H10a1.7 1.7 0 0 0 1-1.5V4a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V10c.3.6.9 1 1.5 1H20a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
+                      </svg>
+                    </span>
+                    <span
+                      class="inline-flex size-8 items-center justify-center rounded-md border border-white/15 bg-chrome/70 text-white/90 backdrop-blur-sm"
+                      title="Enviar comentario"
+                      aria-label="Enviar comentario"
+                    >
+                      <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                        <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
+                      </svg>
+                    </span>
+                  </div>
+                  <div class="absolute inset-x-0 bottom-0 p-3.5 sm:p-4">
+                    <h2 class="font-display text-[15px] font-semibold tracking-tight text-white">
+                      Libertador 4501
+                    </h2>
+                    <p class="mt-1 flex items-center gap-1 text-xs text-white/75">
+                      <svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                        <path d="M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11z" />
+                        <circle cx="12" cy="10" r="2.5" />
+                      </svg>
+                      Núñez, CABA
+                    </p>
+                  </div>
+                </div>
+              </a>
+            </li>
+
+            <!-- Card 5 -->
+            <li>
+              <a
+                href="#"
+                class="group block overflow-hidden rounded-[var(--radius-card)] border border-chrome-border bg-chrome transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-chrome-elevated hover:shadow-[var(--shadow-lift)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+              >
+                <div class="relative aspect-[16/10] overflow-hidden">
+                  <img
+                    src="https://picsum.photos/seed/corrientes-1890/640/360"
+                    alt=""
+                    width="640"
+                    height="360"
+                    class="size-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                  />
+                  <div
+                    class="pointer-events-none absolute inset-0 bg-gradient-to-t from-warm-veil/90 via-chrome/25 to-transparent opacity-90 transition-opacity duration-200 group-hover:opacity-100"
+                    aria-hidden="true"
+                  ></div>
+                  <div
+                    class="absolute top-2.5 right-2.5 flex gap-1.5 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100"
+                  >
+                    <span
+                      class="inline-flex size-8 items-center justify-center rounded-md border border-white/15 bg-chrome/70 text-white/90 backdrop-blur-sm"
+                      title="Configurar"
+                      aria-label="Configurar Corrientes 1890"
+                    >
+                      <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                        <circle cx="12" cy="12" r="3" />
+                        <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V20a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H4a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H10a1.7 1.7 0 0 0 1-1.5V4a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V10c.3.6.9 1 1.5 1H20a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
+                      </svg>
+                    </span>
+                    <span
+                      class="inline-flex size-8 items-center justify-center rounded-md border border-white/15 bg-chrome/70 text-white/90 backdrop-blur-sm"
+                      title="Enviar comentario"
+                      aria-label="Enviar comentario"
+                    >
+                      <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                        <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
+                      </svg>
+                    </span>
+                  </div>
+                  <div class="absolute inset-x-0 bottom-0 p-3.5 sm:p-4">
+                    <h2 class="font-display text-[15px] font-semibold tracking-tight text-white">
+                      Corrientes 1890
+                    </h2>
+                    <p class="mt-1 flex items-center gap-1 text-xs text-white/75">
+                      <svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                        <path d="M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11z" />
+                        <circle cx="12" cy="10" r="2.5" />
+                      </svg>
+                      Balvanera, CABA
+                    </p>
+                  </div>
+                </div>
+              </a>
+            </li>
+
+            <!-- Card 6 -->
+            <li>
+              <a
+                href="#"
+                class="group block overflow-hidden rounded-[var(--radius-card)] border border-chrome-border bg-chrome transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-chrome-elevated hover:shadow-[var(--shadow-lift)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+              >
+                <div class="relative aspect-[16/10] overflow-hidden">
+                  <img
+                    src="https://picsum.photos/seed/rivadavia-5230/640/360"
+                    alt=""
+                    width="640"
+                    height="360"
+                    class="size-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                  />
+                  <div
+                    class="pointer-events-none absolute inset-0 bg-gradient-to-t from-warm-veil/90 via-chrome/25 to-transparent opacity-90 transition-opacity duration-200 group-hover:opacity-100"
+                    aria-hidden="true"
+                  ></div>
+                  <div
+                    class="absolute top-2.5 right-2.5 flex gap-1.5 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100"
+                  >
+                    <span
+                      class="inline-flex size-8 items-center justify-center rounded-md border border-white/15 bg-chrome/70 text-white/90 backdrop-blur-sm"
+                      title="Configurar"
+                      aria-label="Configurar Rivadavia 5230"
+                    >
+                      <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                        <circle cx="12" cy="12" r="3" />
+                        <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V20a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H4a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H10a1.7 1.7 0 0 0 1-1.5V4a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V10c.3.6.9 1 1.5 1H20a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
+                      </svg>
+                    </span>
+                    <span
+                      class="inline-flex size-8 items-center justify-center rounded-md border border-white/15 bg-chrome/70 text-white/90 backdrop-blur-sm"
+                      title="Enviar comentario"
+                      aria-label="Enviar comentario"
+                    >
+                      <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                        <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
+                      </svg>
+                    </span>
+                  </div>
+                  <div class="absolute inset-x-0 bottom-0 p-3.5 sm:p-4">
+                    <h2 class="font-display text-[15px] font-semibold tracking-tight text-white">
+                      Rivadavia 5230
+                    </h2>
+                    <p class="mt-1 flex items-center gap-1 text-xs text-white/75">
+                      <svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                        <path d="M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11z" />
+                        <circle cx="12" cy="10" r="2.5" />
+                      </svg>
+                      Caballito, CABA
+                    </p>
+                  </div>
+                </div>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

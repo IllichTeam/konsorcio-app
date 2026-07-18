@@ -12,6 +12,7 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: ["./vitest.setup.ts"],
+    exclude: ["**/node_modules/**", "**/e2e/**", "**/dist/**", "**/.next/**"],
     // Multiple test files import `src/lib/auth.ts`, whose top-level
     // `export const auth = createAuth()` eagerly opens the real,
     // file-backed local PGlite store at `./.pglite` (see `src/db/index.ts`)
