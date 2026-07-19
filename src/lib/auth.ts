@@ -45,6 +45,20 @@ export function createAuth(database: Parameters<typeof drizzleAdapter>[0] = db) 
       // any other user are created by a superadmin via the `admin` plugin.
       disableSignUp: true,
     },
+    user: {
+      additionalFields: {
+        phone: {
+          type: "string",
+          required: false,
+          input: true,
+        },
+        address: {
+          type: "string",
+          required: false,
+          input: true,
+        },
+      },
+    },
     session: {
       cookieCache: {
         enabled: true,

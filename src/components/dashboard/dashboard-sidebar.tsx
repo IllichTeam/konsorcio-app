@@ -8,13 +8,13 @@ import { usePathname, useRouter } from "next/navigation";
 import { ChevronRight, LayoutDashboard, LogOut, Settings } from "lucide-react";
 
 import { authClient } from "@/lib/auth-client";
-import type { SessionUser } from "@/lib/auth/session";
 import {
   dashboardNavGroups,
   isNavPathActive,
   type DashboardNavGroup,
 } from "@/lib/navigation/dashboard-nav";
 import { cn } from "@/lib/utils";
+import { useDashboardUser } from "@/components/dashboard/dashboard-user-context";
 import {
   Sidebar,
   SidebarContent,
@@ -102,11 +102,8 @@ function NavGroup({ group, pathname }: { group: DashboardNavGroup; pathname: str
   );
 }
 
-type DashboardSidebarProps = {
-  user: SessionUser;
-};
-
-export function DashboardSidebar({ user }: DashboardSidebarProps) {
+export function DashboardSidebar() {
+  const user = useDashboardUser();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -126,7 +123,7 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
 
       <SidebarFooter className="border-t border-sidebar-border p-3">
         <div className="mb-1 flex items-center gap-3 rounded-md px-2 py-2">
-          <div className="flex size-8 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-secondary-foreground">
+          <div className="flex size-8 items-center justify-center rounded-full bg-primary/20 text-xs font-semibold text-primary">
             {getInitials(user.name)}
           </div>
           <div className="min-w-0 leading-tight">

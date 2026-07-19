@@ -1,25 +1,66 @@
 "use client";
 
-import { createContext, useContext, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 
 import type { SessionUser } from "@/lib/auth/session";
 
-const DashboardUserContext = createContext<SessionUser | null>(null);
+type DashboardUserContextValue = {
+  user: SessionUser;
+  setUser: (user: SessionUser | ((prev: SessionUser) => SessionUser)) => void;
+  patchUser: (patch: Partial<SessionUser>) => void;
+};
+
+const DashboardUserContext = createContext<DashboardUserContextValue | null>(null);
 
 export function DashboardUserProvider({
-  user,
+  user: initialUser,
   children,
 }: {
   user: SessionUser;
   children: ReactNode;
 }) {
-  return <DashboardUserContext.Provider value={user}>{children}</DashboardUserContext.Provider>;
+  const [user, setUser] = useState(initialUser);
+
+  useEffect(() => {
+    setUser(initialUser);
+  }, [initialUser]);
+
+  const patchUser = useCallback((patch: Partial<SessionUser>) => {
+    setUser((prev) => ({ ...prev, ...patch }));
+  }, []);
+
+  const value = useMemo(
+    () => ({
+      user,
+      setUser,
+      patchUser,
+    }),
+    [user, patchUser],
+  );
+
+  return <DashboardUserContext.Provider value={value}>{children}</DashboardUserContext.Provider>;
 }
 
 export function useDashboardUser() {
-  const user = useContext(DashboardUserContext);
-  if (!user) {
+  const context = useContext(DashboardUserContext);
+  if (!context) {
     throw new Error("useDashboardUser must be used within a DashboardUserProvider.");
   }
-  return user;
+  return context.user;
+}
+
+export function useDashboardUserActions() {
+  const context = useContext(DashboardUserContext);
+  if (!context) {
+    throw new Error("useDashboardUserActions must be used within a DashboardUserProvider.");
+  }
+  return { setUser: context.setUser, patchUser: context.patchUser };
 }
