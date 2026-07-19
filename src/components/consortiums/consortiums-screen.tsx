@@ -43,7 +43,7 @@ const COMMENT_RECIPIENT_MODES = [
 const commentSchema = z
   .object({
     recipientMode: z.enum(["one", "several", "all"]),
-    recipientEmails: z.array(z.email()).default([]),
+    recipientEmails: z.array(z.email()),
     message: z.string().trim().min(1, "Escribe un comentario"),
   })
   .superRefine((data, ctx) => {
