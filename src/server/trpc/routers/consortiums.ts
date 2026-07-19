@@ -3,7 +3,6 @@ import { TRPCError } from "@trpc/server";
 
 import { db } from "@/db";
 import { consortiums, emailLog, type ConsortiumRow } from "@/db/schema";
-import { env } from "@/env";
 import { isSuperadmin } from "@/lib/auth/roles";
 import { sendEmail } from "@/lib/email/send";
 import {
@@ -18,9 +17,7 @@ import {
 import { z } from "@/lib/zod";
 import { createTRPCRouter, protectedProcedure } from "@/server/trpc/init";
 
-const COMMENT_RECIPIENT_NAME = "Vecino/a";
 const COMMENT_SENDER = "Administración";
-const COMMENT_EMAIL_FALLBACK = "demo@konsorcio.app";
 
 const listColumns = {
   id: consortiums.id,
@@ -204,8 +201,8 @@ export const consortiumsRouter = createTRPCRouter({
     }),
 
   /**
-   * Sends a card comment as a `NotificacionConsorcio` email to the consortium
-   * billing address (or a placeholder that still resolves via EMAIL_OVERRIDE_TO).
+   * Sends a card comment as a `NotificacionConsorcio` email to the selected
+   * tenant-email recipients for the consortium.
    */
   sendComment: protectedProcedure
     .input(sendConsortiumCommentInputSchema)
@@ -217,9 +214,7 @@ export const consortiumsRouter = createTRPCRouter({
         ctx.session.user.role,
       );
 
-      const intendedEmail =
-        consortium.billingEmail ?? env.EMAIL_OVERRIDE_TO ?? COMMENT_EMAIL_FALLBACK;
-      const recipients = [{ email: intendedEmail, name: COMMENT_RECIPIENT_NAME }];
+      const recipients = input.recipients;
       const subject = `Comentario — ${consortium.name}`;
 
       const result = await sendEmail({

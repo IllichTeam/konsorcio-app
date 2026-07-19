@@ -12,10 +12,14 @@ import {
   useCreateConsortiumComment,
   useDeleteConsortium,
 } from "@/hooks/use-consortiums";
+import { useTenantEmails } from "@/hooks/use-tenant-emails";
+import { formatFunctionalUnit } from "@/lib/tenant-email/format-unit";
+import { tenantEmailsToSelectOptions } from "@/lib/tenant-email/to-select-options";
 import type { Consortium } from "@/types/consortium";
 import { ConsortiumCard } from "@/components/consortiums/consortium-card";
 import { ConsortiumFormDialog } from "@/components/consortiums/consortium-form-dialog";
 import { useDashboardUser } from "@/components/dashboard/dashboard-user-context";
+import { FormSearchableSelect } from "@/components/form/form-searchable-select";
 import { FormTextarea } from "@/components/form/form-textarea";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,12 +32,46 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
-const commentSchema = z.object({
-  message: z.string().trim().min(1, "Escribe un comentario"),
-});
+const COMMENT_RECIPIENT_MODES = [
+  { value: "one", label: "1 Destinatario" },
+  { value: "several", label: "Varios" },
+  { value: "all", label: "Todos" },
+] as const;
+
+const commentSchema = z
+  .object({
+    recipientMode: z.enum(["one", "several", "all"]),
+    recipientEmails: z.array(z.email()).default([]),
+    message: z.string().trim().min(1, "Escribe un comentario"),
+  })
+  .superRefine((data, ctx) => {
+    if (data.recipientMode === "one" && data.recipientEmails.length !== 1) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Selecciona un destinatario",
+        path: ["recipientEmails"],
+      });
+    }
+
+    if (data.recipientMode === "several" && data.recipientEmails.length === 0) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Selecciona al menos un destinatario",
+        path: ["recipientEmails"],
+      });
+    }
+  });
 
 type CommentValues = z.infer<typeof commentSchema>;
+type CommentRecipientMode = CommentValues["recipientMode"];
+
+const COMMENT_DEFAULT_VALUES: CommentValues = {
+  recipientMode: "all",
+  recipientEmails: [],
+  message: "",
+};
 
 const CONSORTIUMS_PER_PAGE = 6;
 
@@ -49,6 +87,15 @@ export function ConsortiumsScreen() {
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [editingConsortium, setEditingConsortium] = useState<Consortium | null>(null);
   const [consortiumPendingDelete, setConsortiumPendingDelete] = useState<Consortium | null>(null);
+
+  const { data: tenantEmails = [], isLoading: isTenantEmailsLoading } = useTenantEmails(
+    openConsortium?.id ?? "",
+  );
+
+  const tenantEmailOptions = useMemo(
+    () => tenantEmailsToSelectOptions(tenantEmails),
+    [tenantEmails],
+  );
 
   const filteredConsortiums = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -80,10 +127,18 @@ export function ConsortiumsScreen() {
     setCurrentPage(1);
   }, [searchQuery]);
 
-  const { control, handleSubmit, formState, reset } = useForm<CommentValues>({
-    resolver: zodResolver(commentSchema),
-    defaultValues: { message: "" },
-  });
+  const { control, handleSubmit, formState, reset, watch, setValue, setError, clearErrors } =
+    useForm<CommentValues>({
+      resolver: zodResolver(commentSchema),
+      defaultValues: COMMENT_DEFAULT_VALUES,
+    });
+
+  const recipientMode = watch("recipientMode");
+  const recipientEmails = watch("recipientEmails");
+
+  function resetCommentDialog() {
+    reset(COMMENT_DEFAULT_VALUES);
+  }
 
   function openCreateDialog() {
     setEditingConsortium(null);
@@ -103,18 +158,59 @@ export function ConsortiumsScreen() {
     }
   }
 
+  function handleRecipientModeChange(mode: CommentRecipientMode) {
+    setValue("recipientMode", mode, { shouldDirty: true });
+    clearErrors("recipientEmails");
+
+    if (mode === "all") {
+      setValue("recipientEmails", []);
+      return;
+    }
+
+    if (mode === "one" && recipientEmails.length > 1) {
+      setValue("recipientEmails", recipientEmails.slice(0, 1));
+    }
+  }
+
   async function onSubmitComment(values: CommentValues) {
     if (!openConsortium) {
       return;
     }
 
+    const resolvedEmails =
+      values.recipientMode === "all"
+        ? tenantEmails.map((entry) => entry.email)
+        : values.recipientEmails;
+
+    if (resolvedEmails.length === 0) {
+      setError("recipientEmails", {
+        type: "manual",
+        message:
+          values.recipientMode === "all"
+            ? "Este consorcio no tiene emails de inquilinos registrados"
+            : values.recipientMode === "one"
+              ? "Selecciona un destinatario"
+              : "Selecciona al menos un destinatario",
+      });
+      return;
+    }
+
+    const recipients = resolvedEmails.map((email) => {
+      const entry = tenantEmails.find((item) => item.email === email);
+      return {
+        email,
+        name: entry ? formatFunctionalUnit(entry) : undefined,
+      };
+    });
+
     try {
       await createComment.mutateAsync({
         id: openConsortium.id,
         message: values.message,
+        recipients,
       });
       toast.success("Comentario enviado");
-      reset();
+      resetCommentDialog();
       setOpenConsortium(null);
     } catch {
       toast.error("No se pudo enviar el comentario");
@@ -256,7 +352,7 @@ export function ConsortiumsScreen() {
                     consortium={consortium}
                     className="h-full"
                     onComment={(item) => {
-                      reset();
+                      resetCommentDialog();
                       setOpenConsortium(item);
                     }}
                     onEdit={openEditDialog}
@@ -377,13 +473,67 @@ export function ConsortiumsScreen() {
 
       <Dialog
         open={openConsortium !== null}
-        onOpenChange={(open) => !open && setOpenConsortium(null)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setOpenConsortium(null);
+            resetCommentDialog();
+          }
+        }}
       >
-        <DialogContent>
+        <DialogContent className="overflow-visible">
           <DialogHeader>
             <DialogTitle>{openConsortium?.name}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit(onSubmitComment)} noValidate className="space-y-4">
+            <fieldset className="min-w-0 border-0 p-0">
+              <legend className="sr-only">Destinatarios del comentario</legend>
+              <div className="flex flex-wrap gap-2">
+                {COMMENT_RECIPIENT_MODES.map((mode) => {
+                  const selected = recipientMode === mode.value;
+
+                  return (
+                    <label
+                      key={mode.value}
+                      className={cn(
+                        "cursor-pointer rounded-md border px-3 py-1.5 text-sm font-medium transition-colors",
+                        selected
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-transparent text-foreground hover:bg-muted",
+                      )}
+                    >
+                      <input
+                        type="radio"
+                        name="comment-recipient-mode"
+                        value={mode.value}
+                        checked={selected}
+                        className="sr-only"
+                        onChange={() => handleRecipientModeChange(mode.value)}
+                      />
+                      {mode.label}
+                    </label>
+                  );
+                })}
+              </div>
+            </fieldset>
+            {recipientMode !== "all" ? (
+              <FormSearchableSelect
+                control={control}
+                name="recipientEmails"
+                label="Destinatarios"
+                options={tenantEmailOptions}
+                multiple={recipientMode === "several"}
+                loading={isTenantEmailsLoading}
+                placeholder="Buscar por email o unidad"
+                emptyMessage="No hay emails registrados para este consorcio."
+                loadingMessage="Cargando emails…"
+                selectedEmptyMessage="Ningún email seleccionado"
+                listLabel="Emails del consorcio"
+              />
+            ) : formState.errors.recipientEmails ? (
+              <p role="alert" className="text-sm text-destructive">
+                {formState.errors.recipientEmails.message}
+              </p>
+            ) : null}
             <FormTextarea
               control={control}
               name="message"

@@ -1,3 +1,4 @@
+import { recipientSchema } from "@/lib/schemas/email";
 import { z } from "@/lib/zod";
 
 /** Fields shared by create/update forms and API payloads. */
@@ -28,6 +29,7 @@ export const consortiumIdInputSchema = z.object({
 export const sendConsortiumCommentInputSchema = z.object({
   id: z.string().uuid(),
   message: z.string().trim().min(1, "Escribe un comentario"),
+  recipients: z.array(recipientSchema).min(1, "Selecciona al menos un destinatario"),
 });
 
 /** List card + edit-form shape (amount stays on detail only). */
