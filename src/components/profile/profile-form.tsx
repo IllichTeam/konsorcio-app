@@ -96,7 +96,7 @@ export function ProfileForm({ userName }: ProfileFormProps) {
 
   if (isLoading) {
     return (
-      <div className="w-full max-w-xl space-y-4">
+      <div className="mx-auto w-full max-w-xl space-y-4">
         <Skeleton className="h-6 w-72" />
         <Skeleton className="h-96 w-full rounded-lg" />
       </div>
@@ -108,7 +108,7 @@ export function ProfileForm({ userName }: ProfileFormProps) {
   }
 
   return (
-    <div className="w-full max-w-xl">
+    <div className="mx-auto w-full max-w-xl">
       <h1 className="mb-4 text-lg font-semibold tracking-tight text-foreground">
         Configuración de usuario <span className="text-muted-foreground">· {userName}</span>
       </h1>

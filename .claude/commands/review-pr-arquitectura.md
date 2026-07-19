@@ -34,13 +34,13 @@ Evalúa el diff contra estas reglas del proyecto (fuente: `AGENTS.md`). Reporta 
 - NUNCA componentes crudos de `src/components/ui/` directamente dentro de un form, ni `Controller` inline en páginas/screens.
 - Si falta un wrapper, debe crearse en `src/components/form/` siguiendo el patrón existente (label, error de `fieldState`, `aria-invalid`/`aria-describedby`).
 
-### Diseño (Linear/Apple: sobrio, compacto, preciso)
+### Diseño (Linear/Vercel collection UI — ver AGENTS.md)
 
-- Fondo nunca blanco puro; canvas gris frío (oklch hue ~255) con cards casi blancas.
+- Fondo nunca blanco puro; canvas gris frío (oklch hue ~255) con superficies casi blancas.
 - Neutrales todos en hue ~255, baja chroma — sin grises cálidos.
-- Cards planas: borde 1px `border-border`, sin sombra, `rounded-lg`, padding compacto. Contenido agrupado en `Card`, no cajas ad-hoc.
-- Un solo acento (azul primario), usado con moderación. Sin gradientes ni color decorativo.
-- Densidad: `text-sm` base en cards, radii contenidos, motion sutil con `motion-reduce`.
+- Cards: borde 1px + sombra suave (`shadow-card`), `rounded-lg`; preferir `Card`/tokens de superficie.
+- Primary blue como único acento fuerte; tiles soft multi-hue OK en listas; Squareline opcional en heroes de colección; sin gradientes de fill/marketing.
+- Densidad compacta en forms/tables; aire editorial OK en collection screens; `text-sm` en UI densa; motion sutil con `motion-reduce`.
 
 ### Tooling
 

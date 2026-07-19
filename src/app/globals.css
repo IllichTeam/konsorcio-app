@@ -47,6 +47,20 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  --color-tile-blue: var(--tile-blue);
+  --color-tile-blue-fg: var(--tile-blue-fg);
+  --color-tile-amber: var(--tile-amber);
+  --color-tile-amber-fg: var(--tile-amber-fg);
+  --color-tile-violet: var(--tile-violet);
+  --color-tile-violet-fg: var(--tile-violet-fg);
+  --color-tile-teal: var(--tile-teal);
+  --color-tile-teal-fg: var(--tile-teal-fg);
+  --color-tile-rose: var(--tile-rose);
+  --color-tile-rose-fg: var(--tile-rose-fg);
+  --color-tile-green: var(--tile-green);
+  --color-tile-green-fg: var(--tile-green-fg);
+  --shadow-card: var(--shadow-card);
+  --shadow-card-hover: var(--shadow-card-hover);
 }
 
 :root {
@@ -82,6 +96,20 @@
   --sidebar-accent-foreground: oklch(0.3 0.05 242.749);
   --sidebar-border: oklch(0.885 0.006 255);
   --sidebar-ring: oklch(0.5 0.134 242.749);
+  --shadow-card: 0 0 0 1px oklch(0.895 0.006 255), 0 1px 2px rgba(0, 0, 0, 0.03);
+  --shadow-card-hover: 0 0 0 1px oklch(0.82 0.01 255), 0 8px 24px -8px rgba(0, 0, 0, 0.08);
+  --tile-blue: oklch(0.93 0.04 242.749);
+  --tile-blue-fg: oklch(0.42 0.12 242.749);
+  --tile-amber: oklch(0.94 0.045 75);
+  --tile-amber-fg: oklch(0.45 0.1 65);
+  --tile-violet: oklch(0.93 0.035 290);
+  --tile-violet-fg: oklch(0.42 0.1 290);
+  --tile-teal: oklch(0.93 0.035 195);
+  --tile-teal-fg: oklch(0.4 0.08 195);
+  --tile-rose: oklch(0.94 0.035 15);
+  --tile-rose-fg: oklch(0.45 0.1 15);
+  --tile-green: oklch(0.93 0.04 155);
+  --tile-green-fg: oklch(0.4 0.09 155);
 }
 
 .dark {
@@ -116,6 +144,20 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.552 0.016 255);
+  --shadow-card: 0 0 0 1px oklch(1 0 0 / 10%), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-card-hover: 0 0 0 1px oklch(1 0 0 / 16%), 0 8px 24px -8px rgba(0, 0, 0, 0.45);
+  --tile-blue: oklch(0.28 0.04 242.749);
+  --tile-blue-fg: oklch(0.78 0.08 242.749);
+  --tile-amber: oklch(0.3 0.04 75);
+  --tile-amber-fg: oklch(0.82 0.08 75);
+  --tile-violet: oklch(0.28 0.04 290);
+  --tile-violet-fg: oklch(0.8 0.08 290);
+  --tile-teal: oklch(0.28 0.035 195);
+  --tile-teal-fg: oklch(0.8 0.06 195);
+  --tile-rose: oklch(0.3 0.04 15);
+  --tile-rose-fg: oklch(0.82 0.07 15);
+  --tile-green: oklch(0.28 0.04 155);
+  --tile-green-fg: oklch(0.8 0.07 155);
 }
 
 @layer base {
@@ -127,11 +169,58 @@
   }
 }
 
+/* Soft card elevation — collection surfaces (see AGENTS.md Design direction) */
+@utility shadow-card {
+  box-shadow: var(--shadow-card);
+}
+
+@utility shadow-card-hover {
+  box-shadow: var(--shadow-card-hover);
+}
+
+/* Hairline ring — KPI strip in collection heroes */
+@utility shadow-hair {
+  box-shadow: 0 0 0 1px var(--border);
+}
+
+/* Squareline — collection heroes only (fades before card grid) */
+@utility grid-noise {
+  --grid-line: oklch(from var(--primary) l c h / 0.12);
+  background-image:
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+  background-size: 24px 24px;
+  mask-image: linear-gradient(to bottom, black 0%, black 62%, transparent 100%);
+}
+
 @keyframes cube-spin {
   from {
     transform: rotateX(0) rotateY(0);
   }
   to {
     transform: rotateX(360deg) rotateY(360deg);
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@utility animate-rise-in {
+  animation: rise-in 0.55s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise-in {
+    animation: none;
+    opacity: 1;
+    transform: none;
   }
 }

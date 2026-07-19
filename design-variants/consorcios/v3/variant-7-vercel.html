@@ -1,0 +1,1080 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Variante 7 — Vercel: precisión monócroma · Consorcios</title>
+    <link rel="preconnect" href="https://fonts.bunny.net" />
+    <link
+      href="https://fonts.bunny.net/css?family=geist:400,500,600,700|geist-mono:400,500"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+      @theme {
+        --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+        --font-mono: "Geist Mono", ui-monospace, monospace;
+
+        --color-canvas: #fafafa;
+        --color-surface: #fcfcfc;
+        --color-surface-hover: #f4f4f4;
+        --color-ink: #171717;
+        --color-ink-soft: #404040;
+        --color-muted: #737373;
+        --color-muted-soft: #a3a3a3;
+        --color-border: #eaeaea;
+        --color-border-strong: #d4d4d4;
+        --color-sidebar: #fafafa;
+        --color-accent: #0070f3;
+        --color-accent-soft: #e8f1ff;
+        --color-ready: #0070f3;
+        --color-ready-dot: #0a7d3e;
+        --color-attention: #f5a623;
+        --color-attention-ink: #a35b00;
+        --color-operativo: #7928ca;
+        --color-cta: #171717;
+        --color-cta-fg: #fafafa;
+
+        --radius-sm: 0.375rem;
+        --radius-md: 0.5rem;
+        --radius-lg: 0.625rem;
+      }
+    </style>
+    <style>
+      :root {
+        font-family: "Geist", ui-sans-serif, system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+      }
+
+      body {
+        background-color: #fafafa;
+        color: #171717;
+      }
+
+      .surface {
+        background-color: #fcfcfc;
+      }
+
+      .ease-vercel {
+        transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+      }
+
+      .shadow-hair {
+        box-shadow: 0 0 0 1px #eaeaea;
+      }
+
+      .shadow-card {
+        box-shadow:
+          0 0 0 1px #eaeaea,
+          0 1px 2px rgba(0, 0, 0, 0.04);
+      }
+
+      .shadow-card-hover {
+        box-shadow:
+          0 0 0 1px #d4d4d4,
+          0 8px 24px -8px rgba(0, 0, 0, 0.1);
+      }
+
+      .focus-ring:focus-visible {
+        outline: 2px solid #0070f3;
+        outline-offset: 2px;
+      }
+
+      :focus-visible {
+        outline: 2px solid #0070f3;
+        outline-offset: 2px;
+      }
+
+      /* Status pulse — Ready feel */
+      @keyframes status-pulse {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.55;
+          transform: scale(0.92);
+        }
+      }
+
+      .dot-pulse {
+        animation: status-pulse 2.4s ease-in-out infinite;
+      }
+
+      /* Opening choreography — WOW */
+      @keyframes rise-in {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes fade-in {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .enter {
+        opacity: 0;
+        animation: rise-in 0.55s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+      }
+
+      .enter-fade {
+        opacity: 0;
+        animation: fade-in 0.45s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+      }
+
+      .d1 {
+        animation-delay: 0.04s;
+      }
+      .d2 {
+        animation-delay: 0.1s;
+      }
+      .d3 {
+        animation-delay: 0.18s;
+      }
+      .d4 {
+        animation-delay: 0.26s;
+      }
+      .d5 {
+        animation-delay: 0.34s;
+      }
+      .d6 {
+        animation-delay: 0.42s;
+      }
+      .d7 {
+        animation-delay: 0.5s;
+      }
+      .d8 {
+        animation-delay: 0.58s;
+      }
+
+      .skip-link {
+        position: absolute;
+        left: -9999px;
+        top: 0.75rem;
+        z-index: 100;
+        border-radius: 0.375rem;
+        background: #171717;
+        color: #fafafa;
+        padding: 0.5rem 0.875rem;
+        font-size: 0.8125rem;
+        font-weight: 500;
+      }
+
+      .skip-link:focus {
+        left: 0.75rem;
+      }
+
+      .grid-noise {
+        background-image:
+          linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+        background-size: 24px 24px;
+        mask-image: linear-gradient(to bottom, black 0%, transparent 72%);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+          scroll-behavior: auto !important;
+        }
+
+        .enter,
+        .enter-fade {
+          opacity: 1;
+          animation: none;
+          transform: none;
+        }
+
+        .dot-pulse {
+          animation: none;
+        }
+      }
+    </style>
+  </head>
+  <body class="min-h-dvh antialiased">
+    <a class="skip-link focus-ring" href="#contenido">Saltar al contenido</a>
+
+    <div class="flex min-h-dvh">
+      <!-- Sidebar — Vercel dashboard light -->
+      <aside
+        class="sticky top-0 z-40 hidden h-dvh w-[240px] shrink-0 flex-col border-r border-border bg-sidebar md:flex"
+        aria-label="Navegación principal"
+      >
+        <div class="enter-fade d1 flex h-14 items-center gap-2.5 px-4">
+          <span
+            class="flex size-6 items-center justify-center rounded-[5px] bg-ink text-[11px] font-semibold text-cta-fg"
+            aria-hidden="true"
+            >K</span
+          >
+          <div class="min-w-0 leading-tight">
+            <p class="truncate text-[13px] font-semibold tracking-tight">
+              Konsorcio
+            </p>
+            <p class="truncate text-[11px] text-muted">Panel de administración</p>
+          </div>
+        </div>
+
+        <nav class="enter-fade d2 flex-1 overflow-y-auto px-3 pb-4">
+          <p
+            class="px-2 pb-1.5 pt-2 text-[11px] font-medium uppercase tracking-[0.06em] text-muted-soft"
+          >
+            Dashboard
+          </p>
+          <ul class="space-y-0.5">
+            <li>
+              <a
+                href="#"
+                class="ease-vercel flex items-center gap-2.5 rounded-md bg-ink/[0.06] px-2.5 py-1.5 text-[13px] font-medium text-ink transition-colors duration-200 hover:bg-ink/[0.08] active:scale-[0.99]"
+                aria-current="page"
+              >
+                <svg
+                  class="size-4 shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path d="M3 21h18" />
+                  <path d="M6 21V8l6-4 6 4v13" />
+                  <path d="M10 21v-5h4v5" />
+                </svg>
+                Consorcios
+              </a>
+            </li>
+            <li>
+              <a
+                href="#"
+                class="ease-vercel flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] text-ink-soft transition-colors duration-200 hover:bg-ink/[0.04] hover:text-ink active:scale-[0.99]"
+              >
+                <svg
+                  class="size-4 shrink-0 text-muted"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="3" width="7.5" height="7.5" rx="1.5" />
+                  <rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5" />
+                  <rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5" />
+                  <rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5" />
+                </svg>
+                Resumen
+              </a>
+            </li>
+          </ul>
+
+          <p
+            class="px-2 pb-1.5 pt-5 text-[11px] font-medium uppercase tracking-[0.06em] text-muted-soft"
+          >
+            Sistema
+          </p>
+          <ul class="space-y-0.5">
+            <li>
+              <a
+                href="#"
+                class="ease-vercel flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] text-ink-soft transition-colors duration-200 hover:bg-ink/[0.04] hover:text-ink active:scale-[0.99]"
+              >
+                <svg
+                  class="size-4 shrink-0 text-muted"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="3" />
+                  <path
+                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+                  />
+                </svg>
+                Configuración
+              </a>
+            </li>
+          </ul>
+        </nav>
+
+        <div class="enter-fade d2 border-t border-border p-3">
+          <div
+            class="ease-vercel flex items-center gap-2.5 rounded-md px-1.5 py-1.5 transition-colors duration-200 hover:bg-ink/[0.04]"
+          >
+            <span
+              class="flex size-8 shrink-0 items-center justify-center rounded-md bg-ink text-[11px] font-semibold text-cta-fg"
+              aria-hidden="true"
+              >MG</span
+            >
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-[12.5px] font-medium">María González</p>
+              <p class="truncate font-mono text-[10.5px] text-muted">
+                m.gonzalez@konsorcio.ar
+              </p>
+            </div>
+            <a
+              href="#"
+              class="ease-vercel flex size-8 shrink-0 items-center justify-center rounded-md text-muted transition-colors duration-200 hover:bg-ink/[0.06] hover:text-ink"
+              aria-label="Cerrar sesión"
+              title="Cerrar sesión"
+            >
+              <svg
+                class="size-4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <path d="M16 17l5-5-5-5" />
+                <path d="M21 12H9" />
+              </svg>
+            </a>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main column -->
+      <div class="flex min-w-0 flex-1 flex-col">
+        <header
+          class="sticky top-0 z-30 border-b border-border bg-canvas/90 backdrop-blur-md enter-fade d1"
+        >
+          <div
+            class="mx-auto flex h-14 w-full max-w-[1120px] items-center gap-3 px-4 sm:px-6"
+          >
+            <span
+              class="flex size-6 items-center justify-center rounded-[5px] bg-ink text-[11px] font-semibold text-cta-fg md:hidden"
+              aria-hidden="true"
+              >K</span
+            >
+
+            <nav aria-label="Miga de pan" class="hidden min-w-0 md:block">
+              <ol class="flex items-center gap-1.5 text-[13px] text-muted">
+                <li>
+                  <a
+                    href="#"
+                    class="ease-vercel transition-colors duration-200 hover:text-ink"
+                    >Dashboard</a
+                  >
+                </li>
+                <li aria-hidden="true" class="text-border-strong">/</li>
+                <li class="font-medium text-ink" aria-current="page">
+                  Consorcios
+                </li>
+              </ol>
+            </nav>
+
+            <div class="ml-auto flex items-center gap-2">
+              <button
+                type="button"
+                class="ease-vercel flex size-8 items-center justify-center rounded-md text-muted transition-colors duration-200 hover:bg-ink/[0.05] hover:text-ink sm:hidden"
+                aria-label="Buscar consorcio"
+              >
+                <svg
+                  class="size-4"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="M20 20l-3.2-3.2" />
+                </svg>
+              </button>
+
+              <label class="relative hidden sm:block">
+                <span class="sr-only">Buscar consorcio</span>
+                <svg
+                  class="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="M20 20l-3.2-3.2" />
+                </svg>
+                <input
+                  type="search"
+                  readonly
+                  placeholder="Buscar…"
+                  class="ease-vercel h-8 w-44 rounded-md border border-border bg-surface pl-8 pr-3 text-[13px] text-ink placeholder:text-muted-soft transition-all duration-200 focus:w-56 focus:border-ink/30 focus:outline-none focus:ring-2 focus:ring-accent/25"
+                />
+              </label>
+
+              <button
+                type="button"
+                class="ease-vercel group inline-flex h-8 items-center gap-1.5 rounded-md bg-cta px-3 text-[13px] font-medium text-cta-fg transition-all duration-200 hover:bg-ink-soft active:scale-[0.98]"
+              >
+                <svg
+                  class="size-3.5 transition-transform duration-200 group-hover:rotate-90"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+                <span class="hidden sm:inline">Agregar nuevo consorcio</span>
+                <span class="sm:hidden">Agregar</span>
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <main id="contenido" class="relative flex-1">
+          <div
+            class="pointer-events-none absolute inset-x-0 top-0 h-48 grid-noise"
+            aria-hidden="true"
+          ></div>
+
+          <div
+            class="relative mx-auto w-full max-w-[1120px] px-4 pb-24 sm:px-6"
+          >
+            <!-- Hero -->
+            <section
+              class="enter d2 border-b border-border pb-8 pt-8 sm:pt-10"
+              aria-labelledby="page-title"
+            >
+              <div
+                class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between"
+              >
+                <div class="min-w-0">
+                  <p
+                    class="font-mono text-[11px] font-medium tracking-wide text-muted"
+                  >
+                    Dashboard · Consorcios
+                  </p>
+                  <h1
+                    id="page-title"
+                    class="mt-2 text-balance text-[1.75rem] font-semibold leading-[1.15] tracking-[-0.035em] text-ink sm:text-[2rem]"
+                  >
+                    Selección de consorcios
+                  </h1>
+                  <p class="mt-2 text-[15px] text-ink-soft">
+                    Bienvenida, María González
+                  </p>
+                  <p
+                    class="mt-1.5 max-w-xl text-[13.5px] leading-relaxed text-muted"
+                  >
+                    Administrás
+                    <span class="font-medium tabular-nums text-ink">9</span>
+                    consorcios activos y
+                    <span class="font-medium tabular-nums text-ink">312</span>
+                    unidades. Estado operativo al instante.
+                  </p>
+                </div>
+
+                <!-- Global metrics — deployment-style counters -->
+                <div
+                  class="flex shrink-0 gap-px overflow-hidden rounded-lg border border-border surface shadow-hair"
+                  role="group"
+                  aria-label="Métricas globales"
+                >
+                  <div class="min-w-[7.5rem] px-4 py-3">
+                    <p
+                      class="font-mono text-[10.5px] uppercase tracking-[0.08em] text-muted"
+                    >
+                      Consorcios
+                    </p>
+                    <p
+                      class="mt-1 text-[1.625rem] font-semibold tracking-tight tabular-nums"
+                    >
+                      9
+                    </p>
+                    <p class="text-[11.5px] text-muted">activos</p>
+                  </div>
+                  <div class="w-px bg-border" aria-hidden="true"></div>
+                  <div class="min-w-[7.5rem] px-4 py-3">
+                    <p
+                      class="font-mono text-[10.5px] uppercase tracking-[0.08em] text-muted"
+                    >
+                      Unidades
+                    </p>
+                    <p
+                      class="mt-1 text-[1.625rem] font-semibold tracking-tight tabular-nums"
+                    >
+                      312
+                    </p>
+                    <p class="text-[11.5px] text-muted">administradas</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Project grid -->
+            <section class="enter d3 pt-6" aria-labelledby="list-heading">
+              <div class="mb-4 flex items-center justify-between gap-3">
+                <h2
+                  id="list-heading"
+                  class="text-[13px] font-medium text-ink"
+                >
+                  Tus consorcios
+                </h2>
+                <p class="font-mono text-[11.5px] text-muted">
+                  Página 1 de 2 · 6 visibles
+                </p>
+              </div>
+
+              <div
+                class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3"
+              >
+                <!-- 1 · Av. Santa Fe 2154 · Al día -->
+                <article
+                  class="enter d3 group relative flex flex-col rounded-lg surface shadow-card transition-all duration-200 ease-vercel hover:-translate-y-px hover:shadow-card-hover"
+                >
+                  <a
+                    href="#"
+                    class="absolute inset-0 z-0 rounded-lg"
+                    aria-label="Abrir Av. Santa Fe 2154"
+                  ></a>
+
+                  <div class="relative z-10 flex flex-1 flex-col p-4">
+                    <div class="flex items-start justify-between gap-2">
+                      <div class="flex min-w-0 items-center gap-2.5">
+                        <span
+                          class="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-canvas text-[11px] font-semibold text-ink-soft"
+                          aria-hidden="true"
+                          >SF</span
+                        >
+                        <div class="min-w-0">
+                          <h3
+                            class="truncate text-[14px] font-semibold tracking-tight"
+                          >
+                            Av. Santa Fe 2154
+                          </h3>
+                          <p class="truncate text-[12px] text-muted">
+                            Recoleta, CABA
+                          </p>
+                        </div>
+                      </div>
+                      <span
+                        class="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-border bg-canvas px-1.5 py-0.5 text-[11px] font-medium text-ink-soft"
+                      >
+                        <span
+                          class="dot-pulse size-1.5 rounded-full bg-ready-dot"
+                          aria-hidden="true"
+                        ></span>
+                        Al día
+                      </span>
+                    </div>
+
+                    <dl
+                      class="mt-4 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-border pt-3 text-[12.5px]"
+                    >
+                      <div>
+                        <dt class="text-muted">Unidades</dt>
+                        <dd class="mt-0.5 font-medium tabular-nums">48</dd>
+                      </div>
+                      <div>
+                        <dt class="text-muted">Avisos</dt>
+                        <dd class="mt-0.5 font-medium tabular-nums">0 sin leer</dd>
+                      </div>
+                      <div>
+                        <dt class="text-muted">Reclamos</dt>
+                        <dd class="mt-0.5 font-medium tabular-nums">0 abiertos</dd>
+                      </div>
+                      <div>
+                        <dt class="text-muted">Inquilinos</dt>
+                        <dd class="mt-0.5 font-medium tabular-nums">
+                          41 correos
+                        </dd>
+                      </div>
+                    </dl>
+
+                    <div
+                      class="mt-auto flex items-center justify-between gap-2 border-t border-border pt-3"
+                    >
+                      <p class="font-mono text-[11px] text-muted">
+                        hace 2 h
+                      </p>
+                      <button
+                        type="button"
+                        class="ease-vercel relative z-20 rounded-md px-2 py-1 text-[12.5px] font-medium text-accent transition-colors duration-200 hover:bg-accent-soft active:scale-[0.98]"
+                      >
+                        Enviar comentario
+                      </button>
+                    </div>
+                  </div>
+                </article>
+
+                <!-- 2 · Libertador 4310 · Atención -->
+                <article
+                  class="enter d4 group relative flex flex-col rounded-lg surface shadow-card transition-all duration-200 ease-vercel hover:-translate-y-px hover:shadow-card-hover"
+                >
+                  <a
+                    href="#"
+                    class="absolute inset-0 z-0 rounded-lg"
+                    aria-label="Abrir Libertador 4310"
+                  ></a>
+
+                  <div class="relative z-10 flex flex-1 flex-col p-4">
+                    <div class="flex items-start justify-between gap-2">
+                      <div class="flex min-w-0 items-center gap-2.5">
+                        <span
+                          class="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-canvas text-[11px] font-semibold text-ink-soft"
+                          aria-hidden="true"
+                          >LB</span
+                        >
+                        <div class="min-w-0">
+                          <h3
+                            class="truncate text-[14px] font-semibold tracking-tight"
+                          >
+                            Libertador 4310
+                          </h3>
+                          <p class="truncate text-[12px] text-muted">
+                            Palermo, CABA
+                          </p>
+                        </div>
+                      </div>
+                      <span
+                        class="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-[#f5e6c8] bg-[#fffbeb] px-1.5 py-0.5 text-[11px] font-medium text-attention-ink"
+                      >
+                        <span
+                          class="size-1.5 rounded-full bg-attention"
+                          aria-hidden="true"
+                        ></span>
+                        Atención
+                      </span>
+                    </div>
+
+                    <dl
+                      class="mt-4 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-border pt-3 text-[12.5px]"
+                    >
+                      <div>
+                        <dt class="text-muted">Unidades</dt>
+                        <dd class="mt-0.5 font-medium tabular-nums">72</dd>
+                      </div>
+                      <div>
+                        <dt class="text-muted">Avisos</dt>
+                        <dd class="mt-0.5 font-medium tabular-nums text-attention-ink">
+                          5 sin leer
+                        </dd>
+                      </div>
+                      <div>
+                        <dt class="text-muted">Reclamos</dt>
+                        <dd class="mt-0.5 font-medium tabular-nums">3 abiertos</dd>
+                      </div>
+                      <div>
+                        <dt class="text-muted">Inquilinos</dt>
+                        <dd class="mt-0.5 font-medium tabular-nums">
+                          68 correos
+                        </dd>
+                      </div>
+                    </dl>
+
+                    <div
+                      class="mt-auto flex items-center justify-between gap-2 border-t border-border pt-3"
+                    >
+                      <p class="font-mono text-[11px] text-muted">
+                        hace 18 min
+                      </p>
+                      <button
+                        type="button"
+                        class="ease-vercel relative z-20 rounded-md px-2 py-1 text-[12.5px] font-medium text-accent transition-colors duration-200 hover:bg-accent-soft active:scale-[0.98]"
+                      >
+                        Enviar comentario
+                      </button>
+                    </div>
+                  </div>
+                </article>
+
+                <!-- 3 · Torre Alem Plaza · Atención -->
+                <article
+                  class="enter d5 group relative flex flex-col rounded-lg surface shadow-card transition-all duration-200 ease-vercel hover:-translate-y-px hover:shadow-card-hover"
+                >
+                  <a
+                    href="#"
+                    class="absolute inset-0 z-0 rounded-lg"
+                    aria-label="Abrir Torre Alem Plaza"
+                  ></a>
+
+                  <div class="relative z-10 flex flex-1 flex-col p-4">
+                    <div class="flex items-start justify-between gap-2">
+                      <div class="flex min-w-0 items-center gap-2.5">
+                        <span
+                          class="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-canvas text-[11px] font-semibold text-ink-soft"
+                          aria-hidden="true"
+                          >TA</span
+                        >
+                        <div class="min-w-0">
+                          <h3
+                            class="truncate text-[14px] font-semibold tracking-tight"
+                          >
+                            Torre Alem Plaza
+                          </h3>
+                          <p class="truncate text-[12px] text-muted">
+                            Retiro, CABA
+                          </p>
+                        </div>
+                      </div>
+                      <span
+                        class="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-[#f5e6c8] bg-[#fffbeb] px-1.5 py-0.5 text-[11px] font-medium text-attention-ink"
+                      >
+                        <span
+                          class="size-1.5 rounded-full bg-attention"
+                          aria-hidden="true"
+                        ></span>
+                        Atención
+                      </span>
+                    </div>
+
+                    <dl
+                      class="mt-4 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-border pt-3 text-[12.5px]"
+                    >
+                      <div>
+                        <dt class="text-muted">Unidades</dt>
+                        <dd class="mt-0.5 font-medium tabular-nums">96</dd>
+                      </div>
+                      <div>
+                        <dt class="text-muted">Avisos</dt>
+                        <dd class="mt-0.5 font-medium tabular-nums text-attention-ink">
+                          8 sin leer
+                        </dd>
+                      </div>
+                      <div>
+                        <dt class="text-muted">Reclamos</dt>
+                        <dd class="mt-0.5 font-medium tabular-nums">2 abiertos</dd>
+                      </div>
+                      <div>
+                        <dt class="text-muted">Inquilinos</dt>
+                        <dd class="mt-0.5 font-medium tabular-nums">
+                          90 correos
+                        </dd>
+                      </div>
+                    </dl>
+
+                    <div
+                      class="mt-auto flex items-center justify-between gap-2 border-t border-border pt-3"
+                    >
+                      <p class="font-mono text-[11px] text-muted">
+                        hace 41 min
+                      </p>
+                      <button
+                        type="button"
+                        class="ease-vercel relative z-20 rounded-md px-2 py-1 text-[12.5px] font-medium text-accent transition-colors duration-200 hover:bg-accent-soft active:scale-[0.98]"
+                      >
+                        Enviar comentario
+                      </button>
+                    </div>
+                  </div>
+                </article>
+
+                <!-- 4 · Cabildo 2478 · Operativo -->
+                <article
+                  class="enter d6 group relative flex flex-col rounded-lg surface shadow-card transition-all duration-200 ease-vercel hover:-translate-y-px hover:shadow-card-hover"
+                >
+                  <a
+                    href="#"
+                    class="absolute inset-0 z-0 rounded-lg"
+                    aria-label="Abrir Cabildo 2478"
+                  ></a>
+
+                  <div class="relative z-10 flex flex-1 flex-col p-4">
+                    <div class="flex items-start justify-between gap-2">
+                      <div class="flex min-w-0 items-center gap-2.5">
+                        <span
+                          class="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-canvas text-[11px] font-semibold text-ink-soft"
+                          aria-hidden="true"
+                          >CB</span
+                        >
+                        <div class="min-w-0">
+                          <h3
+                            class="truncate text-[14px] font-semibold tracking-tight"
+                          >
+                            Cabildo 2478
+                          </h3>
+                          <p class="truncate text-[12px] text-muted">
+                            Belgrano, CABA
+                          </p>
+                        </div>
+                      </div>
+                      <span
+                        class="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-[#eadcf8] bg-[#f8f1ff] px-1.5 py-0.5 text-[11px] font-medium text-operativo"
+                      >
+                        <span
+                          class="size-1.5 rounded-full bg-operativo"
+                          aria-hidden="true"
+                        ></span>
+                        Operativo
+                      </span>
+                    </div>
+
+                    <dl
+                      class="mt-4 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-border pt-3 text-[12.5px]"
+                    >
+                      <div>
+                        <dt class="text-muted">Unidades</dt>
+                        <dd class="mt-0.5 font-medium tabular-nums">24</dd>
+                      </div>
+                      <div>
+                        <dt class="text-muted">Avisos</dt>
+                        <dd class="mt-0.5 font-medium tabular-nums">1 sin leer</dd>
+                      </div>
+                      <div>
+                        <dt class="text-muted">Reclamos</dt>
+                        <dd class="mt-0.5 font-medium tabular-nums">0 abiertos</dd>
+                      </div>
+                      <div>
+                        <dt class="text-muted">Inquilinos</dt>
+                        <dd class="mt-0.5 font-medium tabular-nums">
+                          22 correos
+                        </dd>
+                      </div>
+                    </dl>
+
+                    <div
+                      class="mt-auto flex items-center justify-between gap-2 border-t border-border pt-3"
+                    >
+                      <p class="font-mono text-[11px] text-muted">
+                        hace 3 h
+                      </p>
+                      <button
+                        type="button"
+                        class="ease-vercel relative z-20 rounded-md px-2 py-1 text-[12.5px] font-medium text-accent transition-colors duration-200 hover:bg-accent-soft active:scale-[0.98]"
+                      >
+                        Enviar comentario
+                      </button>
+                    </div>
+                  </div>
+                </article>
+
+                <!-- 5 · Rivadavia 6320 · Al día -->
+                <article
+                  class="enter d7 group relative flex flex-col rounded-lg surface shadow-card transition-all duration-200 ease-vercel hover:-translate-y-px hover:shadow-card-hover"
+                >
+                  <a
+                    href="#"
+                    class="absolute inset-0 z-0 rounded-lg"
+                    aria-label="Abrir Rivadavia 6320"
+                  ></a>
+
+                  <div class="relative z-10 flex flex-1 flex-col p-4">
+                    <div class="flex items-start justify-between gap-2">
+                      <div class="flex min-w-0 items-center gap-2.5">
+                        <span
+                          class="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-canvas text-[11px] font-semibold text-ink-soft"
+                          aria-hidden="true"
+                          >RV</span
+                        >
+                        <div class="min-w-0">
+                          <h3
+                            class="truncate text-[14px] font-semibold tracking-tight"
+                          >
+                            Rivadavia 6320
+                          </h3>
+                          <p class="truncate text-[12px] text-muted">
+                            Caballito, CABA
+                          </p>
+                        </div>
+                      </div>
+                      <span
+                        class="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-border bg-canvas px-1.5 py-0.5 text-[11px] font-medium text-ink-soft"
+                      >
+                        <span
+                          class="dot-pulse size-1.5 rounded-full bg-ready-dot"
+                          aria-hidden="true"
+                        ></span>
+                        Al día
+                      </span>
+                    </div>
+
+                    <dl
+                      class="mt-4 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-border pt-3 text-[12.5px]"
+                    >
+                      <div>
+                        <dt class="text-muted">Unidades</dt>
+                        <dd class="mt-0.5 font-medium tabular-nums">36</dd>
+                      </div>
+                      <div>
+                        <dt class="text-muted">Avisos</dt>
+                        <dd class="mt-0.5 font-medium tabular-nums">0 sin leer</dd>
+                      </div>
+                      <div>
+                        <dt class="text-muted">Reclamos</dt>
+                        <dd class="mt-0.5 font-medium tabular-nums">0 abiertos</dd>
+                      </div>
+                      <div>
+                        <dt class="text-muted">Inquilinos</dt>
+                        <dd class="mt-0.5 font-medium tabular-nums">
+                          33 correos
+                        </dd>
+                      </div>
+                    </dl>
+
+                    <div
+                      class="mt-auto flex items-center justify-between gap-2 border-t border-border pt-3"
+                    >
+                      <p class="font-mono text-[11px] text-muted">
+                        hace 5 h
+                      </p>
+                      <button
+                        type="button"
+                        class="ease-vercel relative z-20 rounded-md px-2 py-1 text-[12.5px] font-medium text-accent transition-colors duration-200 hover:bg-accent-soft active:scale-[0.98]"
+                      >
+                        Enviar comentario
+                      </button>
+                    </div>
+                  </div>
+                </article>
+
+                <!-- 6 · Malabia 1725 · Operativo -->
+                <article
+                  class="enter d8 group relative flex flex-col rounded-lg surface shadow-card transition-all duration-200 ease-vercel hover:-translate-y-px hover:shadow-card-hover"
+                >
+                  <a
+                    href="#"
+                    class="absolute inset-0 z-0 rounded-lg"
+                    aria-label="Abrir Malabia 1725"
+                  ></a>
+
+                  <div class="relative z-10 flex flex-1 flex-col p-4">
+                    <div class="flex items-start justify-between gap-2">
+                      <div class="flex min-w-0 items-center gap-2.5">
+                        <span
+                          class="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-canvas text-[11px] font-semibold text-ink-soft"
+                          aria-hidden="true"
+                          >ML</span
+                        >
+                        <div class="min-w-0">
+                          <h3
+                            class="truncate text-[14px] font-semibold tracking-tight"
+                          >
+                            Malabia 1725
+                          </h3>
+                          <p class="truncate text-[12px] text-muted">
+                            Villa Crespo, CABA
+                          </p>
+                        </div>
+                      </div>
+                      <span
+                        class="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-[#eadcf8] bg-[#f8f1ff] px-1.5 py-0.5 text-[11px] font-medium text-operativo"
+                      >
+                        <span
+                          class="size-1.5 rounded-full bg-operativo"
+                          aria-hidden="true"
+                        ></span>
+                        Operativo
+                      </span>
+                    </div>
+
+                    <dl
+                      class="mt-4 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-border pt-3 text-[12.5px]"
+                    >
+                      <div>
+                        <dt class="text-muted">Unidades</dt>
+                        <dd class="mt-0.5 font-medium tabular-nums">18</dd>
+                      </div>
+                      <div>
+                        <dt class="text-muted">Avisos</dt>
+                        <dd class="mt-0.5 font-medium tabular-nums">2 sin leer</dd>
+                      </div>
+                      <div>
+                        <dt class="text-muted">Reclamos</dt>
+                        <dd class="mt-0.5 font-medium tabular-nums">0 abiertos</dd>
+                      </div>
+                      <div>
+                        <dt class="text-muted">Inquilinos</dt>
+                        <dd class="mt-0.5 font-medium tabular-nums">
+                          16 correos
+                        </dd>
+                      </div>
+                    </dl>
+
+                    <div
+                      class="mt-auto flex items-center justify-between gap-2 border-t border-border pt-3"
+                    >
+                      <p class="font-mono text-[11px] text-muted">
+                        hace 6 h
+                      </p>
+                      <button
+                        type="button"
+                        class="ease-vercel relative z-20 rounded-md px-2 py-1 text-[12.5px] font-medium text-accent transition-colors duration-200 hover:bg-accent-soft active:scale-[0.98]"
+                      >
+                        Enviar comentario
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              </div>
+
+              <!-- Pagination -->
+              <nav
+                class="enter d8 mt-8 flex items-center justify-between border-t border-border pt-5"
+                aria-label="Paginación"
+              >
+                <p class="text-[12.5px] text-muted">
+                  Mostrando
+                  <span class="font-medium tabular-nums text-ink">1–6</span>
+                  de
+                  <span class="font-medium tabular-nums text-ink">9</span>
+                </p>
+                <div class="flex items-center gap-1">
+                  <button
+                    type="button"
+                    disabled
+                    class="inline-flex h-8 items-center rounded-md border border-border px-2.5 text-[12.5px] font-medium text-muted-soft opacity-50"
+                    aria-disabled="true"
+                  >
+                    Anterior
+                  </button>
+                  <a
+                    href="#"
+                    class="ease-vercel inline-flex size-8 items-center justify-center rounded-md bg-ink text-[12.5px] font-medium text-cta-fg transition-colors duration-200"
+                    aria-current="page"
+                    aria-label="Página 1"
+                    >1</a
+                  >
+                  <a
+                    href="#"
+                    class="ease-vercel inline-flex size-8 items-center justify-center rounded-md border border-border text-[12.5px] font-medium text-ink-soft transition-colors duration-200 hover:bg-surface-hover hover:text-ink"
+                    aria-label="Página 2"
+                    >2</a
+                  >
+                  <a
+                    href="#"
+                    class="ease-vercel inline-flex h-8 items-center rounded-md border border-border px-2.5 text-[12.5px] font-medium text-ink-soft transition-colors duration-200 hover:bg-surface-hover hover:text-ink"
+                  >
+                    Siguiente
+                  </a>
+                </div>
+              </nav>
+            </section>
+          </div>
+        </main>
+      </div>
+    </div>
+  </body>
+</html>

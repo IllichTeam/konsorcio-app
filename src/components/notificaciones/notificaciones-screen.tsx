@@ -45,7 +45,7 @@ export function NotificacionesScreen() {
   }
 
   return (
-    <div className="flex w-full max-w-2xl flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
       <div>
         <h1 className="text-lg font-semibold tracking-tight text-foreground">Notificaciones</h1>
         <p className="mt-1 text-sm text-muted-foreground">

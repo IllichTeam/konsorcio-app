@@ -21,13 +21,18 @@ Check the installed skills to confirm the exact name to invoke for the domain at
 
 # Design direction
 
-Sober, compact, precise — Linear/Apple-inspired. Rules for every screen:
+Sober, precise — Linear/Vercel-inspired collection UI. Canonical visual reference: `design-variants/consorcios/v4/variant-2-final.html`. Rules for every screen:
 
-- **Background is never pure white.** Light theme uses a cool gray canvas (`--background`, oklch hue 255) with near-white cards on top for hierarchy. Don't place large white surfaces directly on the canvas outside of `Card`.
+- **Background is never pure white.** Light theme uses a cool gray canvas (`--background`, oklch hue 255) with near-white surfaces on top for hierarchy. Don't place large white surfaces directly on the canvas outside of shared surface tokens / `Card`.
 - **Neutral scale shares one temperature.** All neutrals (background/card/muted/secondary/border/sidebar) live at oklch hue ~255 with low chroma. When adding tokens, keep them in that family — never mix warm grays in.
-- **Cards are hairline flat**: 1px `border-border`, no shadow, `rounded-lg`, compact padding (20px default via `--card-spacing`, 16px with `size="sm"`). Group content in `Card` instead of ad-hoc boxes.
-- **One accent.** The primary blue is the only strong color; use it sparingly (primary actions, brand, focus). Everything else stays neutral. No gradients, no decorative color.
-- **Density over ornament**: compact spacing, `text-sm` as base inside cards, restrained radii. Motion is subtle and purposeful (micro-interactions, `motion-reduce` respected).
+- **Cards**: `rounded-lg`, 1px `border-border`, soft shadow (`shadow-card` / hairline + light elevation). Hover may lift ~1px and strengthen the shadow slightly. Prefer `Card` or the same surface tokens — no one-off boxes with random chrome. Default padding 20px (`--card-spacing`); 16px with `size="sm"`.
+- **Accent.** Primary blue is the only _strong_ color (primary actions, brand, focus). Soft multi-hue **identity tiles** (low chroma: blue/amber/violet/teal/rose/green) are allowed on collection cards for recognition. No rainbow chrome elsewhere. No marketing fill gradients.
+- **Squareline.** Optional 24px grid texture (`.grid-noise`) with a bottom fade on **collection heroes only** — not on every panel. Keep it subtle (primary tint ~12% alpha); never as a global page background.
+- **Main column.** `DashboardShell` stretches page content to the full inset width (no `items-start`). Screen roots use `w-full`; when capping width with `max-w-*`, always pair with `mx-auto` so content does not pin left on wide viewports. Collection heroes may break out of shell padding (`-m-6 md:-m-10` + `overflow-x-clip`) and center in `mx-auto w-full max-w-[1120px] px-4 sm:px-6` — see `consortiums-screen.tsx`. Never introduce horizontal scroll (`overflow-x-clip` on the inset / breakout).
+- **Density.** Compact for forms, tables, and chrome. Collection screens may use editorial air: larger H1 with `text-balance`, roomier hero, card `p-5`, grid `gap-4`+. In dense UI, `text-sm` remains the base.
+- **Type.** No all-caps page titles or sustained uppercase UI. KPI/meta micro-labels may use small mono + uppercase + tracking (~10–11px).
+- **Collection card pattern.** Metrics: muted label + `tabular-nums` value with vertical gap ≥ `mt-1.5`. Secondary CTA always has button chrome (border or fill), never plain blue text; pin actions with `mt-auto` so the grid baseline stays clean.
+- **Motion.** Subtle and purposeful (`transform`/`opacity`, micro-interactions). Honor `prefers-reduced-motion` / `motion-reduce`.
 
 # Language
 
