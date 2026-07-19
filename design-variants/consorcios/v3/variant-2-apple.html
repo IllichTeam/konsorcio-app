@@ -1,0 +1,1178 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Variante 2 — Apple: calma, materia y tipografía · Consorcios</title>
+    <link rel="preconnect" href="https://fonts.bunny.net" />
+    <link
+      href="https://fonts.bunny.net/css?family=instrument-sans:300,400,500,600,700"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+      @theme {
+        --font-sans: "Instrument Sans", -apple-system, BlinkMacSystemFont,
+          ui-sans-serif, system-ui, sans-serif;
+
+        --color-canvas: oklch(0.952 0.007 255);
+        --color-foreground: oklch(0.22 0.02 255);
+        --color-surface: oklch(0.982 0.003 255);
+        --color-surface-elevated: oklch(0.99 0.002 255);
+        --color-primary: oklch(0.52 0.17 250);
+        --color-primary-foreground: oklch(0.99 0.01 250);
+        --color-secondary: oklch(0.93 0.008 255);
+        --color-secondary-foreground: oklch(0.32 0.02 255);
+        --color-muted: oklch(0.925 0.006 255);
+        --color-muted-foreground: oklch(0.48 0.016 255);
+        --color-accent: oklch(0.93 0.03 250);
+        --color-accent-foreground: oklch(0.35 0.08 250);
+        --color-success: oklch(0.55 0.12 155);
+        --color-success-soft: oklch(0.94 0.03 155);
+        --color-attention: oklch(0.68 0.14 65);
+        --color-attention-soft: oklch(0.95 0.03 65);
+        --color-border: oklch(0.88 0.008 255);
+        --color-hairline: oklch(0.9 0.006 255);
+        --color-sidebar: oklch(0.94 0.008 255);
+        --color-sidebar-border: oklch(0.88 0.008 255);
+
+        --radius-lg: 0.875rem;
+        --radius-xl: 1.125rem;
+        --radius-2xl: 1.375rem;
+      }
+    </style>
+    <style>
+      :root {
+        font-family: "Instrument Sans", -apple-system, BlinkMacSystemFont,
+          ui-sans-serif, system-ui, sans-serif;
+        font-feature-settings: "ss01", "cv11";
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+      }
+
+      body {
+        background-color: oklch(0.952 0.007 255);
+        color: oklch(0.22 0.02 255);
+      }
+
+      .ease-apple {
+        transition-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+      }
+
+      .shadow-material {
+        box-shadow:
+          0 1px 0 oklch(0.22 0.02 255 / 0.04),
+          0 8px 28px -10px oklch(0.35 0.03 255 / 0.14);
+      }
+
+      .shadow-material-hover {
+        box-shadow:
+          0 1px 0 oklch(0.22 0.02 255 / 0.05),
+          0 16px 40px -14px oklch(0.35 0.03 255 / 0.2);
+      }
+
+      .glass {
+        background: oklch(0.97 0.005 255 / 0.72);
+        backdrop-filter: saturate(180%) blur(22px);
+        -webkit-backdrop-filter: saturate(180%) blur(22px);
+      }
+
+      .glass-sidebar {
+        background: oklch(0.945 0.007 255 / 0.78);
+        backdrop-filter: saturate(180%) blur(24px);
+        -webkit-backdrop-filter: saturate(180%) blur(24px);
+      }
+
+      /* Opening choreography — WOW moment */
+      @keyframes rise-in {
+        from {
+          opacity: 0;
+          transform: translateY(14px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes soft-fade {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .enter {
+        opacity: 0;
+        animation: rise-in 0.85s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+      }
+
+      .enter-fade {
+        opacity: 0;
+        animation: soft-fade 0.7s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+      }
+
+      .d1 {
+        animation-delay: 0.05s;
+      }
+      .d2 {
+        animation-delay: 0.14s;
+      }
+      .d3 {
+        animation-delay: 0.26s;
+      }
+      .d4 {
+        animation-delay: 0.38s;
+      }
+      .d5 {
+        animation-delay: 0.5s;
+      }
+      .d6 {
+        animation-delay: 0.62s;
+      }
+
+      :focus-visible {
+        outline: 2px solid oklch(0.52 0.17 250);
+        outline-offset: 3px;
+      }
+
+      .skip-link {
+        position: absolute;
+        left: -9999px;
+        top: 0.75rem;
+        z-index: 100;
+        border-radius: 9999px;
+        background: oklch(0.52 0.17 250);
+        color: oklch(0.99 0.01 250);
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+      }
+
+      .skip-link:focus {
+        left: 0.75rem;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+          scroll-behavior: auto !important;
+        }
+
+        .enter,
+        .enter-fade {
+          opacity: 1;
+          animation: none;
+          transform: none;
+        }
+      }
+    </style>
+  </head>
+  <body class="min-h-dvh antialiased">
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+
+    <div class="flex min-h-dvh">
+      <!-- Sidebar — macOS Settings material -->
+      <aside
+        class="glass-sidebar sticky top-0 z-40 hidden h-dvh w-[15.5rem] shrink-0 flex-col border-r border-sidebar-border md:flex"
+        aria-label="Navegación principal"
+      >
+        <div class="enter-fade d1 flex h-[3.75rem] items-center gap-2.5 px-5">
+          <span
+            class="flex size-8 items-center justify-center rounded-[0.7rem] bg-primary text-[13px] font-semibold text-primary-foreground shadow-[0_1px_2px_oklch(0.52_0.17_250_/_0.35)]"
+            aria-hidden="true"
+            >K</span
+          >
+          <div class="min-w-0 leading-tight">
+            <p class="text-[15px] font-semibold tracking-tight">Konsorcio</p>
+            <p class="text-[11px] text-muted-foreground">Panel de administración</p>
+          </div>
+        </div>
+
+        <nav class="enter-fade d2 flex-1 overflow-y-auto px-3 pb-4 pt-1">
+          <p
+            class="px-3 pb-1.5 pt-3 text-[11px] font-medium tracking-wide text-muted-foreground"
+          >
+            Dashboard
+          </p>
+          <ul class="space-y-0.5">
+            <li>
+              <a
+                href="#"
+                class="ease-apple flex items-center gap-3 rounded-[0.75rem] bg-primary px-3 py-2 text-[13.5px] font-medium text-primary-foreground shadow-[0_1px_2px_oklch(0.52_0.17_250_/_0.3)] transition-transform duration-200 active:scale-[0.98]"
+                aria-current="page"
+              >
+                <svg
+                  class="size-[18px] shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path d="M3 21h18" />
+                  <path d="M6 21V8l6-4 6 4v13" />
+                  <path d="M10 21v-5h4v5" />
+                  <path d="M9 9h.01M15 9h.01M9 13h.01M15 13h.01" />
+                </svg>
+                Consorcios
+              </a>
+            </li>
+            <li>
+              <a
+                href="#"
+                class="ease-apple flex items-center gap-3 rounded-[0.75rem] px-3 py-2 text-[13.5px] text-secondary-foreground transition-colors duration-200 hover:bg-foreground/[0.04] active:scale-[0.98]"
+              >
+                <svg
+                  class="size-[18px] shrink-0 text-muted-foreground"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="3" width="7.5" height="7.5" rx="2" />
+                  <rect x="13.5" y="3" width="7.5" height="7.5" rx="2" />
+                  <rect x="3" y="13.5" width="7.5" height="7.5" rx="2" />
+                  <rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2" />
+                </svg>
+                Resumen
+              </a>
+            </li>
+          </ul>
+
+          <p
+            class="px-3 pb-1.5 pt-5 text-[11px] font-medium tracking-wide text-muted-foreground"
+          >
+            Sistema
+          </p>
+          <ul class="space-y-0.5">
+            <li>
+              <a
+                href="#"
+                class="ease-apple flex items-center gap-3 rounded-[0.75rem] px-3 py-2 text-[13.5px] text-secondary-foreground transition-colors duration-200 hover:bg-foreground/[0.04] active:scale-[0.98]"
+              >
+                <svg
+                  class="size-[18px] shrink-0 text-muted-foreground"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="3" />
+                  <path
+                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+                  />
+                </svg>
+                Configuración
+              </a>
+            </li>
+          </ul>
+        </nav>
+
+        <div class="enter-fade d2 border-t border-sidebar-border p-3">
+          <div
+            class="ease-apple flex items-center gap-3 rounded-[1rem] px-2 py-2 transition-colors duration-200 hover:bg-foreground/[0.03]"
+          >
+            <span
+              class="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent text-[12px] font-semibold text-accent-foreground"
+              aria-hidden="true"
+              >MG</span
+            >
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-[13px] font-medium">María González</p>
+              <p class="truncate text-[11.5px] text-muted-foreground">
+                m.gonzalez@konsorcio.ar
+              </p>
+            </div>
+            <a
+              href="#"
+              class="ease-apple flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-200 hover:bg-foreground/[0.06] hover:text-foreground"
+              aria-label="Cerrar sesión"
+              title="Cerrar sesión"
+            >
+              <svg
+                class="size-[17px]"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <path d="M16 17l5-5-5-5" />
+                <path d="M21 12H9" />
+              </svg>
+            </a>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main -->
+      <div class="flex min-w-0 flex-1 flex-col">
+        <header
+          class="glass sticky top-0 z-30 border-b border-hairline enter-fade d1"
+        >
+          <div
+            class="mx-auto flex h-[3.75rem] w-full max-w-6xl items-center gap-3 px-4 sm:px-8"
+          >
+            <span
+              class="flex size-8 items-center justify-center rounded-[0.7rem] bg-primary text-[13px] font-semibold text-primary-foreground md:hidden"
+              aria-hidden="true"
+              >K</span
+            >
+
+            <nav aria-label="Miga de pan" class="hidden min-w-0 md:block">
+              <ol
+                class="flex items-center gap-1.5 text-[13px] text-muted-foreground"
+              >
+                <li>
+                  <a
+                    href="#"
+                    class="ease-apple transition-colors duration-200 hover:text-foreground"
+                    >Dashboard</a
+                  >
+                </li>
+                <li aria-hidden="true" class="text-border">·</li>
+                <li class="font-medium text-foreground" aria-current="page">
+                  Consorcios
+                </li>
+              </ol>
+            </nav>
+
+            <div class="ml-auto flex items-center gap-2">
+              <button
+                type="button"
+                class="ease-apple flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors duration-200 hover:bg-foreground/[0.05] hover:text-foreground sm:hidden"
+                aria-label="Buscar consorcio"
+              >
+                <svg
+                  class="size-[18px]"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="M20 20l-3.2-3.2" />
+                </svg>
+              </button>
+
+              <label class="relative hidden sm:block">
+                <span class="sr-only">Buscar consorcio</span>
+                <svg
+                  class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="M20 20l-3.2-3.2" />
+                </svg>
+                <input
+                  type="search"
+                  readonly
+                  placeholder="Buscar"
+                  class="ease-apple h-9 w-40 rounded-full border border-transparent bg-secondary/80 pl-9 pr-3 text-[13.5px] text-foreground placeholder:text-muted-foreground transition-all duration-300 focus:w-56 focus:border-border focus:bg-surface focus:outline-none focus:ring-4 focus:ring-primary/12"
+                />
+              </label>
+
+              <button
+                type="button"
+                class="ease-apple group inline-flex h-9 items-center gap-1.5 rounded-full bg-primary pl-3.5 pr-4 text-[13.5px] font-medium text-primary-foreground shadow-[0_1px_2px_oklch(0.52_0.17_250_/_0.4)] transition-all duration-300 hover:brightness-[1.06] active:scale-[0.97]"
+              >
+                <svg
+                  class="ease-apple size-4 transition-transform duration-300 group-hover:rotate-90"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+                <span class="hidden sm:inline">Agregar nuevo consorcio</span>
+                <span class="sm:hidden">Agregar</span>
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <main id="contenido" class="flex-1">
+          <div class="mx-auto w-full max-w-6xl px-4 pb-28 sm:px-8">
+            <!-- Hero — display greeting -->
+            <section class="enter d2 pt-10 pb-8 sm:pt-14 sm:pb-10" aria-labelledby="page-title">
+              <p class="text-[13px] font-medium tracking-tight text-primary">
+                Sábado por la tarde
+              </p>
+              <p
+                class="mt-2 max-w-3xl text-balance text-[2.75rem] font-light leading-[1.02] tracking-[-0.04em] text-foreground sm:text-[3.75rem]"
+              >
+                Bienvenida, María González
+              </p>
+              <h1
+                id="page-title"
+                class="mt-4 text-[1.0625rem] font-semibold tracking-tight text-foreground sm:text-[1.125rem]"
+              >
+                Selección de consorcios
+              </h1>
+              <p
+                class="mt-1.5 max-w-xl text-[15px] leading-relaxed text-muted-foreground"
+              >
+                Administrás
+                <span class="font-medium tabular-nums text-foreground">9</span>
+                consorcios activos y
+                <span class="font-medium tabular-nums text-foreground">312</span>
+                unidades. Revisá los que piden atención hoy.
+              </p>
+
+              <!-- Compact metric chips -->
+              <div class="mt-6 flex flex-wrap gap-2">
+                <div
+                  class="inline-flex items-center gap-2 rounded-full border border-hairline bg-surface/90 px-3.5 py-1.5 shadow-[0_1px_0_oklch(0.22_0.02_255_/_0.03)]"
+                >
+                  <span
+                    class="size-1.5 rounded-full bg-primary"
+                    aria-hidden="true"
+                  ></span>
+                  <span class="text-[13px] text-muted-foreground">Consorcios</span>
+                  <span class="text-[13px] font-semibold tabular-nums">9</span>
+                </div>
+                <div
+                  class="inline-flex items-center gap-2 rounded-full border border-hairline bg-surface/90 px-3.5 py-1.5 shadow-[0_1px_0_oklch(0.22_0.02_255_/_0.03)]"
+                >
+                  <span
+                    class="size-1.5 rounded-full bg-success"
+                    aria-hidden="true"
+                  ></span>
+                  <span class="text-[13px] text-muted-foreground">Unidades</span>
+                  <span class="text-[13px] font-semibold tabular-nums">312</span>
+                </div>
+              </div>
+            </section>
+
+            <!-- Featured pair -->
+            <section class="enter d3 mb-10" aria-labelledby="featured-heading">
+              <div class="mb-3.5 flex items-baseline justify-between gap-3">
+                <h2
+                  id="featured-heading"
+                  class="text-[13px] font-medium tracking-wide text-muted-foreground"
+                >
+                  Requieren atención
+                </h2>
+                <span class="text-[12.5px] text-muted-foreground"
+                  >2 de 6 en esta página</span
+                >
+              </div>
+
+              <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <!-- Featured 1: Torre Alem Plaza -->
+                <article
+                  class="ease-apple group relative flex flex-col overflow-hidden rounded-2xl border border-hairline bg-surface-elevated p-5 shadow-material transition-all duration-300 hover:-translate-y-0.5 hover:shadow-material-hover"
+                >
+                  <a
+                    href="#"
+                    class="absolute inset-0 z-0 rounded-2xl"
+                    aria-label="Abrir Torre Alem Plaza"
+                  ></a>
+
+                  <div class="relative z-10 flex items-start gap-3.5">
+                    <div
+                      class="flex size-12 shrink-0 items-center justify-center rounded-[0.95rem] bg-accent text-primary ring-1 ring-inset ring-primary/10"
+                      aria-hidden="true"
+                    >
+                      <svg
+                        class="size-6"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M3 21h18" />
+                        <path d="M6 21V5a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v16" />
+                        <path
+                          d="M9 8h.01M15 8h.01M9 12h.01M15 12h.01M9 16h.01M15 16h.01"
+                        />
+                      </svg>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                      <div class="flex flex-wrap items-center gap-2">
+                        <h3
+                          class="truncate text-[17px] font-semibold tracking-tight"
+                        >
+                          Torre Alem Plaza
+                        </h3>
+                        <span
+                          class="inline-flex items-center gap-1 rounded-full bg-attention-soft px-2 py-0.5 text-[11px] font-medium text-attention"
+                        >
+                          <span
+                            class="size-1.5 rounded-full bg-attention"
+                            aria-hidden="true"
+                          ></span>
+                          Atención
+                        </span>
+                      </div>
+                      <p
+                        class="mt-0.5 flex items-center gap-1.5 text-[13.5px] text-muted-foreground"
+                      >
+                        <svg
+                          class="size-3.5 shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="1.5"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
+                        >
+                          <path
+                            d="M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11z"
+                          />
+                          <circle cx="12" cy="10" r="2.5" />
+                        </svg>
+                        Retiro, CABA
+                      </p>
+                    </div>
+                  </div>
+
+                  <dl class="relative z-10 mt-5 grid grid-cols-3 gap-2">
+                    <div>
+                      <dt class="text-[11.5px] text-muted-foreground">Unidades</dt>
+                      <dd class="mt-0.5 text-[15px] font-medium tabular-nums">
+                        96
+                      </dd>
+                    </div>
+                    <div>
+                      <dt class="text-[11.5px] text-muted-foreground">Avisos</dt>
+                      <dd class="mt-0.5 text-[15px] font-medium tabular-nums">
+                        7 sin leer
+                      </dd>
+                    </div>
+                    <div>
+                      <dt class="text-[11.5px] text-muted-foreground">
+                        Reclamos
+                      </dt>
+                      <dd class="mt-0.5 text-[15px] font-medium tabular-nums">
+                        2 abiertos
+                      </dd>
+                    </div>
+                  </dl>
+
+                  <div
+                    class="relative z-10 mt-4 flex items-center justify-between gap-2 border-t border-hairline pt-4"
+                  >
+                    <p class="text-[12.5px] text-muted-foreground">
+                      Actividad
+                      <span class="font-medium text-foreground">hace 45 min</span>
+                    </p>
+                    <button
+                      type="button"
+                      class="ease-apple inline-flex h-8 items-center gap-1.5 rounded-full border border-border bg-surface px-3 text-[12.5px] font-medium text-foreground transition-all duration-200 hover:bg-secondary active:scale-[0.97]"
+                    >
+                      <svg
+                        class="size-3.5 text-muted-foreground"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M21 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2z"
+                        />
+                      </svg>
+                      Enviar comentario
+                    </button>
+                  </div>
+                </article>
+
+                <!-- Featured 2: Av. Santa Fe 2154 -->
+                <article
+                  class="ease-apple group relative flex flex-col overflow-hidden rounded-2xl border border-hairline bg-surface-elevated p-5 shadow-material transition-all duration-300 hover:-translate-y-0.5 hover:shadow-material-hover"
+                >
+                  <a
+                    href="#"
+                    class="absolute inset-0 z-0 rounded-2xl"
+                    aria-label="Abrir Av. Santa Fe 2154"
+                  ></a>
+
+                  <div class="relative z-10 flex items-start gap-3.5">
+                    <div
+                      class="flex size-12 shrink-0 items-center justify-center rounded-[0.95rem] bg-accent text-primary ring-1 ring-inset ring-primary/10"
+                      aria-hidden="true"
+                    >
+                      <svg
+                        class="size-6"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M3 21h18" />
+                        <path d="M6 21V5a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v16" />
+                        <path
+                          d="M9 8h.01M15 8h.01M9 12h.01M15 12h.01M9 16h.01M15 16h.01"
+                        />
+                      </svg>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                      <div class="flex flex-wrap items-center gap-2">
+                        <h3
+                          class="truncate text-[17px] font-semibold tracking-tight"
+                        >
+                          Av. Santa Fe 2154
+                        </h3>
+                        <span
+                          class="inline-flex items-center gap-1 rounded-full bg-attention-soft px-2 py-0.5 text-[11px] font-medium text-attention"
+                        >
+                          <span
+                            class="size-1.5 rounded-full bg-attention"
+                            aria-hidden="true"
+                          ></span>
+                          Atención
+                        </span>
+                      </div>
+                      <p
+                        class="mt-0.5 flex items-center gap-1.5 text-[13.5px] text-muted-foreground"
+                      >
+                        <svg
+                          class="size-3.5 shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="1.5"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
+                        >
+                          <path
+                            d="M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11z"
+                          />
+                          <circle cx="12" cy="10" r="2.5" />
+                        </svg>
+                        Recoleta, CABA
+                      </p>
+                    </div>
+                  </div>
+
+                  <dl class="relative z-10 mt-5 grid grid-cols-3 gap-2">
+                    <div>
+                      <dt class="text-[11.5px] text-muted-foreground">Unidades</dt>
+                      <dd class="mt-0.5 text-[15px] font-medium tabular-nums">
+                        48
+                      </dd>
+                    </div>
+                    <div>
+                      <dt class="text-[11.5px] text-muted-foreground">Avisos</dt>
+                      <dd class="mt-0.5 text-[15px] font-medium tabular-nums">
+                        3 sin leer
+                      </dd>
+                    </div>
+                    <div>
+                      <dt class="text-[11.5px] text-muted-foreground">
+                        Reclamos
+                      </dt>
+                      <dd class="mt-0.5 text-[15px] font-medium tabular-nums">
+                        1 abierto
+                      </dd>
+                    </div>
+                  </dl>
+
+                  <div
+                    class="relative z-10 mt-4 flex items-center justify-between gap-2 border-t border-hairline pt-4"
+                  >
+                    <p class="text-[12.5px] text-muted-foreground">
+                      Actividad
+                      <span class="font-medium text-foreground">hace 2 h</span>
+                    </p>
+                    <button
+                      type="button"
+                      class="ease-apple inline-flex h-8 items-center gap-1.5 rounded-full border border-border bg-surface px-3 text-[12.5px] font-medium text-foreground transition-all duration-200 hover:bg-secondary active:scale-[0.97]"
+                    >
+                      <svg
+                        class="size-3.5 text-muted-foreground"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M21 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2z"
+                        />
+                      </svg>
+                      Enviar comentario
+                    </button>
+                  </div>
+                </article>
+              </div>
+            </section>
+
+            <!-- Grouped list — Apple Settings style -->
+            <section class="enter d4" aria-labelledby="list-heading">
+              <div class="mb-3.5 flex items-baseline justify-between gap-3">
+                <h2
+                  id="list-heading"
+                  class="text-[13px] font-medium tracking-wide text-muted-foreground"
+                >
+                  Todos los consorcios
+                </h2>
+                <span class="text-[12.5px] text-muted-foreground"
+                  >Página 1 de 2</span
+                >
+              </div>
+
+              <ul
+                class="overflow-hidden rounded-2xl border border-hairline bg-surface-elevated shadow-material"
+              >
+                <!-- Libertador -->
+                <li
+                  class="ease-apple group relative transition-colors duration-200 hover:bg-foreground/[0.025]"
+                >
+                  <a
+                    href="#"
+                    class="absolute inset-0 z-0"
+                    aria-label="Abrir Libertador 4310"
+                  ></a>
+                  <div
+                    class="relative z-10 flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:gap-4 sm:px-5"
+                  >
+                    <div class="flex min-w-0 flex-1 items-start gap-3.5">
+                      <div
+                        class="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-[0.8rem] bg-muted text-primary"
+                        aria-hidden="true"
+                      >
+                        <svg
+                          class="size-5"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="1.5"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M3 21h18" />
+                          <path d="M6 21V8l6-4 6 4v13" />
+                          <path d="M10 21v-5h4v5" />
+                        </svg>
+                      </div>
+                      <div class="min-w-0 flex-1">
+                        <div class="flex flex-wrap items-center gap-2">
+                          <h3
+                            class="text-[15px] font-semibold tracking-tight"
+                          >
+                            Libertador 4310
+                          </h3>
+                          <span
+                            class="inline-flex items-center gap-1 rounded-full bg-success-soft px-2 py-0.5 text-[11px] font-medium text-success"
+                          >
+                            <span
+                              class="size-1.5 rounded-full bg-success"
+                              aria-hidden="true"
+                            ></span>
+                            Al día
+                          </span>
+                        </div>
+                        <p class="mt-0.5 text-[13px] text-muted-foreground">
+                          Palermo, CABA ·
+                          <span class="tabular-nums">72</span> unidades ·
+                          <span class="tabular-nums">68</span> emails registrados
+                        </p>
+                        <p class="mt-1 text-[12.5px] text-muted-foreground">
+                          Sin avisos · actividad hace 5 h
+                        </p>
+                      </div>
+                    </div>
+                    <div
+                      class="relative z-10 flex shrink-0 items-center gap-2 sm:pl-2"
+                    >
+                      <button
+                        type="button"
+                        class="ease-apple inline-flex h-8 items-center gap-1.5 rounded-full border border-border bg-surface px-3 text-[12.5px] font-medium transition-all duration-200 hover:bg-secondary active:scale-[0.97]"
+                      >
+                        Enviar comentario
+                      </button>
+                      <svg
+                        class="size-4 text-muted-foreground opacity-0 transition-opacity duration-200 group-hover:opacity-100 max-sm:hidden"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path d="M9 18l6-6-6-6" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div
+                    class="ml-[4.25rem] border-b border-hairline sm:ml-[4.75rem]"
+                    aria-hidden="true"
+                  ></div>
+                </li>
+
+                <!-- Cabildo -->
+                <li
+                  class="ease-apple group relative transition-colors duration-200 hover:bg-foreground/[0.025]"
+                >
+                  <a
+                    href="#"
+                    class="absolute inset-0 z-0"
+                    aria-label="Abrir Cabildo 2478"
+                  ></a>
+                  <div
+                    class="relative z-10 flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:gap-4 sm:px-5"
+                  >
+                    <div class="flex min-w-0 flex-1 items-start gap-3.5">
+                      <div
+                        class="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-[0.8rem] bg-muted text-primary"
+                        aria-hidden="true"
+                      >
+                        <svg
+                          class="size-5"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="1.5"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M3 21h18" />
+                          <path d="M6 21V8l6-4 6 4v13" />
+                          <path d="M10 21v-5h4v5" />
+                        </svg>
+                      </div>
+                      <div class="min-w-0 flex-1">
+                        <div class="flex flex-wrap items-center gap-2">
+                          <h3
+                            class="text-[15px] font-semibold tracking-tight"
+                          >
+                            Cabildo 2478
+                          </h3>
+                          <span
+                            class="inline-flex items-center gap-1 rounded-full bg-success-soft px-2 py-0.5 text-[11px] font-medium text-success"
+                          >
+                            <span
+                              class="size-1.5 rounded-full bg-success"
+                              aria-hidden="true"
+                            ></span>
+                            Al día
+                          </span>
+                        </div>
+                        <p class="mt-0.5 text-[13px] text-muted-foreground">
+                          Belgrano, CABA ·
+                          <span class="tabular-nums">24</span> unidades ·
+                          <span class="tabular-nums">22</span> emails registrados
+                        </p>
+                        <p class="mt-1 text-[12.5px] text-muted-foreground">
+                          Sin avisos pendientes · actividad ayer
+                        </p>
+                      </div>
+                    </div>
+                    <div
+                      class="relative z-10 flex shrink-0 items-center gap-2 sm:pl-2"
+                    >
+                      <button
+                        type="button"
+                        class="ease-apple inline-flex h-8 items-center gap-1.5 rounded-full border border-border bg-surface px-3 text-[12.5px] font-medium transition-all duration-200 hover:bg-secondary active:scale-[0.97]"
+                      >
+                        Enviar comentario
+                      </button>
+                      <svg
+                        class="size-4 text-muted-foreground opacity-0 transition-opacity duration-200 group-hover:opacity-100 max-sm:hidden"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path d="M9 18l6-6-6-6" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div
+                    class="ml-[4.25rem] border-b border-hairline sm:ml-[4.75rem]"
+                    aria-hidden="true"
+                  ></div>
+                </li>
+
+                <!-- Rivadavia -->
+                <li
+                  class="ease-apple group relative transition-colors duration-200 hover:bg-foreground/[0.025]"
+                >
+                  <a
+                    href="#"
+                    class="absolute inset-0 z-0"
+                    aria-label="Abrir Rivadavia 6320"
+                  ></a>
+                  <div
+                    class="relative z-10 flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:gap-4 sm:px-5"
+                  >
+                    <div class="flex min-w-0 flex-1 items-start gap-3.5">
+                      <div
+                        class="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-[0.8rem] bg-muted text-primary"
+                        aria-hidden="true"
+                      >
+                        <svg
+                          class="size-5"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="1.5"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M3 21h18" />
+                          <path d="M6 21V8l6-4 6 4v13" />
+                          <path d="M10 21v-5h4v5" />
+                        </svg>
+                      </div>
+                      <div class="min-w-0 flex-1">
+                        <div class="flex flex-wrap items-center gap-2">
+                          <h3
+                            class="text-[15px] font-semibold tracking-tight"
+                          >
+                            Rivadavia 6320
+                          </h3>
+                          <span
+                            class="inline-flex items-center gap-1 rounded-full bg-success-soft px-2 py-0.5 text-[11px] font-medium text-success"
+                          >
+                            <span
+                              class="size-1.5 rounded-full bg-success"
+                              aria-hidden="true"
+                            ></span>
+                            Al día
+                          </span>
+                        </div>
+                        <p class="mt-0.5 text-[13px] text-muted-foreground">
+                          Caballito, CABA ·
+                          <span class="tabular-nums">36</span> unidades ·
+                          <span class="tabular-nums">34</span> emails registrados
+                        </p>
+                        <p class="mt-1 text-[12.5px] text-muted-foreground">
+                          Reclamos resueltos · actividad hace 3 h
+                        </p>
+                      </div>
+                    </div>
+                    <div
+                      class="relative z-10 flex shrink-0 items-center gap-2 sm:pl-2"
+                    >
+                      <button
+                        type="button"
+                        class="ease-apple inline-flex h-8 items-center gap-1.5 rounded-full border border-border bg-surface px-3 text-[12.5px] font-medium transition-all duration-200 hover:bg-secondary active:scale-[0.97]"
+                      >
+                        Enviar comentario
+                      </button>
+                      <svg
+                        class="size-4 text-muted-foreground opacity-0 transition-opacity duration-200 group-hover:opacity-100 max-sm:hidden"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path d="M9 18l6-6-6-6" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div
+                    class="ml-[4.25rem] border-b border-hairline sm:ml-[4.75rem]"
+                    aria-hidden="true"
+                  ></div>
+                </li>
+
+                <!-- Malabia -->
+                <li
+                  class="ease-apple group relative transition-colors duration-200 hover:bg-foreground/[0.025]"
+                >
+                  <a
+                    href="#"
+                    class="absolute inset-0 z-0"
+                    aria-label="Abrir Malabia 1725"
+                  ></a>
+                  <div
+                    class="relative z-10 flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:gap-4 sm:px-5"
+                  >
+                    <div class="flex min-w-0 flex-1 items-start gap-3.5">
+                      <div
+                        class="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-[0.8rem] bg-muted text-primary"
+                        aria-hidden="true"
+                      >
+                        <svg
+                          class="size-5"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="1.5"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M3 21h18" />
+                          <path d="M6 21V8l6-4 6 4v13" />
+                          <path d="M10 21v-5h4v5" />
+                        </svg>
+                      </div>
+                      <div class="min-w-0 flex-1">
+                        <div class="flex flex-wrap items-center gap-2">
+                          <h3
+                            class="text-[15px] font-semibold tracking-tight"
+                          >
+                            Malabia 1725
+                          </h3>
+                          <span
+                            class="inline-flex items-center gap-1 rounded-full bg-attention-soft px-2 py-0.5 text-[11px] font-medium text-attention"
+                          >
+                            <span
+                              class="size-1.5 rounded-full bg-attention"
+                              aria-hidden="true"
+                            ></span>
+                            Atención
+                          </span>
+                        </div>
+                        <p class="mt-0.5 text-[13px] text-muted-foreground">
+                          Villa Crespo, CABA ·
+                          <span class="tabular-nums">18</span> unidades ·
+                          <span class="tabular-nums">16</span> emails registrados
+                        </p>
+                        <p class="mt-1 text-[12.5px] text-muted-foreground">
+                          2 avisos sin leer · actividad hace 1 d
+                        </p>
+                      </div>
+                    </div>
+                    <div
+                      class="relative z-10 flex shrink-0 items-center gap-2 sm:pl-2"
+                    >
+                      <button
+                        type="button"
+                        class="ease-apple inline-flex h-8 items-center gap-1.5 rounded-full border border-border bg-surface px-3 text-[12.5px] font-medium transition-all duration-200 hover:bg-secondary active:scale-[0.97]"
+                      >
+                        Enviar comentario
+                      </button>
+                      <svg
+                        class="size-4 text-muted-foreground opacity-0 transition-opacity duration-200 group-hover:opacity-100 max-sm:hidden"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path d="M9 18l6-6-6-6" />
+                      </svg>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </section>
+
+            <!-- Pagination -->
+            <nav
+              class="enter d5 mt-8 flex items-center justify-between gap-3"
+              aria-label="Paginación"
+            >
+              <p class="text-[13px] text-muted-foreground">
+                Mostrando
+                <span class="font-medium tabular-nums text-foreground">1–6</span>
+                de
+                <span class="font-medium tabular-nums text-foreground">9</span>
+              </p>
+              <div class="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  disabled
+                  class="ease-apple inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-surface px-3.5 text-[13px] font-medium text-muted-foreground opacity-45"
+                  aria-label="Página anterior"
+                  aria-disabled="true"
+                >
+                  <svg
+                    class="size-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path d="M15 18l-6-6 6-6" />
+                  </svg>
+                  Anterior
+                </button>
+                <a
+                  href="#"
+                  class="ease-apple flex size-9 items-center justify-center rounded-full bg-primary text-[13px] font-semibold tabular-nums text-primary-foreground shadow-[0_1px_2px_oklch(0.52_0.17_250_/_0.3)] transition-transform duration-200 active:scale-[0.96]"
+                  aria-label="Página 1"
+                  aria-current="page"
+                  >1</a
+                >
+                <a
+                  href="#"
+                  class="ease-apple flex size-9 items-center justify-center rounded-full text-[13px] font-medium tabular-nums text-secondary-foreground transition-colors duration-200 hover:bg-foreground/[0.05] active:scale-[0.96]"
+                  aria-label="Página 2"
+                  >2</a
+                >
+                <a
+                  href="#"
+                  class="ease-apple inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-surface px-3.5 text-[13px] font-medium transition-all duration-200 hover:bg-secondary active:scale-[0.97]"
+                  aria-label="Página siguiente"
+                >
+                  Siguiente
+                  <svg
+                    class="size-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
+                </a>
+              </div>
+            </nav>
+          </div>
+        </main>
+      </div>
+    </div>
+  </body>
+</html>

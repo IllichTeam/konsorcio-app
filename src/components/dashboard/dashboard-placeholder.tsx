@@ -6,7 +6,7 @@ type DashboardPlaceholderProps = {
 
 export function DashboardPlaceholder({ title }: DashboardPlaceholderProps) {
   return (
-    <Card className="w-full max-w-3xl">
+    <Card className="mx-auto w-full max-w-3xl">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
       </CardHeader>

@@ -1,19 +1,8 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Building2,
-  ChevronLeft,
-  ChevronRight,
-  MapPin,
-  MessageSquareText,
-  Pencil,
-  Plus,
-  Settings,
-  Trash2,
-} from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "@/lib/zod";
@@ -24,6 +13,7 @@ import {
   useDeleteConsortium,
 } from "@/hooks/use-consortiums";
 import type { Consortium } from "@/types/consortium";
+import { ConsortiumCard } from "@/components/consortiums/consortium-card";
 import { ConsortiumFormDialog } from "@/components/consortiums/consortium-form-dialog";
 import { useDashboardUser } from "@/components/dashboard/dashboard-user-context";
 import { FormTextarea } from "@/components/form/form-textarea";
@@ -36,12 +26,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const commentSchema = z.object({
@@ -58,14 +43,31 @@ export function ConsortiumsScreen() {
   const { data: consortiums = [], isLoading, isError } = useConsortiums();
   const createComment = useCreateConsortiumComment();
   const deleteConsortium = useDeleteConsortium();
+  const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [openConsortium, setOpenConsortium] = useState<Consortium | null>(null);
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [editingConsortium, setEditingConsortium] = useState<Consortium | null>(null);
   const [consortiumPendingDelete, setConsortiumPendingDelete] = useState<Consortium | null>(null);
 
-  const totalPages = Math.max(1, Math.ceil(consortiums.length / CONSORTIUMS_PER_PAGE));
-  const paginatedConsortiums = consortiums.slice(
+  const filteredConsortiums = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) {
+      return consortiums;
+    }
+
+    return consortiums.filter(
+      (consortium) =>
+        consortium.name.toLowerCase().includes(query) ||
+        consortium.location.toLowerCase().includes(query),
+    );
+  }, [consortiums, searchQuery]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredConsortiums.length / CONSORTIUMS_PER_PAGE));
+  const pageStart =
+    filteredConsortiums.length === 0 ? 0 : (currentPage - 1) * CONSORTIUMS_PER_PAGE + 1;
+  const pageEnd = Math.min(currentPage * CONSORTIUMS_PER_PAGE, filteredConsortiums.length);
+  const paginatedConsortiums = filteredConsortiums.slice(
     (currentPage - 1) * CONSORTIUMS_PER_PAGE,
     currentPage * CONSORTIUMS_PER_PAGE,
   );
@@ -73,6 +75,10 @@ export function ConsortiumsScreen() {
   useEffect(() => {
     setCurrentPage((page) => Math.min(page, totalPages));
   }, [totalPages]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   const { control, handleSubmit, formState, reset } = useForm<CommentValues>({
     resolver: zodResolver(commentSchema),
@@ -141,173 +147,188 @@ export function ConsortiumsScreen() {
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-5rem)] w-full max-w-7xl flex-col">
-      <div className="mb-8 flex shrink-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="text-lg font-semibold tracking-tight text-foreground">
-            Selección de consorcios
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">Bienvenido, {userName}</p>
+    /*
+      Break out of shell padding so layout matches the mock main column:
+      full-width inset → centered max-w-[1120px] content. overflow-x-clip
+      contains the hero grid-noise full-bleed without horizontal scroll.
+    */
+    <div className="relative -m-6 w-[calc(100%+3rem)] overflow-x-clip md:-m-10 md:w-[calc(100%+5rem)]">
+      <div className="relative mx-auto w-full max-w-[1120px] px-4 pb-24 sm:px-6">
+        <section className="relative pb-10 pt-10 sm:pt-12" aria-labelledby="page-title">
+          {/*
+            Same full-bleed trick as the mock (w-screen + center). Parent
+            overflow-x-clip keeps it inside the main column — never under the
+            sidebar, never a horizontal scrollbar.
+          */}
+          <div
+            className="pointer-events-none absolute inset-y-0 left-1/2 w-screen -translate-x-1/2 grid-noise"
+            aria-hidden="true"
+          />
+          <div className="relative flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
+            <div className="min-w-0">
+              <h1
+                id="page-title"
+                className="text-balance text-[2rem] font-semibold leading-[1.1] tracking-[-0.04em] text-foreground sm:text-[2.375rem]"
+              >
+                Selección de consorcios
+              </h1>
+              <p className="mt-3 text-[16px] leading-snug text-[oklch(0.38_0.02_250)]">
+                Bienvenido, {userName}
+              </p>
+            </div>
+
+            <fieldset
+              className="flex shrink-0 gap-px overflow-hidden rounded-lg border border-border bg-card shadow-hair"
+              aria-label="Métricas globales"
+            >
+              <div className="min-w-[8rem] px-5 py-4">
+                <p className="font-mono text-[10.5px] uppercase tracking-[0.08em] text-muted-foreground">
+                  Consorcios
+                </p>
+                <p className="mt-1.5 text-[1.75rem] font-semibold tracking-tight tabular-nums">
+                  {consortiums.length}
+                </p>
+                <p className="mt-0.5 text-[12px] text-muted-foreground">activos</p>
+              </div>
+              <div className="w-px bg-border" aria-hidden="true" />
+              <div className="min-w-[8rem] px-5 py-4">
+                <p className="font-mono text-[10.5px] uppercase tracking-[0.08em] text-muted-foreground">
+                  Unidades
+                </p>
+                <p className="mt-1.5 text-[1.75rem] font-semibold tracking-tight tabular-nums">—</p>
+                <p className="mt-0.5 text-[12px] text-muted-foreground">administradas</p>
+              </div>
+            </fieldset>
+          </div>
+        </section>
+
+        <div className="relative flex flex-col gap-3 pt-8 sm:flex-row sm:items-center sm:justify-between">
+          <label htmlFor="consortium-search" className="relative block w-full sm:w-auto">
+            <span className="sr-only">Buscar consorcio</span>
+            <Search
+              className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground"
+              aria-hidden="true"
+            />
+            <Input
+              id="consortium-search"
+              type="search"
+              name="q"
+              autoComplete="off"
+              spellCheck={false}
+              placeholder="Buscar…"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              className="h-8 w-full bg-card pl-8 text-[13px] shadow-none transition-[width] duration-200 sm:w-44 sm:focus-visible:w-56 md:text-[13px]"
+            />
+          </label>
+
+          <Button
+            type="button"
+            variant="default"
+            className="group h-9 shrink-0 px-2.5"
+            onClick={openCreateDialog}
+          >
+            <Plus
+              className="size-4 transition-transform duration-200 group-hover:rotate-90 motion-reduce:transition-none motion-reduce:group-hover:rotate-0"
+              aria-hidden="true"
+            />
+            <span className="hidden sm:inline">Agregar nuevo consorcio</span>
+            <span className="sm:hidden">Agregar</span>
+          </Button>
         </div>
 
-        <Button
-          type="button"
-          variant="default"
-          className="font-semibold tracking-wide"
-          onClick={openCreateDialog}
-        >
-          <Plus className="size-4" aria-hidden="true" />
-          Agregar nuevo consorcio
-        </Button>
-      </div>
+        <section className="pt-8" aria-label="Lista de consorcios">
+          {filteredConsortiums.length === 0 ? (
+            <p className="rounded-lg border border-border bg-card px-5 py-10 text-center text-sm text-muted-foreground shadow-card">
+              {searchQuery.trim()
+                ? "No hay consorcios que coincidan con la búsqueda."
+                : "Todavía no hay consorcios. Agregá el primero para empezar."}
+            </p>
+          ) : (
+            <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {paginatedConsortiums.map((consortium, index) => (
+                <li
+                  key={consortium.id}
+                  className="animate-rise-in"
+                  style={{ animationDelay: `${Math.min(index, 5) * 0.06}s` }}
+                >
+                  <ConsortiumCard
+                    consortium={consortium}
+                    className="h-full"
+                    onComment={(item) => {
+                      reset();
+                      setOpenConsortium(item);
+                    }}
+                    onEdit={openEditDialog}
+                    onDelete={setConsortiumPendingDelete}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
 
-      <ul className="grid min-h-0 flex-1 grid-cols-1 gap-6 sm:grid-cols-2 sm:grid-rows-3 lg:grid-cols-3 lg:grid-rows-2">
-        {Array.from({ length: CONSORTIUMS_PER_PAGE }, (_, index) => {
-          const consortium = paginatedConsortiums[index];
+          {filteredConsortiums.length > 0 ? (
+            <nav
+              aria-label="Paginación de consorcios"
+              className="mt-10 flex flex-col gap-4 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <p className="text-[13px] text-muted-foreground">
+                Mostrando{" "}
+                <span className="font-medium tabular-nums text-foreground">
+                  {pageStart}–{pageEnd}
+                </span>{" "}
+                de{" "}
+                <span className="font-medium tabular-nums text-foreground">
+                  {filteredConsortiums.length}
+                </span>
+              </p>
 
-          if (!consortium) {
-            return (
-              <li
-                key={`empty-slot-${index}`}
-                className="hidden min-h-0 sm:block"
-                aria-hidden="true"
-              />
-            );
-          }
-
-          return (
-            <li key={consortium.id} className="min-h-0">
-              <Link
-                href={`/consorcios/${consortium.id}`}
-                className="@container/consortium-card grid h-full min-h-48 w-full grid-rows-[auto_1fr_auto] rounded-lg border border-border bg-card p-4 text-center transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-0 sm:p-6"
-              >
-                <div className="relative h-8 shrink-0">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger
-                      render={
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          className="absolute top-0 right-0 text-muted-foreground"
-                          aria-label={`Configurar ${consortium.name}`}
-                          onClick={(event) => event.preventDefault()}
-                        >
-                          <Settings className="size-5" aria-hidden="true" />
-                        </Button>
-                      }
-                    />
-                    <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
-                      <DropdownMenuItem
-                        onClick={(event) => {
-                          event.preventDefault();
-                          openEditDialog(consortium);
-                        }}
-                      >
-                        <Pencil className="size-4" aria-hidden="true" />
-                        Editar consorcio
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        variant="destructive"
-                        onClick={(event) => {
-                          event.preventDefault();
-                          setConsortiumPendingDelete(consortium);
-                        }}
-                      >
-                        <Trash2 className="size-4" aria-hidden="true" />
-                        Eliminar consorcio
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-
-                <div className="flex min-h-0 flex-col items-center justify-center gap-3 px-2">
-                  <div className="flex w-full flex-1 items-center justify-center">
-                    <Building2
-                      className="aspect-square size-[clamp(4rem,min(38cqw,42cqh),9rem)] text-primary"
-                      aria-hidden="true"
-                    />
-                  </div>
-                  <span className="shrink-0 text-lg font-semibold tracking-tight text-foreground">
-                    {consortium.name}
-                  </span>
-                  <span className="flex shrink-0 items-center gap-1 text-sm text-muted-foreground">
-                    <MapPin className="size-4" aria-hidden="true" />
-                    {consortium.location}
-                  </span>
-                </div>
-
-                <div className="flex shrink-0 justify-end pt-4">
+              {totalPages > 1 ? (
+                <div className="flex items-center gap-1.5">
                   <Button
                     type="button"
-                    variant="outline"
-                    size="sm"
-                    className="bg-transparent font-semibold"
-                    onClick={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      reset();
-                      setOpenConsortium(consortium);
-                    }}
+                    variant="secondary"
+                    className="h-9"
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
                   >
-                    <MessageSquareText className="size-4" aria-hidden="true" />
-                    Enviar comentario
+                    Anterior
+                  </Button>
+
+                  {Array.from({ length: totalPages }, (_, index) => {
+                    const page = index + 1;
+
+                    return (
+                      <Button
+                        key={page}
+                        type="button"
+                        variant={page === currentPage ? "default" : "secondary"}
+                        size="icon"
+                        className="size-9"
+                        aria-label={`Página ${page}`}
+                        aria-current={page === currentPage ? "page" : undefined}
+                        onClick={() => setCurrentPage(page)}
+                      >
+                        {page}
+                      </Button>
+                    );
+                  })}
+
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="h-9"
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                  >
+                    Siguiente
                   </Button>
                 </div>
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-
-      {totalPages > 1 ? (
-        <nav
-          aria-label="Paginación de consorcios"
-          className="mt-6 shrink-0 flex items-center justify-center gap-2"
-        >
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            className="text-muted-foreground"
-            aria-label="Página anterior"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
-          >
-            <ChevronLeft className="size-4" aria-hidden="true" />
-          </Button>
-
-          {Array.from({ length: totalPages }, (_, index) => {
-            const page = index + 1;
-
-            return (
-              <Button
-                key={page}
-                type="button"
-                variant={page === currentPage ? "default" : "ghost"}
-                size="icon-sm"
-                className={page === currentPage ? "" : "text-muted-foreground"}
-                aria-label={`Página ${page}`}
-                aria-current={page === currentPage ? "page" : undefined}
-                onClick={() => setCurrentPage(page)}
-              >
-                {page}
-              </Button>
-            );
-          })}
-
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            className="text-muted-foreground"
-            aria-label="Página siguiente"
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
-          >
-            <ChevronRight className="size-4" aria-hidden="true" />
-          </Button>
-        </nav>
-      ) : null}
+              ) : null}
+            </nav>
+          ) : null}
+        </section>
+      </div>
 
       <ConsortiumFormDialog
         open={formDialogOpen}
@@ -367,7 +388,7 @@ export function ConsortiumsScreen() {
               control={control}
               name="message"
               label="Comentario"
-              placeholder="Escribe tu comentario..."
+              placeholder="Escribe tu comentario…"
               rows={5}
             />
             <DialogFooter>
@@ -384,15 +405,24 @@ export function ConsortiumsScreen() {
 
 function ConsortiumsSkeleton() {
   return (
-    <div className="flex min-h-[calc(100vh-5rem)] w-full max-w-7xl flex-col">
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <Skeleton className="h-12 w-56" />
-        <Skeleton className="h-9 w-48" />
-      </div>
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-6 sm:grid-cols-2 sm:grid-rows-3 lg:grid-cols-3 lg:grid-rows-2">
-        {["a", "b", "c", "d", "e", "f"].map((key) => (
-          <Skeleton key={key} className="min-h-48 rounded-lg sm:min-h-0" />
-        ))}
+    <div className="relative -m-6 w-[calc(100%+3rem)] overflow-x-clip md:-m-10 md:w-[calc(100%+5rem)]">
+      <div className="relative mx-auto w-full max-w-[1120px] px-4 pb-24 sm:px-6">
+        <div className="flex flex-col gap-8 border-b border-border pb-10 pt-10 sm:flex-row sm:items-end sm:justify-between sm:pt-12">
+          <div className="space-y-3">
+            <Skeleton className="h-10 w-72" />
+            <Skeleton className="h-5 w-48" />
+          </div>
+          <Skeleton className="h-[5.5rem] w-72 rounded-lg" />
+        </div>
+        <div className="flex flex-col gap-3 pt-8 sm:flex-row sm:justify-between">
+          <Skeleton className="h-8 w-full sm:w-44" />
+          <Skeleton className="h-9 w-48" />
+        </div>
+        <div className="grid grid-cols-1 gap-4 pt-8 sm:grid-cols-2 xl:grid-cols-3">
+          {["a", "b", "c", "d", "e", "f"].map((key) => (
+            <Skeleton key={key} className="h-56 rounded-lg" />
+          ))}
+        </div>
       </div>
     </div>
   );

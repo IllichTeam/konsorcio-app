@@ -1,0 +1,660 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Variante 3 — Linear light · Selección de consorcios</title>
+  <meta name="description" content="Selección de consorcios — panel de administración Konsorcio, estética Linear en modo claro." />
+  <link rel="preconnect" href="https://fonts.bunny.net" crossorigin />
+  <link href="https://fonts.bunny.net/css?family=geist:400,500,600,700|geist-mono:400,500" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style type="text/tailwindcss">
+    @theme {
+      --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, sans-serif;
+      --font-mono: "Geist Mono", ui-monospace, "SF Mono", monospace;
+
+      /* Cool gray family, hue ~255 — never pure white */
+      --color-background: oklch(0.961 0.005 255);
+      --color-foreground: oklch(0.22 0.02 265);
+      --color-card: oklch(0.988 0.003 255);
+      --color-card-foreground: oklch(0.22 0.02 265);
+      --color-primary: oklch(0.52 0.16 275);
+      --color-primary-foreground: oklch(0.985 0.01 275);
+      --color-secondary: oklch(0.94 0.006 255);
+      --color-muted: oklch(0.94 0.006 255);
+      --color-muted-foreground: oklch(0.48 0.018 265);
+      --color-accent: oklch(0.93 0.03 275);
+      --color-accent-foreground: oklch(0.38 0.1 275);
+      --color-destructive: oklch(0.55 0.2 25);
+      --color-success: oklch(0.52 0.1 155);
+      --color-warning: oklch(0.62 0.14 65);
+      --color-border: oklch(0.895 0.008 255);
+      --color-ring: oklch(0.52 0.16 275);
+      --color-sidebar: oklch(0.948 0.006 255);
+      --color-sidebar-border: oklch(0.88 0.008 255);
+      --color-spotlight: oklch(0.72 0.14 275);
+
+      --radius-lg: 0.5rem;
+      --radius-md: 0.375rem;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--color-background);
+      color: var(--color-foreground);
+    }
+
+    .kbd {
+      font-family: var(--font-mono);
+      font-size: 0.6875rem;
+      line-height: 1;
+      font-weight: 500;
+    }
+
+    /* Staggered entrance — the quiet WOW */
+    @keyframes rise-in {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .rise {
+      animation: rise-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    .d1 { animation-delay: 40ms; }
+    .d2 { animation-delay: 80ms; }
+    .d3 { animation-delay: 120ms; }
+    .d4 { animation-delay: 160ms; }
+    .d5 { animation-delay: 200ms; }
+    .d6 { animation-delay: 240ms; }
+    .d7 { animation-delay: 280ms; }
+    .d8 { animation-delay: 320ms; }
+
+    /* Spotlight hairline on card hover — CSS only */
+    .card-spotlight {
+      position: relative;
+      isolation: isolate;
+    }
+
+    .card-spotlight::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      border-radius: calc(var(--radius-lg) + 1px);
+      padding: 1px;
+      background:
+        radial-gradient(
+          120px 80px at 12% 0%,
+          color-mix(in oklch, var(--color-spotlight) 55%, transparent),
+          transparent 70%
+        ),
+        linear-gradient(
+          135deg,
+          color-mix(in oklch, var(--color-spotlight) 40%, transparent),
+          transparent 42%,
+          transparent 58%,
+          color-mix(in oklch, var(--color-primary) 18%, transparent)
+        );
+      -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      opacity: 0;
+      transition: opacity 240ms ease;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .card-spotlight:hover::before,
+    .card-spotlight:focus-visible::before {
+      opacity: 1;
+    }
+
+    .card-spotlight::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: radial-gradient(
+        180px 100px at 20% 0%,
+        color-mix(in oklch, var(--color-spotlight) 8%, transparent),
+        transparent 70%
+      );
+      opacity: 0;
+      transition: opacity 240ms ease;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .card-spotlight:hover::after,
+    .card-spotlight:focus-visible::after {
+      opacity: 1;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+      }
+
+      .rise {
+        animation: none;
+      }
+    }
+  </style>
+</head>
+<body class="bg-background text-foreground antialiased">
+  <a href="#contenido" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-foreground">Saltar al contenido</a>
+
+  <div class="flex min-h-dvh">
+    <!-- Sidebar — light, cool gray -->
+    <aside class="hidden w-[232px] shrink-0 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
+      <div class="flex h-12 items-center gap-2.5 px-4">
+        <div class="flex size-6 items-center justify-center rounded-[6px] bg-primary text-[11px] font-semibold tracking-tight text-primary-foreground" aria-hidden="true">K</div>
+        <div class="min-w-0 leading-none">
+          <p class="truncate text-[13px] font-semibold tracking-tight">Konsorcio</p>
+          <p class="mt-0.5 truncate text-[11px] text-muted-foreground">Panel de administración</p>
+        </div>
+      </div>
+
+      <nav class="flex flex-1 flex-col gap-5 px-2.5 pb-3 pt-1" aria-label="Navegación principal">
+        <div>
+          <p class="px-2 pb-1.5 text-[11px] font-medium tracking-wide text-muted-foreground">Dashboard</p>
+          <ul class="flex flex-col gap-px">
+            <li>
+              <a href="#" aria-current="page"
+                 class="flex items-center gap-2 rounded-md bg-card px-2 py-1.5 text-[13px] font-medium text-foreground shadow-[inset_0_0_0_1px_var(--color-border)] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <svg class="size-3.5 shrink-0 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/>
+                </svg>
+                Consorcios
+                <span class="ml-auto font-mono text-[11px] tabular-nums text-muted-foreground">9</span>
+              </a>
+            </li>
+            <li>
+              <a href="#"
+                 class="flex items-center gap-2 rounded-md px-2 py-1.5 text-[13px] text-muted-foreground transition-colors duration-200 hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <svg class="size-3.5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M7 13h4"/><path d="M15 9h4"/><path d="M7 9h2"/><path d="M15 13h2"/>
+                </svg>
+                Resumen
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div>
+          <p class="px-2 pb-1.5 text-[11px] font-medium tracking-wide text-muted-foreground">Sistema</p>
+          <ul class="flex flex-col gap-px">
+            <li>
+              <a href="#"
+                 class="flex items-center gap-2 rounded-md px-2 py-1.5 text-[13px] text-muted-foreground transition-colors duration-200 hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <svg class="size-3.5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                Configuración
+              </a>
+            </li>
+          </ul>
+        </div>
+      </nav>
+
+      <div class="border-t border-sidebar-border p-2.5">
+        <div class="flex items-center gap-2 rounded-md px-1.5 py-1">
+          <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-accent text-[11px] font-semibold text-accent-foreground" aria-hidden="true">MG</div>
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-[13px] font-medium leading-tight">María González</p>
+            <p class="truncate text-[11px] text-muted-foreground">m.gonzalez@konsorcio.ar</p>
+          </div>
+          <button type="button"
+                  class="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors duration-200 hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  aria-label="Cerrar sesión" title="Cerrar sesión">
+            <svg class="size-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <main id="contenido" class="flex min-w-0 flex-1 flex-col">
+      <!-- Mobile top bar -->
+      <div class="flex h-12 items-center justify-between border-b border-border px-4 lg:hidden">
+        <div class="flex items-center gap-2">
+          <div class="flex size-6 items-center justify-center rounded-[6px] bg-primary text-[11px] font-semibold text-primary-foreground" aria-hidden="true">K</div>
+          <span class="text-[13px] font-semibold tracking-tight">Konsorcio</span>
+        </div>
+        <button type="button"
+                class="inline-flex size-8 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors duration-200 hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                aria-label="Abrir menú de navegación">
+          <svg class="size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="mx-auto flex w-full max-w-[1080px] flex-1 flex-col px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+
+        <!-- Header -->
+        <header class="rise d1 mb-5">
+          <nav aria-label="Migas de pan" class="mb-2 flex items-center gap-1.5 text-[12px] text-muted-foreground">
+            <a href="#" class="transition-colors duration-200 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm">Dashboard</a>
+            <span aria-hidden="true" class="text-muted-foreground/50">·</span>
+            <span class="font-medium text-foreground">Consorcios</span>
+          </nav>
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div class="min-w-0">
+              <h1 class="text-[22px] font-semibold leading-tight tracking-[-0.03em] text-foreground sm:text-[24px]">Selección de consorcios</h1>
+              <p class="mt-1 text-[13px] text-muted-foreground">Bienvenida, María González</p>
+            </div>
+            <button type="button"
+                    class="inline-flex h-8 shrink-0 items-center gap-1.5 self-start rounded-md bg-primary pl-2.5 pr-1.5 text-[13px] font-medium text-primary-foreground transition-[opacity,transform] duration-200 hover:opacity-90 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:self-auto">
+              <svg class="size-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 12h14"/><path d="M12 5v14"/>
+              </svg>
+              Agregar nuevo consorcio
+              <kbd class="kbd ml-0.5 hidden items-center rounded border border-primary-foreground/20 bg-primary-foreground/10 px-1.5 py-0.5 text-primary-foreground/85 sm:inline-flex">C</kbd>
+            </button>
+          </div>
+        </header>
+
+        <!-- Global metrics -->
+        <section class="rise d2 mb-4 grid grid-cols-2 gap-2 sm:max-w-md" aria-label="Métricas globales">
+          <div class="rounded-lg border border-border bg-card px-3 py-2.5">
+            <p class="text-[11px] font-medium text-muted-foreground">Consorcios activos</p>
+            <p class="mt-0.5 font-mono text-[18px] font-semibold tabular-nums tracking-tight text-foreground">9</p>
+          </div>
+          <div class="rounded-lg border border-border bg-card px-3 py-2.5">
+            <p class="text-[11px] font-medium text-muted-foreground">Unidades administradas</p>
+            <p class="mt-0.5 font-mono text-[18px] font-semibold tabular-nums tracking-tight text-foreground">312</p>
+          </div>
+        </section>
+
+        <!-- Toolbar -->
+        <div class="rise d3 mb-3 flex flex-col gap-2.5 sm:flex-row sm:items-center">
+          <label class="relative block min-w-0 flex-1 sm:max-w-sm">
+            <span class="sr-only">Buscar consorcios</span>
+            <svg class="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+            </svg>
+            <input type="search" placeholder="Buscar por nombre o barrio…"
+                   class="h-8 w-full rounded-md border border-border bg-card pl-8 pr-14 text-[13px] text-foreground placeholder:text-muted-foreground transition-[border-color,box-shadow] duration-200 hover:border-muted-foreground/35 focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25" />
+            <kbd class="kbd pointer-events-none absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-0.5 rounded border border-border bg-secondary px-1.5 py-0.5 text-muted-foreground">
+              <span class="text-[12px] leading-none">⌘</span>K
+            </kbd>
+          </label>
+
+          <div class="flex items-center gap-2">
+            <button type="button"
+                    class="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-card px-2.5 text-[13px] text-foreground transition-colors duration-200 hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <svg class="size-3.5 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 6h18"/><path d="M7 12h10"/><path d="M10 18h4"/>
+              </svg>
+              Filtros
+            </button>
+            <span class="hidden text-[12px] tabular-nums text-muted-foreground md:inline">Página 1 de 2</span>
+          </div>
+        </div>
+
+        <!-- Filter chips -->
+        <div class="rise d4 mb-4 flex items-center gap-1.5 overflow-x-auto pb-0.5" role="group" aria-label="Filtros rápidos">
+          <button type="button" class="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md bg-foreground px-2.5 text-[12px] font-medium text-background transition-[opacity,transform] duration-200 hover:opacity-90 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            Todos <span class="tabular-nums opacity-70">9</span>
+          </button>
+          <button type="button" class="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md border border-border bg-card px-2.5 text-[12px] text-muted-foreground transition-colors duration-200 hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <span class="size-1.5 rounded-full bg-destructive" aria-hidden="true"></span>
+            Con avisos <span class="tabular-nums">4</span>
+          </button>
+          <button type="button" class="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md border border-border bg-card px-2.5 text-[12px] text-muted-foreground transition-colors duration-200 hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <span class="size-1.5 rounded-full bg-warning" aria-hidden="true"></span>
+            Con reclamos <span class="tabular-nums">3</span>
+          </button>
+          <button type="button" class="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md border border-border bg-card px-2.5 text-[12px] text-muted-foreground transition-colors duration-200 hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <span class="size-1.5 rounded-full bg-success" aria-hidden="true"></span>
+            Operativos <span class="tabular-nums">5</span>
+          </button>
+        </div>
+
+        <!-- Cards -->
+        <ul class="grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-3" role="list">
+
+          <!-- 1 Av. Santa Fe 2154 -->
+          <li class="rise d5">
+            <article class="card-spotlight group flex h-full flex-col rounded-lg border border-border bg-card p-3.5 transition-[border-color,transform,box-shadow] duration-200 hover:-translate-y-px hover:border-primary/25 hover:shadow-[0_8px_24px_-16px_oklch(0.4_0.04_275/0.35)] focus-within:border-primary/25">
+              <div class="relative z-[2] flex items-start gap-2.5">
+                <div class="flex size-9 shrink-0 items-center justify-center rounded-md border border-border bg-secondary font-mono text-[12px] font-medium text-foreground" aria-hidden="true">SF</div>
+                <div class="min-w-0 flex-1">
+                  <h2 class="truncate text-[14px] font-semibold tracking-[-0.02em] text-foreground">
+                    <a href="#" class="rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring">Av. Santa Fe 2154</a>
+                  </h2>
+                  <p class="mt-0.5 truncate text-[12px] text-muted-foreground">Recoleta, CABA</p>
+                </div>
+              </div>
+
+              <dl class="relative z-[2] mt-3 grid grid-cols-3 gap-2 border-t border-border pt-3">
+                <div>
+                  <dt class="text-[10px] font-medium text-muted-foreground">Unidades</dt>
+                  <dd class="mt-0.5 font-mono text-[13px] font-medium tabular-nums text-foreground">48</dd>
+                </div>
+                <div>
+                  <dt class="text-[10px] font-medium text-muted-foreground">Avisos</dt>
+                  <dd class="mt-0.5 font-mono text-[13px] font-medium tabular-nums text-destructive">3</dd>
+                </div>
+                <div>
+                  <dt class="text-[10px] font-medium text-muted-foreground">Reclamos</dt>
+                  <dd class="mt-0.5 font-mono text-[13px] font-medium tabular-nums text-foreground">1</dd>
+                </div>
+              </dl>
+
+              <div class="relative z-[2] mt-3 flex flex-1 flex-col justify-end gap-2">
+                <div class="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+                  <span class="truncate">Correos inquilinos <span class="font-mono tabular-nums text-foreground">41</span></span>
+                  <span class="shrink-0 tabular-nums">hace 2 h</span>
+                </div>
+                <div class="flex flex-col gap-2 border-t border-border pt-2.5">
+                  <span class="inline-flex items-center gap-1.5 text-[11px] font-medium text-destructive">
+                    <span class="size-1.5 rounded-full bg-destructive" aria-hidden="true"></span>
+                    Atención requerida
+                  </span>
+                  <div class="flex items-center justify-between gap-2">
+                    <a href="#" class="text-[11px] font-medium text-muted-foreground transition-colors duration-200 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm">
+                      Enviar comentario
+                    </a>
+                    <a href="#" class="inline-flex items-center gap-1 text-[11px] font-medium text-primary transition-colors duration-200 hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm">
+                      Entrar
+                      <svg class="size-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </li>
+
+          <!-- 2 Libertador 4310 -->
+          <li class="rise d5" style="animation-delay: 220ms">
+            <article class="card-spotlight group flex h-full flex-col rounded-lg border border-border bg-card p-3.5 transition-[border-color,transform,box-shadow] duration-200 hover:-translate-y-px hover:border-primary/25 hover:shadow-[0_8px_24px_-16px_oklch(0.4_0.04_275/0.35)] focus-within:border-primary/25">
+              <div class="relative z-[2] flex items-start gap-2.5">
+                <div class="flex size-9 shrink-0 items-center justify-center rounded-md border border-border bg-secondary font-mono text-[12px] font-medium text-foreground" aria-hidden="true">LB</div>
+                <div class="min-w-0 flex-1">
+                  <h2 class="truncate text-[14px] font-semibold tracking-[-0.02em] text-foreground">
+                    <a href="#" class="rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring">Libertador 4310</a>
+                  </h2>
+                  <p class="mt-0.5 truncate text-[12px] text-muted-foreground">Palermo, CABA</p>
+                </div>
+              </div>
+              <dl class="relative z-[2] mt-3 grid grid-cols-3 gap-2 border-t border-border pt-3">
+                <div>
+                  <dt class="text-[10px] font-medium text-muted-foreground">Unidades</dt>
+                  <dd class="mt-0.5 font-mono text-[13px] font-medium tabular-nums text-foreground">72</dd>
+                </div>
+                <div>
+                  <dt class="text-[10px] font-medium text-muted-foreground">Avisos</dt>
+                  <dd class="mt-0.5 font-mono text-[13px] font-medium tabular-nums text-foreground">0</dd>
+                </div>
+                <div>
+                  <dt class="text-[10px] font-medium text-muted-foreground">Reclamos</dt>
+                  <dd class="mt-0.5 font-mono text-[13px] font-medium tabular-nums text-foreground">0</dd>
+                </div>
+              </dl>
+              <div class="relative z-[2] mt-3 flex flex-1 flex-col justify-end gap-2">
+                <div class="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+                  <span class="truncate">Correos inquilinos <span class="font-mono tabular-nums text-foreground">68</span></span>
+                  <span class="shrink-0 tabular-nums">hace 5 h</span>
+                </div>
+                <div class="flex flex-col gap-2 border-t border-border pt-2.5">
+                  <span class="inline-flex items-center gap-1.5 text-[11px] font-medium text-success">
+                    <span class="size-1.5 rounded-full bg-success" aria-hidden="true"></span>
+                    Operativo
+                  </span>
+                  <div class="flex items-center justify-between gap-2">
+                    <a href="#" class="text-[11px] font-medium text-muted-foreground transition-colors duration-200 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm">
+                      Enviar comentario
+                    </a>
+                    <a href="#" class="inline-flex items-center gap-1 text-[11px] font-medium text-primary transition-colors duration-200 hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm">
+                      Entrar
+                      <svg class="size-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </li>
+
+          <!-- 3 Torre Alem Plaza -->
+          <li class="rise d6">
+            <article class="card-spotlight group flex h-full flex-col rounded-lg border border-border bg-card p-3.5 transition-[border-color,transform,box-shadow] duration-200 hover:-translate-y-px hover:border-primary/25 hover:shadow-[0_8px_24px_-16px_oklch(0.4_0.04_275/0.35)] focus-within:border-primary/25">
+              <div class="relative z-[2] flex items-start gap-2.5">
+                <div class="flex size-9 shrink-0 items-center justify-center rounded-md border border-border bg-secondary font-mono text-[12px] font-medium text-foreground" aria-hidden="true">TA</div>
+                <div class="min-w-0 flex-1">
+                  <h2 class="truncate text-[14px] font-semibold tracking-[-0.02em] text-foreground">
+                    <a href="#" class="rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring">Torre Alem Plaza</a>
+                  </h2>
+                  <p class="mt-0.5 truncate text-[12px] text-muted-foreground">Retiro, CABA</p>
+                </div>
+              </div>
+              <dl class="relative z-[2] mt-3 grid grid-cols-3 gap-2 border-t border-border pt-3">
+                <div>
+                  <dt class="text-[10px] font-medium text-muted-foreground">Unidades</dt>
+                  <dd class="mt-0.5 font-mono text-[13px] font-medium tabular-nums text-foreground">96</dd>
+                </div>
+                <div>
+                  <dt class="text-[10px] font-medium text-muted-foreground">Avisos</dt>
+                  <dd class="mt-0.5 font-mono text-[13px] font-medium tabular-nums text-destructive">5</dd>
+                </div>
+                <div>
+                  <dt class="text-[10px] font-medium text-muted-foreground">Reclamos</dt>
+                  <dd class="mt-0.5 font-mono text-[13px] font-medium tabular-nums text-warning">2</dd>
+                </div>
+              </dl>
+              <div class="relative z-[2] mt-3 flex flex-1 flex-col justify-end gap-2">
+                <div class="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+                  <span class="truncate">Correos inquilinos <span class="font-mono tabular-nums text-foreground">89</span></span>
+                  <span class="shrink-0 tabular-nums">hace 35 min</span>
+                </div>
+                <div class="flex flex-col gap-2 border-t border-border pt-2.5">
+                  <span class="inline-flex items-center gap-1.5 text-[11px] font-medium text-destructive">
+                    <span class="size-1.5 rounded-full bg-destructive" aria-hidden="true"></span>
+                    Atención requerida
+                  </span>
+                  <div class="flex items-center justify-between gap-2">
+                    <a href="#" class="text-[11px] font-medium text-muted-foreground transition-colors duration-200 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm">
+                      Enviar comentario
+                    </a>
+                    <a href="#" class="inline-flex items-center gap-1 text-[11px] font-medium text-primary transition-colors duration-200 hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm">
+                      Entrar
+                      <svg class="size-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </li>
+
+          <!-- 4 Cabildo 2478 -->
+          <li class="rise d6" style="animation-delay: 300ms">
+            <article class="card-spotlight group flex h-full flex-col rounded-lg border border-border bg-card p-3.5 transition-[border-color,transform,box-shadow] duration-200 hover:-translate-y-px hover:border-primary/25 hover:shadow-[0_8px_24px_-16px_oklch(0.4_0.04_275/0.35)] focus-within:border-primary/25">
+              <div class="relative z-[2] flex items-start gap-2.5">
+                <div class="flex size-9 shrink-0 items-center justify-center rounded-md border border-border bg-secondary font-mono text-[12px] font-medium text-foreground" aria-hidden="true">CB</div>
+                <div class="min-w-0 flex-1">
+                  <h2 class="truncate text-[14px] font-semibold tracking-[-0.02em] text-foreground">
+                    <a href="#" class="rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring">Cabildo 2478</a>
+                  </h2>
+                  <p class="mt-0.5 truncate text-[12px] text-muted-foreground">Belgrano, CABA</p>
+                </div>
+              </div>
+              <dl class="relative z-[2] mt-3 grid grid-cols-3 gap-2 border-t border-border pt-3">
+                <div>
+                  <dt class="text-[10px] font-medium text-muted-foreground">Unidades</dt>
+                  <dd class="mt-0.5 font-mono text-[13px] font-medium tabular-nums text-foreground">24</dd>
+                </div>
+                <div>
+                  <dt class="text-[10px] font-medium text-muted-foreground">Avisos</dt>
+                  <dd class="mt-0.5 font-mono text-[13px] font-medium tabular-nums text-destructive">1</dd>
+                </div>
+                <div>
+                  <dt class="text-[10px] font-medium text-muted-foreground">Reclamos</dt>
+                  <dd class="mt-0.5 font-mono text-[13px] font-medium tabular-nums text-foreground">0</dd>
+                </div>
+              </dl>
+              <div class="relative z-[2] mt-3 flex flex-1 flex-col justify-end gap-2">
+                <div class="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+                  <span class="truncate">Correos inquilinos <span class="font-mono tabular-nums text-foreground">22</span></span>
+                  <span class="shrink-0 tabular-nums">hace 1 d</span>
+                </div>
+                <div class="flex flex-col gap-2 border-t border-border pt-2.5">
+                  <span class="inline-flex items-center gap-1.5 text-[11px] font-medium text-warning">
+                    <span class="size-1.5 rounded-full bg-warning" aria-hidden="true"></span>
+                    Avisos pendientes
+                  </span>
+                  <div class="flex items-center justify-between gap-2">
+                    <a href="#" class="text-[11px] font-medium text-muted-foreground transition-colors duration-200 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm">
+                      Enviar comentario
+                    </a>
+                    <a href="#" class="inline-flex items-center gap-1 text-[11px] font-medium text-primary transition-colors duration-200 hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm">
+                      Entrar
+                      <svg class="size-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </li>
+
+          <!-- 5 Rivadavia 6320 -->
+          <li class="rise d7">
+            <article class="card-spotlight group flex h-full flex-col rounded-lg border border-border bg-card p-3.5 transition-[border-color,transform,box-shadow] duration-200 hover:-translate-y-px hover:border-primary/25 hover:shadow-[0_8px_24px_-16px_oklch(0.4_0.04_275/0.35)] focus-within:border-primary/25">
+              <div class="relative z-[2] flex items-start gap-2.5">
+                <div class="flex size-9 shrink-0 items-center justify-center rounded-md border border-border bg-secondary font-mono text-[12px] font-medium text-foreground" aria-hidden="true">RV</div>
+                <div class="min-w-0 flex-1">
+                  <h2 class="truncate text-[14px] font-semibold tracking-[-0.02em] text-foreground">
+                    <a href="#" class="rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring">Rivadavia 6320</a>
+                  </h2>
+                  <p class="mt-0.5 truncate text-[12px] text-muted-foreground">Caballito, CABA</p>
+                </div>
+              </div>
+              <dl class="relative z-[2] mt-3 grid grid-cols-3 gap-2 border-t border-border pt-3">
+                <div>
+                  <dt class="text-[10px] font-medium text-muted-foreground">Unidades</dt>
+                  <dd class="mt-0.5 font-mono text-[13px] font-medium tabular-nums text-foreground">36</dd>
+                </div>
+                <div>
+                  <dt class="text-[10px] font-medium text-muted-foreground">Avisos</dt>
+                  <dd class="mt-0.5 font-mono text-[13px] font-medium tabular-nums text-foreground">0</dd>
+                </div>
+                <div>
+                  <dt class="text-[10px] font-medium text-muted-foreground">Reclamos</dt>
+                  <dd class="mt-0.5 font-mono text-[13px] font-medium tabular-nums text-warning">1</dd>
+                </div>
+              </dl>
+              <div class="relative z-[2] mt-3 flex flex-1 flex-col justify-end gap-2">
+                <div class="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+                  <span class="truncate">Correos inquilinos <span class="font-mono tabular-nums text-foreground">33</span></span>
+                  <span class="shrink-0 tabular-nums">hace 3 h</span>
+                </div>
+                <div class="flex flex-col gap-2 border-t border-border pt-2.5">
+                  <span class="inline-flex items-center gap-1.5 text-[11px] font-medium text-warning">
+                    <span class="size-1.5 rounded-full bg-warning" aria-hidden="true"></span>
+                    Reclamo abierto
+                  </span>
+                  <div class="flex items-center justify-between gap-2">
+                    <a href="#" class="text-[11px] font-medium text-muted-foreground transition-colors duration-200 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm">
+                      Enviar comentario
+                    </a>
+                    <a href="#" class="inline-flex items-center gap-1 text-[11px] font-medium text-primary transition-colors duration-200 hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm">
+                      Entrar
+                      <svg class="size-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </li>
+
+          <!-- 6 Malabia 1725 -->
+          <li class="rise d8">
+            <article class="card-spotlight group flex h-full flex-col rounded-lg border border-border bg-card p-3.5 transition-[border-color,transform,box-shadow] duration-200 hover:-translate-y-px hover:border-primary/25 hover:shadow-[0_8px_24px_-16px_oklch(0.4_0.04_275/0.35)] focus-within:border-primary/25">
+              <div class="relative z-[2] flex items-start gap-2.5">
+                <div class="flex size-9 shrink-0 items-center justify-center rounded-md border border-border bg-secondary font-mono text-[12px] font-medium text-foreground" aria-hidden="true">ML</div>
+                <div class="min-w-0 flex-1">
+                  <h2 class="truncate text-[14px] font-semibold tracking-[-0.02em] text-foreground">
+                    <a href="#" class="rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring">Malabia 1725</a>
+                  </h2>
+                  <p class="mt-0.5 truncate text-[12px] text-muted-foreground">Villa Crespo, CABA</p>
+                </div>
+              </div>
+              <dl class="relative z-[2] mt-3 grid grid-cols-3 gap-2 border-t border-border pt-3">
+                <div>
+                  <dt class="text-[10px] font-medium text-muted-foreground">Unidades</dt>
+                  <dd class="mt-0.5 font-mono text-[13px] font-medium tabular-nums text-foreground">18</dd>
+                </div>
+                <div>
+                  <dt class="text-[10px] font-medium text-muted-foreground">Avisos</dt>
+                  <dd class="mt-0.5 font-mono text-[13px] font-medium tabular-nums text-foreground">0</dd>
+                </div>
+                <div>
+                  <dt class="text-[10px] font-medium text-muted-foreground">Reclamos</dt>
+                  <dd class="mt-0.5 font-mono text-[13px] font-medium tabular-nums text-foreground">0</dd>
+                </div>
+              </dl>
+              <div class="relative z-[2] mt-3 flex flex-1 flex-col justify-end gap-2">
+                <div class="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+                  <span class="truncate">Correos inquilinos <span class="font-mono tabular-nums text-foreground">17</span></span>
+                  <span class="shrink-0 tabular-nums">hace 8 h</span>
+                </div>
+                <div class="flex flex-col gap-2 border-t border-border pt-2.5">
+                  <span class="inline-flex items-center gap-1.5 text-[11px] font-medium text-success">
+                    <span class="size-1.5 rounded-full bg-success" aria-hidden="true"></span>
+                    Operativo
+                  </span>
+                  <div class="flex items-center justify-between gap-2">
+                    <a href="#" class="text-[11px] font-medium text-muted-foreground transition-colors duration-200 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm">
+                      Enviar comentario
+                    </a>
+                    <a href="#" class="inline-flex items-center gap-1 text-[11px] font-medium text-primary transition-colors duration-200 hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm">
+                      Entrar
+                      <svg class="size-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </li>
+        </ul>
+
+        <!-- Pagination -->
+        <footer class="rise d8 mt-5 flex flex-col items-center justify-between gap-3 border-t border-border pt-4 sm:flex-row">
+          <p class="text-[12px] tabular-nums text-muted-foreground">Mostrando 1–6 de 9 consorcios</p>
+          <nav aria-label="Paginación de consorcios" class="flex items-center gap-1">
+            <button type="button" disabled aria-label="Página anterior"
+                    class="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground/40 disabled:cursor-not-allowed">
+              <svg class="size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <button type="button" aria-current="page" aria-label="Página 1"
+                    class="inline-flex size-8 items-center justify-center rounded-md bg-primary text-[13px] font-medium tabular-nums text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">1</button>
+            <button type="button" aria-label="Página 2"
+                    class="inline-flex size-8 items-center justify-center rounded-md text-[13px] tabular-nums text-muted-foreground transition-colors duration-200 hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">2</button>
+            <button type="button" aria-label="Página siguiente"
+                    class="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors duration-200 hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <svg class="size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+          </nav>
+        </footer>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
