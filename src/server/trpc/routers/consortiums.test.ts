@@ -257,13 +257,20 @@ describe("consortiums tRPC router", () => {
       commentCaller.consortiums.sendComment({
         id: created.id,
         message: "Hola vecinos",
+        recipients: [
+          { email: "juan.perez@example.com", name: "1° - A" },
+          { email: "maria.gomez@example.com", name: "3° - 2 B" },
+        ],
       }),
     ).resolves.toBeUndefined();
 
     expect(sendEmail).toHaveBeenCalledWith({
       subject: `Comentario — ${created.name}`,
       body: "Hola vecinos",
-      recipients: [{ email: sampleInput.billingEmail, name: "Vecino/a" }],
+      recipients: [
+        { email: "juan.perez@example.com", name: "1° - A" },
+        { email: "maria.gomez@example.com", name: "3° - 2 B" },
+      ],
       consortium: created.name,
       sender: "Administración",
     });
