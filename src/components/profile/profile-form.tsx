@@ -14,12 +14,11 @@ import { FormInput } from "@/components/form/form-input";
 import { PasswordVisibilityToggle } from "@/components/form/password-visibility-toggle";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 const profileSchema = z
   .object({
     name: z.string().min(1, "El nombre es obligatorio"),
+    email: z.string(),
     phone: z.string(),
     address: z.string(),
     currentPassword: z.string(),
@@ -80,6 +79,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
     resolver: zodResolver(profileSchema),
     defaultValues: {
       name: user.name,
+      email: user.email,
       phone: optionalField(user.phone),
       address: optionalField(user.address),
       currentPassword: "",
@@ -93,6 +93,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
   React.useEffect(() => {
     reset({
       name: user.name,
+      email: user.email,
       phone: optionalField(user.phone),
       address: optionalField(user.address),
       currentPassword: "",
@@ -137,6 +138,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
     toast.success("Perfil actualizado");
     reset({
       name: values.name.trim(),
+      email: user.email,
       phone,
       address,
       currentPassword: "",
@@ -151,7 +153,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
   }
 
   return (
-    <div className="w-full max-w-xl">
+    <div className="mx-auto w-full max-w-xl">
       <h1 className="mb-4 text-lg font-semibold tracking-tight text-foreground">
         Configuración de usuario <span className="text-muted-foreground">· {displayName}</span>
       </h1>
@@ -164,17 +166,15 @@ export function ProfileForm({ user }: ProfileFormProps) {
 
               <FormInput control={control} name="name" label="Nombre" autoComplete="name" />
 
-              <div className="grid gap-2">
-                <Label htmlFor="profile-email">Email</Label>
-                <Input
-                  id="profile-email"
-                  type="email"
-                  value={user.email}
-                  readOnly
-                  disabled
-                  autoComplete="email"
-                />
-              </div>
+              <FormInput
+                control={control}
+                name="email"
+                label="Email"
+                type="email"
+                readOnly
+                disabled
+                autoComplete="email"
+              />
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormInput
