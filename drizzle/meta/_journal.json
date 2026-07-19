@@ -57,6 +57,13 @@
       "when": 1784407145939,
       "tag": "0007_romantic_lethal_legion",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1784424493893,
+      "tag": "0008_mighty_deadpool",
+      "breakpoints": true
     }
   ]
 }

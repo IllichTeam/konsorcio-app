@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -12,6 +11,7 @@ import { z } from "@/lib/zod";
 import { authClient } from "@/lib/auth-client";
 import { FormInput } from "@/components/form/form-input";
 import { FormInputOTP } from "@/components/form/form-input-otp";
+import { PasswordVisibilityToggle } from "@/components/form/password-visibility-toggle";
 import { Button } from "@/components/ui/button";
 
 const emailSchema = z.object({
@@ -200,16 +200,10 @@ export function ForgotPasswordForm() {
         autoComplete="new-password"
         placeholder="••••••••"
         endAdornment={
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            className="absolute top-1/2 right-1 -translate-y-1/2 text-muted-foreground"
-            aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-            onClick={() => setShowPassword((v) => !v)}
-          >
-            {showPassword ? <EyeOff /> : <Eye />}
-          </Button>
+          <PasswordVisibilityToggle
+            visible={showPassword}
+            onToggle={() => setShowPassword((v) => !v)}
+          />
         }
       />
       <FormInput
@@ -220,16 +214,10 @@ export function ForgotPasswordForm() {
         autoComplete="new-password"
         placeholder="••••••••"
         endAdornment={
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            className="absolute top-1/2 right-1 -translate-y-1/2 text-muted-foreground"
-            aria-label={showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-            onClick={() => setShowConfirmPassword((v) => !v)}
-          >
-            {showConfirmPassword ? <EyeOff /> : <Eye />}
-          </Button>
+          <PasswordVisibilityToggle
+            visible={showConfirmPassword}
+            onToggle={() => setShowConfirmPassword((v) => !v)}
+          />
         }
       />
       <Button type="submit" disabled={passwordForm.formState.isSubmitting}>
