@@ -2,54 +2,18 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, FileText, Mail, Pencil } from "lucide-react";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { z } from "@/lib/zod";
 
 import { defaultAuthenticatedPath } from "@/lib/navigation/dashboard-nav";
 
-import {
-  useConsortium,
-  useConsortiumHistory,
-  useUpdateConsortiumAmount,
-} from "@/hooks/use-consortiums";
-import { FormInput } from "@/components/form/form-input";
+import { useConsortium, useConsortiumHistory } from "@/hooks/use-consortiums";
 import { ConsortiumFormDialog } from "@/components/consortiums/consortium-form-dialog";
+import { consortiumHistoryColumns } from "@/components/consortiums/consortium-history-columns";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
-const currencyFormatter = new Intl.NumberFormat("es-AR", {
-  style: "currency",
-  currency: "ARS",
-  minimumFractionDigits: 2,
-});
-
-const amountSchema = z.object({
-  amount: z
-    .string()
-    .min(1, "Ingresa un monto")
-    .refine((value) => !Number.isNaN(Number(value)), "Ingresa un monto válido")
-    .refine((value) => Number(value) > 0, "El monto debe ser mayor a cero"),
-});
-
-type AmountValues = z.infer<typeof amountSchema>;
+const HISTORY_PAGE_SIZE = 10;
 
 type ConsortiumDetailProps = {
   consortiumId: string;
@@ -57,28 +21,16 @@ type ConsortiumDetailProps = {
 
 export function ConsortiumDetail({ consortiumId }: ConsortiumDetailProps) {
   const { data: consortium, isLoading, isError } = useConsortium(consortiumId);
-  const { data: history = [], isLoading: isHistoryLoading } = useConsortiumHistory(consortiumId);
-  const updateAmount = useUpdateConsortiumAmount();
-  const [editOpen, setEditOpen] = useState(false);
-  const [formDialogOpen, setFormDialogOpen] = useState(false);
-
-  const { control, handleSubmit, formState, reset } = useForm<AmountValues>({
-    resolver: zodResolver(amountSchema),
-    defaultValues: { amount: "" },
+  const [historyPage, setHistoryPage] = useState(1);
+  const {
+    data: historyPageData,
+    isLoading: isHistoryLoading,
+    isFetching: isHistoryFetching,
+  } = useConsortiumHistory(consortiumId, {
+    page: historyPage,
+    pageSize: HISTORY_PAGE_SIZE,
   });
-
-  async function onSubmitAmount(values: AmountValues) {
-    try {
-      await updateAmount.mutateAsync({
-        id: consortiumId,
-        amount: Math.trunc(Number(values.amount)),
-      });
-      toast.success("Monto actualizado");
-      setEditOpen(false);
-    } catch {
-      toast.error("No se pudo actualizar el monto");
-    }
-  }
+  const [formDialogOpen, setFormDialogOpen] = useState(false);
 
   if (isLoading) {
     return <ConsortiumDetailSkeleton />;
@@ -113,45 +65,35 @@ export function ConsortiumDetail({ consortiumId }: ConsortiumDetailProps) {
         Volver a consorcios
       </Button>
 
-      <div className="mt-4 space-y-2">
-        <h1 className="text-xl font-semibold tracking-tight text-balance text-foreground">
+      <div className="mt-4">
+        <h1 className="text-3xl font-semibold tracking-tight text-balance text-foreground">
           {consortium.name}
         </h1>
-        <p className="text-3xl font-bold tracking-tight text-foreground">
-          {currencyFormatter.format(consortium.amount)}
-        </p>
-        <Button
-          variant="outline"
-          size="sm"
-          className="mt-2 w-fit"
-          onClick={() => {
-            reset({ amount: String(consortium.amount) });
-            setEditOpen(true);
-          }}
-        >
-          Cambiar monto de caja
-        </Button>
-        <div className="flex flex-wrap gap-3 pt-2">
-          {process.env.NEXT_PUBLIC_DEMO_MODE !== "true" ? (
-            <>
-              <Button className="w-fit">
-                <FileText className="size-4" aria-hidden="true" />
-                Enviar expensa mensual
-              </Button>
-              <Button
-                variant="outline"
-                className="w-fit"
-                render={<Link href={`/consorcios/${consortiumId}/emails-inquilinos`} />}
-              >
-                <Mail className="size-4" aria-hidden="true" />
-                Emails de inquilinos
-              </Button>
-            </>
-          ) : null}
-          <Button variant="outline" className="w-fit" onClick={() => setFormDialogOpen(true)}>
-            <Pencil className="size-4" aria-hidden="true" />
-            Editar consorcio
-          </Button>
+
+        <div className="mt-6">
+          <p className="text-base font-medium text-muted-foreground">Acciones</p>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {process.env.NEXT_PUBLIC_DEMO_MODE !== "true" ? (
+              <>
+                <Button className="w-fit">
+                  <FileText className="size-4" aria-hidden="true" />
+                  Enviar expensa mensual
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-fit"
+                  render={<Link href={`/consorcios/${consortiumId}/emails-inquilinos`} />}
+                >
+                  <Mail className="size-4" aria-hidden="true" />
+                  Emails de inquilinos
+                </Button>
+              </>
+            ) : null}
+            <Button variant="outline" className="w-fit" onClick={() => setFormDialogOpen(true)}>
+              <Pencil className="size-4" aria-hidden="true" />
+              Editar consorcio
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -185,29 +127,20 @@ export function ConsortiumDetail({ consortiumId }: ConsortiumDetailProps) {
 
       <div className="mt-8 flex min-h-0 flex-1 flex-col">
         <h2 className="mb-3 text-sm font-semibold text-foreground">Historial de acciones</h2>
-        {isHistoryLoading ? (
-          <Skeleton className="min-h-48 w-full flex-1 rounded-lg" />
+        {isHistoryLoading && !historyPageData ? (
+          <DataTableSkeleton columnCount={2} rowCount={HISTORY_PAGE_SIZE} />
         ) : (
-          <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border border-border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-44 px-4">Fecha</TableHead>
-                  <TableHead className="px-4">Acción</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {history.map((entry) => (
-                  <TableRow key={entry.id}>
-                    <TableCell className="px-4 text-muted-foreground">{entry.timestamp}</TableCell>
-                    <TableCell className="px-4 whitespace-normal text-foreground">
-                      {entry.description}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <DataTable
+            columns={consortiumHistoryColumns}
+            data={historyPageData?.items ?? []}
+            pageIndex={historyPage - 1}
+            pageSize={HISTORY_PAGE_SIZE}
+            totalCount={historyPageData?.total ?? 0}
+            onPageChange={(pageIndex) => setHistoryPage(pageIndex + 1)}
+            getRowId={(row) => String(row.id)}
+            emptyMessage="Todavía no hay acciones registradas"
+            className={isHistoryFetching ? "opacity-70 transition-opacity" : undefined}
+          />
         )}
       </div>
 
@@ -217,44 +150,26 @@ export function ConsortiumDetail({ consortiumId }: ConsortiumDetailProps) {
         consortiumId={consortiumId}
         initialConsortium={consortium}
       />
-
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Cambiar monto de la caja</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit(onSubmitAmount)} noValidate className="space-y-4">
-            <FormInput
-              control={control}
-              name="amount"
-              label="Nuevo monto (ARS)"
-              type="number"
-              step="0.01"
-              inputMode="decimal"
-            />
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={formState.isSubmitting || updateAmount.isPending}>
-                {updateAmount.isPending ? "Guardando…" : "Guardar"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
 
 function ConsortiumDetailSkeleton() {
   return (
-    <div className="w-full space-y-4">
+    <div className="flex w-full min-h-[calc(100dvh-5rem)] flex-col">
       <Skeleton className="h-8 w-40" />
-      <Skeleton className="h-8 w-48" />
-      <Skeleton className="h-10 w-36" />
-      <Skeleton className="h-9 w-28" />
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+      <div className="mt-4">
+        <Skeleton className="h-7 w-56" />
+        <div className="mt-6">
+          <Skeleton className="h-4 w-16" />
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <Skeleton className="h-9 w-44" />
+            <Skeleton className="h-9 w-40" />
+            <Skeleton className="h-9 w-36" />
+          </div>
+        </div>
+      </div>
+      <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-3">
         <div className="space-y-2">
           <Skeleton className="h-5 w-24" />
           <Skeleton className="h-4 w-32" />
@@ -268,7 +183,10 @@ function ConsortiumDetailSkeleton() {
           <Skeleton className="h-4 w-48" />
         </div>
       </div>
-      <Skeleton className="min-h-64 w-full flex-1 rounded-lg" />
+      <div className="mt-8 flex min-h-0 flex-1 flex-col">
+        <Skeleton className="mb-3 h-4 w-40" />
+        <DataTableSkeleton columnCount={2} rowCount={HISTORY_PAGE_SIZE} />
+      </div>
     </div>
   );
 }

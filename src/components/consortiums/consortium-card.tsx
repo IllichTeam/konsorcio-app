@@ -60,8 +60,12 @@ export function ConsortiumCard({
         aria-label={`Abrir ${consortium.name}`}
       />
 
-      <div className="relative z-10 flex flex-1 flex-col p-5">
-        <div className="absolute top-3 right-3">
+      {/*
+        Content sits above the stretched link for paint order; pointer-events-none
+        lets clicks fall through to the Link. Interactive controls re-enable hits.
+      */}
+      <div className="pointer-events-none relative z-10 flex flex-1 flex-col p-5">
+        <div className="pointer-events-auto absolute top-3 right-3">
           <DropdownMenu>
             <DropdownMenuTrigger
               render={
@@ -70,29 +74,17 @@ export function ConsortiumCard({
                   size="icon-sm"
                   className="text-muted-foreground"
                   aria-label={`Configurar ${consortium.name}`}
-                  onClick={(event) => event.preventDefault()}
                 >
                   <Settings className="size-4" aria-hidden="true" />
                 </Button>
               }
             />
-            <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
-              <DropdownMenuItem
-                onClick={(event) => {
-                  event.preventDefault();
-                  onEdit(consortium);
-                }}
-              >
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onEdit(consortium)}>
                 <Pencil className="size-4" aria-hidden="true" />
                 Editar consorcio
               </DropdownMenuItem>
-              <DropdownMenuItem
-                variant="destructive"
-                onClick={(event) => {
-                  event.preventDefault();
-                  onDelete(consortium);
-                }}
-              >
+              <DropdownMenuItem variant="destructive" onClick={() => onDelete(consortium)}>
                 <Trash2 className="size-4" aria-hidden="true" />
                 Eliminar consorcio
               </DropdownMenuItem>
@@ -139,12 +131,8 @@ export function ConsortiumCard({
         <div className="mt-auto pt-5">
           <button
             type="button"
-            className="relative z-20 flex h-9 w-full items-center justify-center rounded-md border border-border bg-card px-3 text-[13px] font-medium text-foreground transition-colors duration-200 hover:border-[oklch(0.82_0.01_255)] hover:bg-[oklch(0.94_0.005_255)] active:scale-[0.99] motion-reduce:active:scale-100"
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              onComment(consortium);
-            }}
+            className="pointer-events-auto flex h-9 w-full items-center justify-center rounded-md border border-border bg-card px-3 text-[13px] font-medium text-foreground transition-colors duration-200 hover:border-[oklch(0.82_0.01_255)] hover:bg-[oklch(0.94_0.005_255)] active:scale-[0.99] motion-reduce:active:scale-100"
+            onClick={() => onComment(consortium)}
           >
             Enviar comentario
           </button>

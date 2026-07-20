@@ -10,9 +10,3 @@ export type Consortium = {
 export type ConsortiumDetail = Consortium & {
   amount: number;
 };
-
-export type ConsortiumHistoryEntry = {
-  id: number;
-  timestamp: string;
-  description: string;
-};

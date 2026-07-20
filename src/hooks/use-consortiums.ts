@@ -1,7 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { getConsortiumHistory } from "@/lib/api/consortiums";
-import { queryKeys } from "@/lib/api/query-keys";
 import type { ConsortiumDetailDto, ConsortiumListItem } from "@/lib/schemas/consortium";
 import { useTRPC } from "@/lib/trpc/client";
 
@@ -53,10 +51,16 @@ export function useConsortium(id: string) {
   });
 }
 
-export function useConsortiumHistory(id: string) {
+export function useConsortiumHistory(id: string, options: { page: number; pageSize?: number }) {
+  const trpc = useTRPC();
+  const pageSize = options.pageSize ?? 10;
+
   return useQuery({
-    queryKey: queryKeys.consortiums.history(id),
-    queryFn: () => getConsortiumHistory(id),
+    ...trpc.consortiums.history.queryOptions({
+      id,
+      page: options.page,
+      pageSize,
+    }),
     enabled: Boolean(id),
   });
 }
@@ -124,7 +128,7 @@ export function useDeleteConsortium() {
           (current) => (current ?? []).filter((row) => row.id !== variables.id),
         );
         queryClient.removeQueries(trpc.consortiums.byId.queryFilter({ id: variables.id }));
-        queryClient.removeQueries({ queryKey: queryKeys.consortiums.history(variables.id) });
+        queryClient.removeQueries(trpc.consortiums.history.queryFilter({ id: variables.id }));
       },
     }),
   );

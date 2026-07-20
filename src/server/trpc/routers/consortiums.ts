@@ -7,17 +7,43 @@ import { isSuperadmin } from "@/lib/auth/roles";
 import { sendEmail } from "@/lib/email/send";
 import {
   consortiumDetailSchema,
+  consortiumHistoryInputSchema,
+  consortiumHistoryPageSchema,
   consortiumIdInputSchema,
   consortiumListItemSchema,
   createConsortiumInputSchema,
   sendConsortiumCommentInputSchema,
   updateConsortiumAmountInputSchema,
   updateConsortiumInputSchema,
+  type ConsortiumHistoryEntry,
 } from "@/lib/schemas/consortium";
 import { z } from "@/lib/zod";
 import { createTRPCRouter, protectedProcedure } from "@/server/trpc/init";
 
 const COMMENT_SENDER = "Administración";
+
+/** Mock action history until the domain is modeled in the DB. */
+const MOCK_HISTORY: ConsortiumHistoryEntry[] = [
+  { id: 1, timestamp: "2026-07-20 09:12", description: "Se actualizó el monto de caja" },
+  { id: 2, timestamp: "2026-07-18 16:40", description: "Se envió la expensa mensual" },
+  { id: 3, timestamp: "2026-07-15 11:05", description: "Se editaron los datos del consorcio" },
+  { id: 4, timestamp: "2026-07-12 14:22", description: "Se agregó un email de inquilino" },
+  { id: 5, timestamp: "2026-07-10 10:00", description: "Se envió un comentario a los inquilinos" },
+  { id: 6, timestamp: "2026-07-08 18:31", description: "Se eliminó un email de inquilino" },
+  { id: 7, timestamp: "2026-07-05 09:45", description: "Se actualizó el alias de cobro" },
+  { id: 8, timestamp: "2026-07-02 13:18", description: "Se actualizó el link del drive" },
+  { id: 9, timestamp: "2026-06-28 17:50", description: "Se envió la expensa mensual" },
+  { id: 10, timestamp: "2026-06-25 08:20", description: "Se cambió el email de facturación" },
+  { id: 11, timestamp: "2026-06-20 12:00", description: "Se creó el consorcio" },
+  {
+    id: 12,
+    timestamp: "2026-06-18 15:33",
+    description: "Se sincronizaron los emails de inquilinos",
+  },
+  { id: 13, timestamp: "2026-06-15 11:11", description: "Se actualizó la ubicación" },
+  { id: 14, timestamp: "2026-06-12 19:05", description: "Se reenvió la notificación de expensa" },
+  { id: 15, timestamp: "2026-06-10 10:30", description: "Se registró el primer monto de caja" },
+];
 
 const listColumns = {
   id: consortiums.id,
@@ -101,6 +127,24 @@ export const consortiumsRouter = createTRPCRouter({
         .limit(1);
 
       return row ?? null;
+    }),
+
+  /**
+   * Paginated action history for a consortium.
+   * Backed by mock data until history is persisted.
+   */
+  history: protectedProcedure
+    .input(consortiumHistoryInputSchema)
+    .output(consortiumHistoryPageSchema)
+    .query(async ({ ctx, input }) => {
+      await findAccessibleConsortium(input.id, ctx.session.user.id, ctx.session.user.role);
+
+      const offset = (input.page - 1) * input.pageSize;
+
+      return {
+        items: MOCK_HISTORY.slice(offset, offset + input.pageSize),
+        total: MOCK_HISTORY.length,
+      };
     }),
 
   create: protectedProcedure

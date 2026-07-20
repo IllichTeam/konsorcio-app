@@ -47,9 +47,29 @@ export const consortiumDetailSchema = consortiumListItemSchema.extend({
   amount: z.number().int(),
 });
 
+/** Action-history row — mock until history is modeled in the DB. */
+export const consortiumHistoryEntrySchema = z.object({
+  id: z.number().int(),
+  timestamp: z.string(),
+  description: z.string(),
+});
+
+export const consortiumHistoryInputSchema = consortiumIdInputSchema.extend({
+  page: z.number().int().min(1),
+  pageSize: z.number().int().min(1).max(50).default(10),
+});
+
+export const consortiumHistoryPageSchema = z.object({
+  items: z.array(consortiumHistoryEntrySchema),
+  total: z.number().int().nonnegative(),
+});
+
 export type CreateConsortiumInput = z.infer<typeof createConsortiumInputSchema>;
 export type UpdateConsortiumInput = z.infer<typeof updateConsortiumInputSchema>;
 export type UpdateConsortiumAmountInput = z.infer<typeof updateConsortiumAmountInputSchema>;
 export type SendConsortiumCommentInput = z.infer<typeof sendConsortiumCommentInputSchema>;
 export type ConsortiumListItem = z.infer<typeof consortiumListItemSchema>;
 export type ConsortiumDetailDto = z.infer<typeof consortiumDetailSchema>;
+export type ConsortiumHistoryEntry = z.infer<typeof consortiumHistoryEntrySchema>;
+export type ConsortiumHistoryInput = z.infer<typeof consortiumHistoryInputSchema>;
+export type ConsortiumHistoryPage = z.infer<typeof consortiumHistoryPageSchema>;

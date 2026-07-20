@@ -27,7 +27,7 @@ Sober, precise — Linear/Vercel-inspired collection UI. Canonical visual refere
 - **Neutral scale shares one temperature.** All neutrals (background/card/muted/secondary/border/sidebar) live at oklch hue ~255 with low chroma. When adding tokens, keep them in that family — never mix warm grays in.
 - **Cards**: `rounded-lg`, 1px `border-border`, soft shadow (`shadow-card` / hairline + light elevation). Hover may lift ~1px and strengthen the shadow slightly. Prefer `Card` or the same surface tokens — no one-off boxes with random chrome. Default padding 20px (`--card-spacing`); 16px with `size="sm"`.
 - **Accent.** Primary blue is the only _strong_ color (primary actions, brand, focus). Soft multi-hue **identity tiles** (low chroma: blue/amber/violet/teal/rose/green) are allowed on collection cards for recognition. No rainbow chrome elsewhere. No marketing fill gradients.
-- **Squareline.** Optional 24px grid texture (`.grid-noise`) with a bottom fade on **collection heroes only** — not on every panel. Keep it subtle (primary tint ~12% alpha); never as a global page background.
+- **Squareline.** 24px grid texture (`.grid-noise`) as a **top band on the authenticated main column** (via `DashboardShell`), with a bottom fade. Keep it subtle (primary tint ~12% alpha). Do not re-mount per screen, use as full-scroll background, or put on panels/cards.
 - **Main column.** `DashboardShell` stretches page content to the full inset width (no `items-start`). Screen roots use `w-full`; when capping width with `max-w-*`, always pair with `mx-auto` so content does not pin left on wide viewports. Collection heroes may break out of shell padding (`-m-6 md:-m-10` + `overflow-x-clip`) and center in `mx-auto w-full max-w-[1120px] px-4 sm:px-6` — see `consortiums-screen.tsx`. Never introduce horizontal scroll (`overflow-x-clip` on the inset / breakout).
 - **Density.** Compact for forms, tables, and chrome. Collection screens may use editorial air: larger H1 with `text-balance`, roomier hero, card `p-5`, grid `gap-4`+. In dense UI, `text-sm` remains the base.
 - **Type.** No all-caps page titles or sustained uppercase UI. KPI/meta micro-labels may use small mono + uppercase + tracking (~10–11px).
@@ -69,6 +69,12 @@ Always use **pnpm** to install dependencies and run scripts — never npm or yar
 # Forms
 
 Forms use react-hook-form + zod (`zodResolver`). Before implementing any form, check `src/components/form/` and reuse the existing wrappers (e.g. `FormInput`). Never use the raw `src/components/ui/` components directly inside a form, and never wire `Controller` inline in a screen/page component: if a form needs a component that has no wrapper yet, first create that wrapper in `src/components/form/` following the existing Controller + ui pattern (label, error message from `fieldState`, `aria-invalid`/`aria-describedby`), then use it from the screen. Inline one-off implementations in the consuming screen are not acceptable.
+
+# Component reuse
+
+Prefer reuse over new micro-components. Before painting UI, check whether something already exists in `src/components/ui/`, `src/components/form/`, or the relevant domain folder under `src/components/` — and use it. Do not invent a one-off screen-local variant when a shared primitive covers the case; extend the shared component if a gap is real.
+
+**Tables:** always use `DataTable` / `DataTableSkeleton` from `src/components/ui/data-table.tsx` (TanStack Table: server offset pagination + local sort, `ColumnDef` for custom cells). Do not assemble raw `Table` primitives for data lists with pagination/sorting. If `DataTable` is missing a capability, extend that component rather than forking a parallel table in the screen.
 
 # Data fetching
 
