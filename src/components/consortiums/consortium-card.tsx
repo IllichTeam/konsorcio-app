@@ -134,7 +134,7 @@ export function ConsortiumCard({
             className="pointer-events-auto flex h-9 w-full items-center justify-center rounded-md border border-border bg-card px-3 text-[13px] font-medium text-foreground transition-colors duration-200 hover:border-[oklch(0.82_0.01_255)] hover:bg-[oklch(0.94_0.005_255)] active:scale-[0.99] motion-reduce:active:scale-100"
             onClick={() => onComment(consortium)}
           >
-            Enviar comentario
+            Enviar notificación
           </button>
         </div>
       </div>
