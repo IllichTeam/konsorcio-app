@@ -242,6 +242,8 @@ export function ConsortiumsScreen() {
     return <p className="text-sm text-destructive">No se pudieron cargar los consorcios.</p>;
   }
 
+  const totalUnits = consortiums.reduce((acc, consortium) => acc + consortium.unitCount, 0);
+
   return (
     /*
       Break out of shell padding so layout matches the mock main column:
@@ -282,7 +284,9 @@ export function ConsortiumsScreen() {
                 <p className="font-mono text-[10.5px] uppercase tracking-[0.08em] text-muted-foreground">
                   Unidades
                 </p>
-                <p className="mt-1.5 text-[1.75rem] font-semibold tracking-tight tabular-nums">—</p>
+                <p className="mt-1.5 text-[1.75rem] font-semibold tracking-tight tabular-nums">
+                  {totalUnits}
+                </p>
                 <p className="mt-0.5 text-[12px] text-muted-foreground">administradas</p>
               </div>
             </fieldset>

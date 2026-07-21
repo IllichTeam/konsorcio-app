@@ -32,8 +32,8 @@ export const sendConsortiumCommentInputSchema = z.object({
   recipients: z.array(recipientSchema).min(1, "Selecciona al menos un destinatario"),
 });
 
-/** List card + edit-form shape (amount stays on detail only). */
-export const consortiumListItemSchema = z.object({
+/** Shared identity / contact fields for consortium DTOs. */
+const consortiumBaseSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
   location: z.string(),
@@ -42,8 +42,16 @@ export const consortiumListItemSchema = z.object({
   driveLink: z.string().nullable(),
 });
 
+/** List card + edit-form shape (amount stays on detail only). */
+export const consortiumListItemSchema = consortiumBaseSchema.extend({
+  /** Distinct functional units (floor/dept/letter) across active tenant emails. */
+  unitCount: z.number().int().nonnegative(),
+  /** Active tenant-email contacts (propietario + inquilino). */
+  contactCount: z.number().int().nonnegative(),
+});
+
 /** Full detail returned by byId / mutations. */
-export const consortiumDetailSchema = consortiumListItemSchema.extend({
+export const consortiumDetailSchema = consortiumBaseSchema.extend({
   amount: z.number().int(),
 });
 

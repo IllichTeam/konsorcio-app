@@ -1,9 +1,8 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
 import { db } from "@/db";
-import { consortiums, emailLog, type ConsortiumRow } from "@/db/schema";
-import { isSuperadmin } from "@/lib/auth/roles";
+import { consortiums, emailLog, tenantEmails, type ConsortiumRow } from "@/db/schema";
 import { sendEmail } from "@/lib/email/send";
 import {
   consortiumDetailSchema,
@@ -19,6 +18,7 @@ import {
 } from "@/lib/schemas/consortium";
 import { z } from "@/lib/zod";
 import { createTRPCRouter, protectedProcedure } from "@/server/trpc/init";
+import { findAccessibleConsortium, ownershipFilter } from "@/server/trpc/lib/consortium-access";
 
 const COMMENT_SENDER = "Administración";
 
@@ -77,38 +77,24 @@ function toDetail(row: ConsortiumRow) {
   };
 }
 
-function ownershipFilter(userId: string, role: string | null | undefined) {
-  if (isSuperadmin(role)) {
-    return eq(consortiums.isDeleted, false);
-  }
-
-  return and(eq(consortiums.isDeleted, false), eq(consortiums.ownerId, userId));
-}
-
-async function findAccessibleConsortium(
-  id: string,
-  userId: string,
-  role: string | null | undefined,
-): Promise<ConsortiumRow> {
-  const [row] = await db
-    .select()
-    .from(consortiums)
-    .where(and(eq(consortiums.id, id), ownershipFilter(userId, role)))
-    .limit(1);
-
-  if (!row) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "Consorcio no encontrado" });
-  }
-
-  return row;
-}
-
 export const consortiumsRouter = createTRPCRouter({
   list: protectedProcedure.output(z.array(consortiumListItemSchema)).query(async ({ ctx }) => {
     return db
-      .select(listColumns)
+      .select({
+        ...listColumns,
+        unitCount:
+          sql<number>`count(distinct (${tenantEmails.floor}, ${tenantEmails.departmentNumber}, ${tenantEmails.letter})) filter (where ${tenantEmails.id} is not null)`.mapWith(
+            Number,
+          ),
+        contactCount: sql<number>`count(${tenantEmails.id})`.mapWith(Number),
+      })
       .from(consortiums)
-      .where(ownershipFilter(ctx.session.user.id, ctx.session.user.role));
+      .leftJoin(
+        tenantEmails,
+        and(eq(tenantEmails.consortiumId, consortiums.id), eq(tenantEmails.isDeleted, false)),
+      )
+      .where(ownershipFilter(ctx.session.user.id, ctx.session.user.role))
+      .groupBy(consortiums.id);
   }),
 
   byId: protectedProcedure

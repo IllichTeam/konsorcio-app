@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Variante 6 — Experimental dense · Perfil de usuario</title>
+    <meta
+      name="description"
+      content="Perfil de usuario — densidad Linear/Notion: filas compactas label/control, divisores hairline."
+    />
+    <link rel="preconnect" href="https://fonts.bunny.net" crossorigin />
+    <link
+      href="https://fonts.bunny.net/css?family=geist:400,500,600|geist-mono:400,500"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+      @theme {
+        --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, sans-serif;
+        --font-mono: "Geist Mono", ui-monospace, "SF Mono", monospace;
+
+        --color-background: oklch(0.962 0.004 255);
+        --color-foreground: oklch(0.21 0.02 250);
+        --color-card: oklch(0.995 0.002 255);
+        --color-card-foreground: oklch(0.21 0.02 250);
+        --color-primary: oklch(0.5 0.134 242.749);
+        --color-primary-foreground: oklch(0.985 0.006 247.9);
+        --color-secondary: oklch(0.935 0.006 255);
+        --color-secondary-foreground: oklch(0.28 0.02 250);
+        --color-muted: oklch(0.935 0.006 255);
+        --color-muted-foreground: oklch(0.5 0.015 250);
+        --color-accent: oklch(0.92 0.02 242.749);
+        --color-accent-foreground: oklch(0.3 0.05 242.749);
+        --color-border: oklch(0.895 0.006 255);
+        --color-input: oklch(0.895 0.006 255);
+        --color-ring: oklch(0.5 0.134 242.749);
+        --color-sidebar: oklch(0.945 0.005 255);
+        --color-sidebar-border: oklch(0.885 0.006 255);
+
+        --radius-sm: 0.375rem;
+        --radius-md: 0.5rem;
+        --radius-lg: 0.625rem;
+      }
+
+      body {
+        font-family: var(--font-sans);
+        background-color: var(--color-background);
+        color: var(--color-foreground);
+      }
+
+      /* Dense settings row — label left / control right */
+      .settings-row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.375rem;
+        align-items: center;
+        min-height: 2.75rem;
+        padding-block: 0.625rem;
+      }
+
+      @media (min-width: 640px) {
+        .settings-row {
+          grid-template-columns: minmax(0, 11.5rem) minmax(0, 1fr);
+          gap: 1rem;
+          padding-block: 0.5rem;
+        }
+      }
+
+      .settings-row + .settings-row {
+        border-top: 1px solid var(--color-border);
+      }
+
+      .field {
+        width: 100%;
+        min-width: 0;
+        height: 2rem;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--color-input);
+        background: var(--color-card);
+        padding-inline: 0.625rem;
+        font-size: 0.8125rem;
+        line-height: 1.25rem;
+        color: var(--color-foreground);
+        transition:
+          border-color 140ms ease,
+          box-shadow 140ms ease,
+          background-color 140ms ease;
+      }
+
+      .field::placeholder {
+        color: var(--color-muted-foreground);
+      }
+
+      .field:hover:not(:disabled):not([readonly]) {
+        border-color: oklch(0.82 0.01 255);
+      }
+
+      .field:focus {
+        outline: none;
+      }
+
+      .field:focus-visible {
+        border-color: var(--color-ring);
+        box-shadow: 0 0 0 2px oklch(0.5 0.134 242.749 / 0.22);
+      }
+
+      .field:disabled,
+      .field[readonly] {
+        background: var(--color-muted);
+        color: var(--color-muted-foreground);
+        cursor: default;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.375rem;
+        height: 1.875rem;
+        padding-inline: 0.75rem;
+        border-radius: var(--radius-sm);
+        font-size: 0.8125rem;
+        font-weight: 500;
+        line-height: 1;
+        white-space: nowrap;
+        transition:
+          background-color 140ms ease,
+          border-color 140ms ease,
+          color 140ms ease,
+          box-shadow 140ms ease;
+      }
+
+      .btn:focus {
+        outline: none;
+      }
+
+      .btn:focus-visible {
+        box-shadow: 0 0 0 2px var(--color-background), 0 0 0 4px var(--color-ring);
+      }
+
+      .btn-outline {
+        border: 1px solid var(--color-border);
+        background: var(--color-card);
+        color: var(--color-foreground);
+      }
+
+      .btn-outline:hover {
+        background: var(--color-muted);
+        border-color: oklch(0.82 0.01 255);
+      }
+
+      .btn-primary {
+        border: 1px solid transparent;
+        background: var(--color-primary);
+        color: var(--color-primary-foreground);
+      }
+
+      .btn-primary:hover {
+        background: oklch(0.46 0.134 242.749);
+      }
+
+      .panel {
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        background: var(--color-card);
+        /* Minimal chrome: hairline only, no elevation */
+        box-shadow: none;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .field,
+        .btn {
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body class="min-h-dvh antialiased">
+    <div class="flex min-h-dvh">
+      <!-- Sidebar hint — context only -->
+      <aside
+        class="hidden w-52 shrink-0 border-r border-sidebar-border bg-sidebar md:flex md:flex-col"
+        aria-hidden="true"
+      >
+        <div class="flex h-12 items-center gap-2 border-b border-sidebar-border px-4">
+          <div
+            class="flex size-6 items-center justify-center rounded-sm bg-primary text-[10px] font-semibold text-primary-foreground"
+          >
+            K
+          </div>
+          <span class="text-[13px] font-semibold tracking-tight">Konsorcio</span>
+        </div>
+        <nav class="flex flex-col gap-0.5 p-2 text-[13px]">
+          <span class="rounded-sm px-2.5 py-1.5 text-muted-foreground">Consorcios</span>
+          <span class="rounded-sm px-2.5 py-1.5 text-muted-foreground">Emails inquilinos</span>
+          <span
+            class="rounded-sm bg-accent px-2.5 py-1.5 font-medium text-accent-foreground"
+            >Perfil</span
+          >
+        </nav>
+      </aside>
+
+      <main class="min-w-0 flex-1">
+        <header
+          class="flex h-12 items-center border-b border-border bg-card/60 px-4 sm:px-6"
+        >
+          <p class="text-[13px] text-muted-foreground">
+            Configuración
+            <span class="mx-1.5 text-border">/</span>
+            <span class="font-medium text-foreground">Perfil de usuario</span>
+          </p>
+        </header>
+
+        <div class="mx-auto w-full max-w-2xl px-4 py-6 sm:px-6 sm:py-8">
+          <!-- Compact page header -->
+          <div class="mb-5 flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <h1 class="text-base font-semibold tracking-tight text-foreground">
+                Configuración de usuario
+              </h1>
+              <p class="mt-0.5 truncate text-[13px] text-muted-foreground">
+                Admin ·
+                <span class="font-mono text-[12px]">illich570@gmail.com</span>
+              </p>
+            </div>
+            <span
+              class="shrink-0 rounded-sm border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wide text-muted-foreground"
+            >
+              Admin
+            </span>
+          </div>
+
+          <form action="#" method="get" novalidate class="space-y-4">
+            <!-- Información personal — row list -->
+            <section class="panel" aria-labelledby="personal-heading">
+              <div
+                class="flex items-center justify-between gap-2 border-b border-border px-3.5 py-2"
+              >
+                <h2
+                  id="personal-heading"
+                  class="text-[13px] font-semibold tracking-tight text-foreground"
+                >
+                  Información personal
+                </h2>
+                <span class="font-mono text-[10px] uppercase tracking-wide text-muted-foreground"
+                  >4 campos</span
+                >
+              </div>
+
+              <div class="px-3.5 py-0.5">
+                <div class="settings-row">
+                  <label
+                    for="name"
+                    class="text-[13px] font-medium text-foreground"
+                    >Nombre</label
+                  >
+                  <div class="min-w-0">
+                    <input
+                      id="name"
+                      name="name"
+                      type="text"
+                      autocomplete="name"
+                      value="Admin"
+                      class="field"
+                    />
+                  </div>
+                </div>
+
+                <div class="settings-row">
+                  <label
+                    for="email"
+                    class="text-[13px] font-medium text-foreground"
+                    >Email</label
+                  >
+                  <div class="min-w-0">
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      autocomplete="email"
+                      value="illich570@gmail.com"
+                      readonly
+                      disabled
+                      class="field truncate"
+                      title="illich570@gmail.com"
+                    />
+                    <p class="mt-1 text-[11px] text-muted-foreground">
+                      El email no se puede modificar desde aquí.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="settings-row">
+                  <label
+                    for="phone"
+                    class="text-[13px] font-medium text-foreground"
+                    >Teléfono</label
+                  >
+                  <div class="min-w-0">
+                    <input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      autocomplete="tel"
+                      value="+54911-12345678"
+                      placeholder="+54911-12345678"
+                      class="field font-mono text-[12.5px] tabular-nums"
+                    />
+                  </div>
+                </div>
+
+                <div class="settings-row">
+                  <label
+                    for="address"
+                    class="text-[13px] font-medium text-foreground"
+                    >Dirección fiscal</label
+                  >
+                  <div class="min-w-0">
+                    <input
+                      id="address"
+                      name="address"
+                      type="text"
+                      autocomplete="street-address"
+                      value="CABA"
+                      placeholder="CABA"
+                      class="field"
+                    />
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Seguridad — single action row -->
+            <section class="panel" aria-labelledby="security-heading">
+              <div
+                class="flex items-center justify-between gap-2 border-b border-border px-3.5 py-2"
+              >
+                <h2
+                  id="security-heading"
+                  class="text-[13px] font-semibold tracking-tight text-foreground"
+                >
+                  Seguridad
+                </h2>
+              </div>
+
+              <div class="px-3.5">
+                <div class="settings-row">
+                  <div class="min-w-0">
+                    <p class="text-[13px] font-medium text-foreground">Contraseña</p>
+                    <p class="mt-0.5 text-[12px] text-muted-foreground">
+                      Actualizá tu contraseña de acceso.
+                    </p>
+                  </div>
+                  <div class="flex min-w-0 justify-start sm:justify-end">
+                    <button type="button" class="btn btn-outline">
+                      Cambiar contraseña
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Footer actions — Linear-style right-aligned -->
+            <div
+              class="flex flex-col-reverse items-stretch justify-end gap-2 pt-1 sm:flex-row sm:items-center"
+            >
+              <p class="text-center text-[12px] text-muted-foreground sm:mr-auto sm:text-left">
+                Los cambios se aplican de inmediato.
+              </p>
+              <button type="submit" class="btn btn-primary h-8 px-3.5">
+                Guardar cambios
+              </button>
+            </div>
+          </form>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

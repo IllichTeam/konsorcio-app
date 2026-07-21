@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Variante 3 — Exploratoria split · Perfil de usuario</title>
+    <link rel="preconnect" href="https://fonts.bunny.net" />
+    <link
+      href="https://fonts.bunny.net/css?family=geist:400,500,600,700|geist-mono:400,500"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+      @theme {
+        --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+        --font-mono: "Geist Mono", ui-monospace, monospace;
+
+        --color-background: oklch(0.962 0.004 255);
+        --color-foreground: oklch(0.21 0.02 250);
+        --color-card: oklch(0.995 0.002 255);
+        --color-card-foreground: oklch(0.21 0.02 250);
+        --color-primary: oklch(0.5 0.134 242.749);
+        --color-primary-foreground: oklch(0.985 0.006 247.9);
+        --color-secondary: oklch(0.935 0.006 255);
+        --color-secondary-foreground: oklch(0.28 0.02 250);
+        --color-muted: oklch(0.935 0.006 255);
+        --color-muted-foreground: oklch(0.5 0.015 250);
+        --color-accent: oklch(0.92 0.02 242.749);
+        --color-accent-foreground: oklch(0.3 0.05 242.749);
+        --color-border: oklch(0.895 0.006 255);
+        --color-input: oklch(0.895 0.006 255);
+        --color-ring: oklch(0.5 0.134 242.749);
+        --color-sidebar: oklch(0.945 0.005 255);
+        --color-sidebar-foreground: oklch(0.21 0.02 250);
+        --color-sidebar-border: oklch(0.885 0.006 255);
+        --color-tile-blue: oklch(0.93 0.04 242.749);
+        --color-tile-blue-fg: oklch(0.42 0.12 242.749);
+
+        --radius-sm: calc(0.625rem * 0.6);
+        --radius-md: calc(0.625rem * 0.8);
+        --radius-lg: 0.625rem;
+      }
+    </style>
+    <style>
+      :root {
+        font-family: "Geist", ui-sans-serif, system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+      }
+
+      body {
+        background-color: oklch(0.962 0.004 255);
+        color: oklch(0.21 0.02 250);
+      }
+
+      .shadow-card {
+        box-shadow:
+          0 0 0 1px oklch(0.895 0.006 255),
+          0 1px 2px rgba(0, 0, 0, 0.03);
+      }
+
+      .btn-outline:hover {
+        background: color-mix(
+          in oklch,
+          oklch(0.935 0.006 255),
+          oklch(0.21 0.02 250) 5%
+        );
+      }
+
+      .btn-primary:hover {
+        filter: brightness(1.05);
+      }
+
+      :focus-visible {
+        outline: 2px solid oklch(0.5 0.134 242.749);
+        outline-offset: 2px;
+      }
+
+      .field:focus-visible {
+        outline: none;
+        border-color: oklch(0.5 0.134 242.749);
+        box-shadow: 0 0 0 3px oklch(0.5 0.134 242.749 / 0.18);
+      }
+
+      .grid-noise {
+        --grid-line: oklch(from oklch(0.5 0.134 242.749) l c h / 0.12);
+        background-image:
+          linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+          linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+        background-size: 24px 24px;
+        mask-image: linear-gradient(
+          to bottom,
+          black 0%,
+          black 55%,
+          transparent 100%
+        );
+      }
+
+      .skip-link {
+        position: absolute;
+        left: -9999px;
+        top: 0.75rem;
+        z-index: 100;
+        border-radius: 0.375rem;
+        background: oklch(0.21 0.02 250);
+        color: oklch(0.985 0.002 255);
+        padding: 0.5rem 0.875rem;
+        font-size: 0.8125rem;
+        font-weight: 500;
+      }
+
+      .skip-link:focus {
+        left: 0.75rem;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+          scroll-behavior: auto !important;
+        }
+      }
+    </style>
+  </head>
+  <body class="min-h-dvh antialiased">
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+
+    <div class="flex min-h-dvh">
+      <!-- Slim sidebar hint (context only) -->
+      <aside
+        class="sticky top-0 z-40 hidden h-dvh w-[56px] shrink-0 flex-col items-center border-r border-sidebar-border bg-sidebar py-3 lg:flex"
+        aria-label="Navegación (resumen)"
+      >
+        <span
+          class="mb-6 flex size-7 items-center justify-center rounded-[5px] bg-primary text-[11px] font-semibold text-primary-foreground"
+          aria-hidden="true"
+          >K</span
+        >
+        <nav class="flex flex-1 flex-col items-center gap-1" aria-label="Secciones">
+          <a
+            href="#"
+            class="flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground"
+            aria-label="Consorcios"
+          >
+            <svg
+              class="size-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path d="M3 21h18" />
+              <path d="M6 21V8l6-4 6 4v13" />
+              <path d="M10 21v-5h4v5" />
+            </svg>
+          </a>
+          <a
+            href="#"
+            class="flex size-9 items-center justify-center rounded-md bg-foreground/[0.06] text-foreground"
+            aria-label="Perfil de usuario"
+            aria-current="page"
+          >
+            <svg
+              class="size-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+          </a>
+        </nav>
+      </aside>
+
+      <!-- Main -->
+      <div class="relative flex min-w-0 flex-1 flex-col">
+        <div
+          class="pointer-events-none absolute inset-x-0 top-0 h-64 grid-noise"
+          aria-hidden="true"
+        ></div>
+
+        <main id="contenido" class="relative z-10 flex-1 px-4 py-6 sm:px-6 md:px-10">
+          <div class="mx-auto w-full max-w-[960px]">
+            <header class="mb-6 md:mb-8">
+              <p
+                class="mb-1.5 font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground"
+              >
+                Cuenta
+              </p>
+              <h1 class="text-balance text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+                Perfil de usuario
+              </h1>
+              <p class="mt-1.5 max-w-lg text-sm text-muted-foreground">
+                Datos de contacto y preferencias de tu cuenta en Konsorcio.
+              </p>
+            </header>
+
+            <!-- Split: identity rail + form -->
+            <div class="grid grid-cols-1 gap-5 md:grid-cols-[240px_minmax(0,1fr)] md:gap-6 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-8">
+              <!-- Left: sticky identity summary -->
+              <aside
+                class="md:sticky md:top-6 md:self-start"
+                aria-label="Resumen de identidad"
+              >
+                <div
+                  class="rounded-lg bg-card p-5 shadow-card"
+                >
+                  <div class="flex flex-row items-center gap-3.5 md:flex-col md:items-start md:gap-4">
+                    <div
+                      class="flex size-14 shrink-0 items-center justify-center rounded-lg bg-tile-blue text-base font-semibold text-tile-blue-fg sm:size-16 sm:text-lg"
+                      aria-hidden="true"
+                    >
+                      A
+                    </div>
+                    <div class="min-w-0 flex-1 md:w-full">
+                      <p class="truncate text-[15px] font-semibold tracking-tight text-foreground">
+                        Admin
+                      </p>
+                      <p class="mt-0.5 truncate text-[13px] text-muted-foreground">
+                        illich570@gmail.com
+                      </p>
+                      <span
+                        class="mt-2.5 inline-flex items-center rounded-md border border-border bg-muted px-2 py-0.5 text-[11px] font-medium text-secondary-foreground"
+                      >
+                        Administrador
+                      </span>
+                    </div>
+                  </div>
+
+                  <dl class="mt-5 space-y-3 border-t border-border pt-4 text-[13px]">
+                    <div class="flex items-baseline justify-between gap-3">
+                      <dt class="shrink-0 text-muted-foreground">Teléfono</dt>
+                      <dd class="min-w-0 truncate text-right tabular-nums text-foreground">
+                        +54911-12345678
+                      </dd>
+                    </div>
+                    <div class="flex items-baseline justify-between gap-3">
+                      <dt class="shrink-0 text-muted-foreground">Dirección</dt>
+                      <dd class="min-w-0 truncate text-right text-foreground">CABA</dd>
+                    </div>
+                    <div class="flex items-baseline justify-between gap-3">
+                      <dt class="shrink-0 text-muted-foreground">Miembro desde</dt>
+                      <dd class="min-w-0 truncate text-right tabular-nums text-foreground">
+                        Mar 2025
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+              </aside>
+
+              <!-- Right: form cards -->
+              <div class="min-w-0 space-y-4">
+                <section
+                  class="rounded-lg bg-card shadow-card"
+                  aria-labelledby="info-personal-heading"
+                >
+                  <div class="border-b border-border px-5 py-4">
+                    <h2
+                      id="info-personal-heading"
+                      class="text-sm font-semibold text-foreground"
+                    >
+                      Información personal
+                    </h2>
+                    <p class="mt-0.5 text-[13px] text-muted-foreground">
+                      Estos datos aparecen en recibos y comunicaciones.
+                    </p>
+                  </div>
+
+                  <form class="space-y-4 px-5 py-5" action="#" method="get">
+                    <div class="space-y-1.5">
+                      <label
+                        for="nombre"
+                        class="block text-[13px] font-medium text-foreground"
+                        >Nombre</label
+                      >
+                      <input
+                        id="nombre"
+                        name="nombre"
+                        type="text"
+                        autocomplete="name"
+                        value="Admin"
+                        class="field h-9 w-full rounded-md border border-input bg-card px-3 text-sm text-foreground transition-shadow placeholder:text-muted-foreground"
+                      />
+                    </div>
+
+                    <div class="space-y-1.5">
+                      <label
+                        for="email"
+                        class="block text-[13px] font-medium text-foreground"
+                        >Email</label
+                      >
+                      <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        autocomplete="email"
+                        value="illich570@gmail.com"
+                        readonly
+                        aria-readonly="true"
+                        class="field h-9 w-full cursor-default rounded-md border border-input bg-muted px-3 text-sm text-muted-foreground"
+                      />
+                      <p id="email-hint" class="text-[12px] text-muted-foreground">
+                        El email no se puede modificar desde aquí.
+                      </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div class="space-y-1.5">
+                        <label
+                          for="telefono"
+                          class="block text-[13px] font-medium text-foreground"
+                          >Teléfono</label
+                        >
+                        <input
+                          id="telefono"
+                          name="telefono"
+                          type="tel"
+                          autocomplete="tel"
+                          value="+54911-12345678"
+                          placeholder="+54911-12345678"
+                          class="field h-9 w-full rounded-md border border-input bg-card px-3 text-sm tabular-nums text-foreground transition-shadow placeholder:text-muted-foreground"
+                        />
+                      </div>
+                      <div class="space-y-1.5">
+                        <label
+                          for="direccion"
+                          class="block text-[13px] font-medium text-foreground"
+                          >Dirección Fiscal</label
+                        >
+                        <input
+                          id="direccion"
+                          name="direccion"
+                          type="text"
+                          autocomplete="street-address"
+                          value="CABA"
+                          placeholder="CABA"
+                          class="field h-9 w-full rounded-md border border-input bg-card px-3 text-sm text-foreground transition-shadow placeholder:text-muted-foreground"
+                        />
+                      </div>
+                    </div>
+
+                    <div
+                      class="flex flex-col-reverse gap-2 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <button
+                        type="button"
+                        class="btn-outline inline-flex h-9 items-center justify-center rounded-md border border-border bg-card px-3.5 text-sm font-medium text-foreground transition-colors"
+                      >
+                        Cambiar contraseña
+                      </button>
+                      <button
+                        type="submit"
+                        class="btn-primary inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-[filter]"
+                      >
+                        Guardar cambios
+                      </button>
+                    </div>
+                  </form>
+                </section>
+
+                <p class="px-1 text-[12px] text-muted-foreground">
+                  Los cambios se aplican a tu sesión actual. La contraseña se
+                  gestiona en un flujo aparte.
+                </p>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </body>
+</html>

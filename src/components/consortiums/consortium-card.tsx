@@ -117,13 +117,13 @@ export function ConsortiumCard({
           <div className="flex flex-col gap-1.5">
             <dt className="text-[12px] text-muted-foreground">Unidades</dt>
             <dd className="text-[15px] font-semibold tracking-tight tabular-nums text-foreground">
-              —
+              {consortium.unitCount}
             </dd>
           </div>
           <div className="flex flex-col gap-1.5">
             <dt className="text-[12px] text-muted-foreground">Inquilinos</dt>
             <dd className="text-[15px] font-semibold tracking-tight tabular-nums text-foreground">
-              —
+              {consortium.contactCount}
             </dd>
           </div>
         </dl>

@@ -75,7 +75,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
   const [showNew, setShowNew] = React.useState(false);
   const [showConfirm, setShowConfirm] = React.useState(false);
 
-  const { control, handleSubmit, formState, reset, watch } = useForm<ProfileValues>({
+  const { control, handleSubmit, formState, reset } = useForm<ProfileValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       name: user.name,
@@ -88,8 +88,6 @@ export function ProfileForm({ user }: ProfileFormProps) {
     },
   });
 
-  const displayName = watch("name") || user.name;
-
   React.useEffect(() => {
     reset({
       name: user.name,
@@ -101,6 +99,19 @@ export function ProfileForm({ user }: ProfileFormProps) {
       confirmPassword: "",
     });
   }, [user, reset]);
+
+  function closePasswordPanel() {
+    setChangePasswordOpen(false);
+    setShowCurrent(false);
+    setShowNew(false);
+    setShowConfirm(false);
+    reset((current) => ({
+      ...current,
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    }));
+  }
 
   async function onSubmit(values: ProfileValues) {
     const phone = values.phone.trim();
@@ -154,15 +165,30 @@ export function ProfileForm({ user }: ProfileFormProps) {
 
   return (
     <div className="mx-auto w-full max-w-xl">
-      <h1 className="mb-4 text-lg font-semibold tracking-tight text-foreground">
-        Configuración de usuario <span className="text-muted-foreground">· {displayName}</span>
-      </h1>
+      <header className="mb-6 space-y-1">
+        <h1 className="text-balance text-2xl font-semibold tracking-tight text-foreground sm:text-[1.75rem]">
+          Configuración de usuario
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Actualizá tus datos de contacto y preferencias de cuenta.
+        </p>
+      </header>
 
-      <Card>
+      <Card className="border-0 shadow-card">
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
-          <CardContent className="space-y-6">
-            <section className="space-y-4">
-              <h2 className="text-sm font-semibold text-foreground">Información personal</h2>
+          <CardContent className="space-y-8 pb-2">
+            <section className="space-y-4" aria-labelledby="personal-heading">
+              <div className="space-y-1">
+                <h2
+                  id="personal-heading"
+                  className="text-sm font-semibold tracking-tight text-foreground"
+                >
+                  Información personal
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  El teléfono y la dirección fiscal aparecen en los correos que enviás.
+                </p>
+              </div>
 
               <FormInput control={control} name="name" label="Nombre" autoComplete="name" />
 
@@ -174,71 +200,71 @@ export function ProfileForm({ user }: ProfileFormProps) {
                 readOnly
                 disabled
                 autoComplete="email"
+                description="No se puede cambiar desde aquí"
+                labelAction={
+                  <span className="inline-flex items-center rounded border border-border bg-secondary px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+                    Solo lectura
+                  </span>
+                }
               />
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <FormInput
-                  control={control}
-                  name="phone"
-                  label="Teléfono"
-                  autoComplete="tel"
-                  placeholder="+54911-12345678"
-                />
-                <FormInput
-                  control={control}
-                  name="address"
-                  label="Dirección Fiscal"
-                  autoComplete="street-address"
-                  placeholder="CABA"
-                />
-              </div>
+              <FormInput
+                control={control}
+                name="phone"
+                label="Teléfono"
+                autoComplete="tel"
+                placeholder="+54911-12345678"
+              />
+
+              <FormInput
+                control={control}
+                name="address"
+                label="Dirección Fiscal"
+                autoComplete="street-address"
+                placeholder="Av. Corrientes 1847, Piso 5 Of. B, CABA"
+              />
             </section>
 
-            <section className="space-y-4 pb-4">
-              {!changePasswordOpen ? (
-                <div className="flex justify-center">
-                  <Button
-                    type="button"
-                    className="w-[90%] bg-primary/70 text-primary-foreground hover:bg-primary/60"
-                    onClick={() => setChangePasswordOpen(true)}
-                  >
-                    Cambiar contraseña
-                  </Button>
-                </div>
-              ) : (
-                <>
-                  <div className="flex items-center justify-between gap-2">
-                    <h2 className="text-sm font-semibold text-foreground">Cambiar contraseña</h2>
+            <section className="space-y-4" aria-labelledby="password-heading">
+              <h2
+                id="password-heading"
+                className="text-sm font-semibold tracking-tight text-foreground"
+              >
+                Seguridad
+              </h2>
+
+              {changePasswordOpen ? (
+                <section
+                  className="animate-rise-in space-y-4 rounded-md border border-border bg-secondary/40 p-4"
+                  aria-labelledby="password-panel-title"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div className="min-w-0 space-y-0.5">
+                      <p id="password-panel-title" className="text-sm font-medium text-foreground">
+                        Cambiar contraseña
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Completá los tres campos para actualizarla.
+                      </p>
+                    </div>
                     <Button
                       type="button"
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
-                      className="text-muted-foreground"
-                      onClick={() => {
-                        setChangePasswordOpen(false);
-                        setShowCurrent(false);
-                        setShowNew(false);
-                        setShowConfirm(false);
-                        reset((current) => ({
-                          ...current,
-                          currentPassword: "",
-                          newPassword: "",
-                          confirmPassword: "",
-                        }));
-                      }}
+                      className="h-8 shrink-0 bg-card"
+                      onClick={closePasswordPanel}
                     >
                       Cancelar
                     </Button>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="space-y-3">
                     <FormInput
                       control={control}
                       name="currentPassword"
                       label="Contraseña actual"
                       type={showCurrent ? "text" : "password"}
                       autoComplete="current-password"
-                      placeholder="••••••••"
                       endAdornment={
                         <PasswordVisibilityToggle
                           visible={showCurrent}
@@ -252,7 +278,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
                       label="Nueva contraseña"
                       type={showNew ? "text" : "password"}
                       autoComplete="new-password"
-                      placeholder="••••••••"
+                      placeholder="Mínimo 8 caracteres"
                       endAdornment={
                         <PasswordVisibilityToggle
                           visible={showNew}
@@ -260,28 +286,31 @@ export function ProfileForm({ user }: ProfileFormProps) {
                         />
                       }
                     />
+                    <FormInput
+                      control={control}
+                      name="confirmPassword"
+                      label="Confirmar contraseña"
+                      type={showConfirm ? "text" : "password"}
+                      autoComplete="new-password"
+                      placeholder="Repetí la nueva contraseña"
+                      endAdornment={
+                        <PasswordVisibilityToggle
+                          visible={showConfirm}
+                          onToggle={() => setShowConfirm((v) => !v)}
+                        />
+                      }
+                    />
                   </div>
-
-                  <FormInput
-                    control={control}
-                    name="confirmPassword"
-                    label="Confirmar nueva contraseña"
-                    type={showConfirm ? "text" : "password"}
-                    autoComplete="new-password"
-                    placeholder="••••••••"
-                    endAdornment={
-                      <PasswordVisibilityToggle
-                        visible={showConfirm}
-                        onToggle={() => setShowConfirm((v) => !v)}
-                      />
-                    }
-                  />
-                </>
+                </section>
+              ) : (
+                <Button type="button" variant="outline" onClick={() => setChangePasswordOpen(true)}>
+                  Cambiar contraseña
+                </Button>
               )}
             </section>
           </CardContent>
 
-          <CardFooter className="border-t border-border">
+          <CardFooter>
             <Button type="submit" className="w-full" disabled={formState.isSubmitting}>
               {formState.isSubmitting ? "Guardando…" : "Guardar cambios"}
             </Button>
