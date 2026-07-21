@@ -242,24 +242,17 @@ export function ConsortiumsScreen() {
     return <p className="text-sm text-destructive">No se pudieron cargar los consorcios.</p>;
   }
 
+  const totalUnits = consortiums.reduce((acc, consortium) => acc + consortium.unitCount, 0);
+
   return (
     /*
       Break out of shell padding so layout matches the mock main column:
-      full-width inset → centered max-w-[1120px] content. overflow-x-clip
-      contains the hero grid-noise full-bleed without horizontal scroll.
+      full-width inset → centered max-w-[1120px] content. Grid-noise lives
+      in DashboardShell; overflow-x-clip keeps any breakout contained.
     */
     <div className="relative -m-6 w-[calc(100%+3rem)] overflow-x-clip md:-m-10 md:w-[calc(100%+5rem)]">
       <div className="relative mx-auto w-full max-w-[1120px] px-4 pb-24 sm:px-6">
         <section className="relative pb-10 pt-10 sm:pt-12" aria-labelledby="page-title">
-          {/*
-            Same full-bleed trick as the mock (w-screen + center). Parent
-            overflow-x-clip keeps it inside the main column — never under the
-            sidebar, never a horizontal scrollbar.
-          */}
-          <div
-            className="pointer-events-none absolute inset-y-0 left-1/2 w-screen -translate-x-1/2 grid-noise"
-            aria-hidden="true"
-          />
           <div className="relative flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
             <div className="min-w-0">
               <h1
@@ -291,7 +284,9 @@ export function ConsortiumsScreen() {
                 <p className="font-mono text-[10.5px] uppercase tracking-[0.08em] text-muted-foreground">
                   Unidades
                 </p>
-                <p className="mt-1.5 text-[1.75rem] font-semibold tracking-tight tabular-nums">—</p>
+                <p className="mt-1.5 text-[1.75rem] font-semibold tracking-tight tabular-nums">
+                  {totalUnits}
+                </p>
                 <p className="mt-0.5 text-[12px] text-muted-foreground">administradas</p>
               </div>
             </fieldset>

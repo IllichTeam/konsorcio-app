@@ -1,11 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { getConsortiumHistory } from "@/lib/api/consortiums";
-import { queryKeys } from "@/lib/api/query-keys";
 import type { ConsortiumDetailDto, ConsortiumListItem } from "@/lib/schemas/consortium";
 import { useTRPC } from "@/lib/trpc/client";
 
-function toListItem(detail: ConsortiumDetailDto): ConsortiumListItem {
+function toListItem(
+  detail: ConsortiumDetailDto,
+  counts: { unitCount: number; contactCount: number } = {
+    unitCount: 0,
+    contactCount: 0,
+  },
+): ConsortiumListItem {
   return {
     id: detail.id,
     name: detail.name,
@@ -13,6 +17,8 @@ function toListItem(detail: ConsortiumDetailDto): ConsortiumListItem {
     paymentAlias: detail.paymentAlias,
     billingEmail: detail.billingEmail,
     driveLink: detail.driveLink,
+    unitCount: counts.unitCount,
+    contactCount: counts.contactCount,
   };
 }
 
@@ -38,6 +44,20 @@ function upsertListItem(
   });
 }
 
+function preserveListCounts(
+  queryClient: ReturnType<typeof useQueryClient>,
+  listQueryKey: readonly unknown[],
+  detail: ConsortiumDetailDto,
+): ConsortiumListItem {
+  const current = queryClient.getQueryData<ConsortiumListItem[]>(listQueryKey);
+  const existing = current?.find((row) => row.id === detail.id);
+
+  return toListItem(detail, {
+    unitCount: existing?.unitCount ?? 0,
+    contactCount: existing?.contactCount ?? 0,
+  });
+}
+
 export function useConsortiums() {
   const trpc = useTRPC();
 
@@ -53,10 +73,16 @@ export function useConsortium(id: string) {
   });
 }
 
-export function useConsortiumHistory(id: string) {
+export function useConsortiumHistory(id: string, options: { page: number; pageSize?: number }) {
+  const trpc = useTRPC();
+  const pageSize = options.pageSize ?? 10;
+
   return useQuery({
-    queryKey: queryKeys.consortiums.history(id),
-    queryFn: () => getConsortiumHistory(id),
+    ...trpc.consortiums.history.queryOptions({
+      id,
+      page: options.page,
+      pageSize,
+    }),
     enabled: Boolean(id),
   });
 }
@@ -89,7 +115,7 @@ export function useUpdateConsortium() {
   return useMutation(
     trpc.consortiums.update.mutationOptions({
       onSuccess: (data) => {
-        const listItem = toListItem(data);
+        const listItem = preserveListCounts(queryClient, trpc.consortiums.list.queryKey(), data);
         upsertListItem(queryClient, trpc.consortiums.list.queryKey(), listItem);
         queryClient.setQueryData(trpc.consortiums.byId.queryKey({ id: data.id }), data);
       },
@@ -104,7 +130,7 @@ export function useUpdateConsortiumAmount() {
   return useMutation(
     trpc.consortiums.updateAmount.mutationOptions({
       onSuccess: (data) => {
-        const listItem = toListItem(data);
+        const listItem = preserveListCounts(queryClient, trpc.consortiums.list.queryKey(), data);
         upsertListItem(queryClient, trpc.consortiums.list.queryKey(), listItem);
         queryClient.setQueryData(trpc.consortiums.byId.queryKey({ id: data.id }), data);
       },
@@ -124,7 +150,7 @@ export function useDeleteConsortium() {
           (current) => (current ?? []).filter((row) => row.id !== variables.id),
         );
         queryClient.removeQueries(trpc.consortiums.byId.queryFilter({ id: variables.id }));
-        queryClient.removeQueries({ queryKey: queryKeys.consortiums.history(variables.id) });
+        queryClient.removeQueries(trpc.consortiums.history.queryFilter({ id: variables.id }));
       },
     }),
   );

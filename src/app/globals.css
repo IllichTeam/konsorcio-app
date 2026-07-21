@@ -183,12 +183,12 @@
   box-shadow: 0 0 0 1px var(--border);
 }
 
-/* Squareline — collection heroes only (fades before card grid) */
+/* Squareline — dashboard main top band (fades before dense content) */
 @utility grid-noise {
-  --grid-line: oklch(from var(--primary) l c h / 0.12);
+  --grid-line: oklch(from var(--primary) l c h / 0.085);
   background-image:
-    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+    linear-gradient(to right, var(--grid-line) 1.75px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1.75px, transparent 1px);
   background-size: 24px 24px;
   mask-image: linear-gradient(to bottom, black 0%, black 62%, transparent 100%);
 }

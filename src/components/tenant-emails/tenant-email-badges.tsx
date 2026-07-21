@@ -10,7 +10,7 @@ type UnitBadgeProps = {
 
 export function UnitBadge({ entry, className }: UnitBadgeProps) {
   return (
-    <Badge variant="secondary" className={cn("font-normal", className)}>
+    <Badge variant="soft" className={cn("font-normal", className)}>
       {formatFunctionalUnit(entry)}
     </Badge>
   );
@@ -28,10 +28,7 @@ type ContactTypeBadgeProps = {
 
 export function ContactTypeBadge({ contactType, className }: ContactTypeBadgeProps) {
   return (
-    <Badge
-      variant={contactType === "propietario" ? "outline" : "secondary"}
-      className={cn("font-normal", className)}
-    >
+    <Badge variant="soft" className={cn("font-normal", className)}>
       {contactTypeLabels[contactType]}
     </Badge>
   );

@@ -64,6 +64,41 @@ export type NewConsortium = typeof consortiums.$inferInsert;
 // reference pattern.
 
 /**
+ * Tenant emails — contact emails for functional units within a consortium.
+ * Unit identity is denormalized (`floor` / `departmentNumber` / `letter`);
+ * soft-deleted rows keep `isDeleted = true` and are excluded from list queries.
+ */
+export const tenantEmails = pgTable(
+  "tenant_emails",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    consortiumId: uuid("consortium_id")
+      .notNull()
+      .references(() => consortiums.id),
+    /** Floor label, e.g. "1" or "PB". */
+    floor: text("floor"),
+    departmentNumber: text("department_number"),
+    letter: text("letter"),
+    email: text("email").notNull(),
+    /** Contact role: "propietario" | "inquilino". */
+    contactType: text("contact_type").notNull().$type<"propietario" | "inquilino">(),
+    isDeleted: boolean("is_deleted").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("tenant_emails_consortium_id_active_idx")
+      .on(table.consortiumId)
+      .where(sql`${table.isDeleted} = false`),
+  ],
+);
+
+export type TenantEmailRow = typeof tenantEmails.$inferSelect;
+export type NewTenantEmail = typeof tenantEmails.$inferInsert;
+
+/**
  * Email log - one row per email send attempt (single email or batch),
  * recording who sent it, to whom, and the outcome reported by Resend.
  */

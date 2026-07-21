@@ -32,8 +32,8 @@ export const sendConsortiumCommentInputSchema = z.object({
   recipients: z.array(recipientSchema).min(1, "Selecciona al menos un destinatario"),
 });
 
-/** List card + edit-form shape (amount stays on detail only). */
-export const consortiumListItemSchema = z.object({
+/** Shared identity / contact fields for consortium DTOs. */
+const consortiumBaseSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
   location: z.string(),
@@ -42,9 +42,34 @@ export const consortiumListItemSchema = z.object({
   driveLink: z.string().nullable(),
 });
 
+/** List card + edit-form shape (amount stays on detail only). */
+export const consortiumListItemSchema = consortiumBaseSchema.extend({
+  /** Distinct functional units (floor/dept/letter) across active tenant emails. */
+  unitCount: z.number().int().nonnegative(),
+  /** Active tenant-email contacts (propietario + inquilino). */
+  contactCount: z.number().int().nonnegative(),
+});
+
 /** Full detail returned by byId / mutations. */
-export const consortiumDetailSchema = consortiumListItemSchema.extend({
+export const consortiumDetailSchema = consortiumBaseSchema.extend({
   amount: z.number().int(),
+});
+
+/** Action-history row — mock until history is modeled in the DB. */
+export const consortiumHistoryEntrySchema = z.object({
+  id: z.number().int(),
+  timestamp: z.string(),
+  description: z.string(),
+});
+
+export const consortiumHistoryInputSchema = consortiumIdInputSchema.extend({
+  page: z.number().int().min(1),
+  pageSize: z.number().int().min(1).max(50).default(10),
+});
+
+export const consortiumHistoryPageSchema = z.object({
+  items: z.array(consortiumHistoryEntrySchema),
+  total: z.number().int().nonnegative(),
 });
 
 export type CreateConsortiumInput = z.infer<typeof createConsortiumInputSchema>;
@@ -53,3 +78,6 @@ export type UpdateConsortiumAmountInput = z.infer<typeof updateConsortiumAmountI
 export type SendConsortiumCommentInput = z.infer<typeof sendConsortiumCommentInputSchema>;
 export type ConsortiumListItem = z.infer<typeof consortiumListItemSchema>;
 export type ConsortiumDetailDto = z.infer<typeof consortiumDetailSchema>;
+export type ConsortiumHistoryEntry = z.infer<typeof consortiumHistoryEntrySchema>;
+export type ConsortiumHistoryInput = z.infer<typeof consortiumHistoryInputSchema>;
+export type ConsortiumHistoryPage = z.infer<typeof consortiumHistoryPageSchema>;

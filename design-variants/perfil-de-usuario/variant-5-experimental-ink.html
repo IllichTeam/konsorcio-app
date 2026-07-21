@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Variante 5 — Experimental ink · Perfil de usuario</title>
+    <link rel="preconnect" href="https://fonts.bunny.net" />
+    <link
+      href="https://fonts.bunny.net/css?family=ibm-plex-sans:400,500,600|source-serif-4:500,600,700"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+      @theme {
+        --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+        --font-serif: "Source Serif 4", ui-serif, Georgia, serif;
+
+        --color-canvas: #f0efe9;
+        --color-surface: #faf8f4;
+        --color-surface-hover: #f3f0ea;
+        --color-ink: #14131a;
+        --color-ink-soft: #3a3745;
+        --color-muted: #6b6674;
+        --color-muted-soft: #9a94a3;
+        --color-border: #d6d1c7;
+        --color-border-strong: #2a2733;
+        --color-sidebar: #ebe8e1;
+        --color-accent: #1d4ed8;
+        --color-accent-hover: #1e40af;
+        --color-accent-soft: #dbe7ff;
+        --color-cta: #1d4ed8;
+        --color-cta-fg: #f8fafc;
+
+        --radius-sm: 0.375rem;
+        --radius-md: 0.5rem;
+        --radius-lg: 0.75rem;
+      }
+    </style>
+    <style>
+      :root {
+        font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+      }
+
+      body {
+        background-color: #f0efe9;
+        color: #14131a;
+      }
+
+      .font-serif {
+        font-family: "Source Serif 4", ui-serif, Georgia, serif;
+      }
+
+      .surface {
+        background-color: #faf8f4;
+      }
+
+      .ease-out-soft {
+        transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      /* Ink-heavy ledger panel */
+      .shadow-ledger {
+        box-shadow:
+          0 0 0 1.5px #2a2733,
+          0 1px 0 rgba(255, 255, 255, 0.55) inset,
+          0 14px 32px -20px rgba(20, 19, 26, 0.3);
+      }
+
+      .field-input {
+        width: 100%;
+        height: 2.5rem;
+        border-radius: 0.375rem;
+        border: 1.5px solid #d6d1c7;
+        background: #faf8f4;
+        padding: 0 0.75rem;
+        font-size: 0.8125rem;
+        color: #14131a;
+        transition:
+          border-color 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+          box-shadow 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+          background-color 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      .field-input::placeholder {
+        color: #9a94a3;
+      }
+
+      .field-input:hover:not(:disabled):not([readonly]) {
+        border-color: #b8b2a6;
+        background: #f3f0ea;
+      }
+
+      .field-input:focus {
+        outline: none;
+        border-color: #1d4ed8;
+        box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.18);
+      }
+
+      .field-input:disabled,
+      .field-input[readonly] {
+        background: #ebe8e1;
+        color: #3a3745;
+        cursor: not-allowed;
+      }
+
+      :focus-visible {
+        outline: 2px solid #1d4ed8;
+        outline-offset: 2px;
+      }
+
+      @keyframes rise-in {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes fade-in {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .enter {
+        opacity: 0;
+        animation: rise-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      }
+
+      .enter-fade {
+        opacity: 0;
+        animation: fade-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      }
+
+      .d1 {
+        animation-delay: 0.04s;
+      }
+      .d2 {
+        animation-delay: 0.1s;
+      }
+      .d3 {
+        animation-delay: 0.18s;
+      }
+      .d4 {
+        animation-delay: 0.26s;
+      }
+
+      .skip-link {
+        position: absolute;
+        left: -9999px;
+        top: 0.75rem;
+        z-index: 100;
+        border-radius: 0.375rem;
+        background: #1d4ed8;
+        color: #f8fafc;
+        padding: 0.5rem 0.875rem;
+        font-size: 0.8125rem;
+        font-weight: 500;
+      }
+
+      .skip-link:focus {
+        left: 0.75rem;
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      /* Warm ink grid band */
+      .grid-noise {
+        background-image:
+          linear-gradient(
+            to right,
+            rgba(42, 39, 51, 0.055) 1px,
+            transparent 1px
+          ),
+          linear-gradient(
+            to bottom,
+            rgba(42, 39, 51, 0.055) 1px,
+            transparent 1px
+          );
+        background-size: 24px 24px;
+        mask-image: linear-gradient(to bottom, black 0%, transparent 72%);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+          scroll-behavior: auto !important;
+        }
+
+        .enter,
+        .enter-fade {
+          opacity: 1;
+          animation: none;
+          transform: none;
+        }
+      }
+    </style>
+  </head>
+  <body class="min-h-dvh antialiased">
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+
+    <div class="flex min-h-dvh">
+      <!-- Sidebar -->
+      <aside
+        class="sticky top-0 z-40 hidden h-dvh w-[240px] shrink-0 flex-col border-r border-border bg-sidebar md:flex"
+        aria-label="Navegación principal"
+      >
+        <div class="enter-fade d1 flex h-14 items-center gap-2.5 px-4">
+          <span
+            class="flex size-6 items-center justify-center rounded-[5px] bg-accent text-[11px] font-semibold text-cta-fg"
+            aria-hidden="true"
+            >K</span
+          >
+          <div class="min-w-0 leading-tight">
+            <p
+              class="truncate font-serif text-[15px] font-semibold tracking-tight"
+            >
+              Konsorcio
+            </p>
+            <p class="truncate text-[11px] text-muted">Panel de administración</p>
+          </div>
+        </div>
+
+        <nav class="enter-fade d2 flex-1 overflow-y-auto px-3 pb-4">
+          <p
+            class="px-2 pb-1.5 pt-2 text-[11px] font-medium tracking-[0.04em] text-muted-soft"
+          >
+            Dashboard
+          </p>
+          <ul class="space-y-0.5">
+            <li>
+              <a
+                href="#"
+                class="ease-out-soft flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] text-ink-soft transition-colors duration-200 hover:bg-ink/[0.04] hover:text-ink"
+              >
+                <svg
+                  class="size-4 shrink-0 text-muted"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path d="M3 21h18" />
+                  <path d="M6 21V8l6-4 6 4v13" />
+                  <path d="M10 21v-5h4v5" />
+                </svg>
+                Consorcios
+              </a>
+            </li>
+            <li>
+              <a
+                href="#"
+                class="ease-out-soft flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] text-ink-soft transition-colors duration-200 hover:bg-ink/[0.04] hover:text-ink"
+              >
+                <svg
+                  class="size-4 shrink-0 text-muted"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="3" width="7.5" height="7.5" rx="1.5" />
+                  <rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5" />
+                  <rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5" />
+                  <rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5" />
+                </svg>
+                Resumen
+              </a>
+            </li>
+          </ul>
+
+          <p
+            class="px-2 pb-1.5 pt-5 text-[11px] font-medium tracking-[0.04em] text-muted-soft"
+          >
+            Cuenta
+          </p>
+          <ul class="space-y-0.5">
+            <li>
+              <a
+                href="#"
+                class="ease-out-soft flex items-center gap-2.5 rounded-md bg-accent/[0.1] px-2.5 py-1.5 text-[13px] font-medium text-ink transition-colors duration-200 hover:bg-accent/[0.14]"
+                aria-current="page"
+              >
+                <svg
+                  class="size-4 shrink-0 text-accent"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                Perfil de usuario
+              </a>
+            </li>
+            <li>
+              <a
+                href="#"
+                class="ease-out-soft flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] text-ink-soft transition-colors duration-200 hover:bg-ink/[0.04] hover:text-ink"
+              >
+                <svg
+                  class="size-4 shrink-0 text-muted"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="3" />
+                  <path
+                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+                  />
+                </svg>
+                Configuración
+              </a>
+            </li>
+          </ul>
+        </nav>
+
+        <div class="enter-fade d2 border-t border-border p-3">
+          <div
+            class="ease-out-soft flex items-center gap-2.5 rounded-md px-1.5 py-1.5 transition-colors duration-200 hover:bg-ink/[0.04]"
+          >
+            <span
+              class="flex size-8 shrink-0 items-center justify-center rounded-md bg-border-strong text-[11px] font-semibold text-cta-fg"
+              aria-hidden="true"
+              >AD</span
+            >
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-[12.5px] font-medium">Admin</p>
+              <p class="truncate text-[10.5px] text-muted">illich570@gmail.com</p>
+            </div>
+            <a
+              href="#"
+              class="ease-out-soft flex size-8 shrink-0 items-center justify-center rounded-md text-muted transition-colors duration-200 hover:bg-ink/[0.06] hover:text-ink"
+              aria-label="Cerrar sesión"
+              title="Cerrar sesión"
+            >
+              <svg
+                class="size-4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <path d="M16 17l5-5-5-5" />
+                <path d="M21 12H9" />
+              </svg>
+            </a>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main column -->
+      <div class="flex min-w-0 flex-1 flex-col">
+        <header
+          class="enter-fade d1 sticky top-0 z-30 border-b border-border bg-canvas/90 backdrop-blur-md"
+        >
+          <div
+            class="mx-auto flex h-14 w-full max-w-[720px] items-center gap-3 px-4 sm:px-6"
+          >
+            <span
+              class="flex size-6 items-center justify-center rounded-[5px] bg-accent text-[11px] font-semibold text-cta-fg md:hidden"
+              aria-hidden="true"
+              >K</span
+            >
+
+            <nav aria-label="Miga de pan" class="hidden min-w-0 md:block">
+              <ol class="flex items-center gap-1.5 text-[13px] text-muted">
+                <li>
+                  <a
+                    href="#"
+                    class="ease-out-soft transition-colors duration-200 hover:text-ink"
+                    >Cuenta</a
+                  >
+                </li>
+                <li aria-hidden="true" class="text-border">/</li>
+                <li class="font-medium text-ink" aria-current="page">
+                  Perfil de usuario
+                </li>
+              </ol>
+            </nav>
+
+            <p class="min-w-0 truncate text-[13px] font-medium text-ink md:hidden">
+              Perfil de usuario
+            </p>
+          </div>
+        </header>
+
+        <main id="contenido" class="relative flex-1">
+          <div
+            class="pointer-events-none absolute inset-x-0 top-0 h-48 grid-noise"
+            aria-hidden="true"
+          ></div>
+
+          <div
+            class="relative mx-auto w-full max-w-[720px] px-4 pb-24 pt-9 sm:px-6 sm:pt-11"
+          >
+            <!-- Page header -->
+            <header class="enter d2 mb-8" aria-labelledby="page-title">
+              <p
+                class="text-[11px] font-medium tracking-[0.06em] text-muted"
+              >
+                Cuenta · Registro
+              </p>
+              <h1
+                id="page-title"
+                class="font-serif mt-2.5 text-balance text-[1.75rem] font-semibold leading-[1.12] tracking-[-0.02em] text-ink sm:text-[2rem]"
+              >
+                Configuración de usuario
+                <span class="text-muted"> · Admin</span>
+              </h1>
+              <p class="mt-2.5 max-w-md text-[14px] leading-relaxed text-ink-soft">
+                Datos de contacto y acceso del administrador. Los cambios se
+                aplican al guardar.
+              </p>
+            </header>
+
+            <!-- Ledger form card -->
+            <form
+              class="enter d3 surface overflow-hidden rounded-lg shadow-ledger"
+              aria-labelledby="personal-heading"
+              action="#"
+              method="get"
+            >
+              <!-- Ledger index strip -->
+              <div
+                class="flex items-center justify-between gap-3 border-b-[1.5px] border-border-strong/20 bg-canvas/70 px-5 py-3 sm:px-6"
+              >
+                <div class="flex min-w-0 items-center gap-3">
+                  <span
+                    class="flex size-9 shrink-0 items-center justify-center rounded-md border-[1.5px] border-border-strong/25 bg-surface font-serif text-[12px] font-semibold text-ink-soft"
+                    aria-hidden="true"
+                    >AD</span
+                  >
+                  <div class="min-w-0">
+                    <p class="truncate font-serif text-[14px] font-semibold tracking-tight">
+                      Ficha de administrador
+                    </p>
+                    <p class="mt-0.5 truncate text-[12px] text-muted">
+                      illich570@gmail.com
+                    </p>
+                  </div>
+                </div>
+                <p
+                  class="shrink-0 font-serif text-[12px] tabular-nums tracking-tight text-muted"
+                >
+                  Nº&nbsp;001
+                </p>
+              </div>
+
+              <div class="space-y-0 px-5 py-6 sm:px-6">
+                <section aria-labelledby="personal-heading">
+                  <div
+                    class="mb-5 flex items-baseline justify-between gap-3 border-b border-border pb-3"
+                  >
+                    <h2
+                      id="personal-heading"
+                      class="font-serif text-[15px] font-semibold tracking-tight text-ink"
+                    >
+                      Información personal
+                    </h2>
+                    <span class="text-[11px] tracking-[0.04em] text-muted-soft">
+                      Obligatorios · nombre
+                    </span>
+                  </div>
+
+                  <div class="space-y-5">
+                    <div>
+                      <label
+                        for="name"
+                        class="mb-1.5 block text-[12.5px] font-medium text-ink-soft"
+                        >Nombre</label
+                      >
+                      <input
+                        id="name"
+                        name="name"
+                        type="text"
+                        autocomplete="name"
+                        value="Admin"
+                        class="field-input"
+                      />
+                    </div>
+
+                    <div>
+                      <label
+                        for="email"
+                        class="mb-1.5 block text-[12.5px] font-medium text-ink-soft"
+                        >Email</label
+                      >
+                      <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        autocomplete="email"
+                        value="illich570@gmail.com"
+                        readonly
+                        disabled
+                        class="field-input"
+                        aria-describedby="email-hint"
+                      />
+                      <p id="email-hint" class="mt-1.5 text-[12px] text-muted">
+                        El email no se puede modificar desde aquí.
+                      </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                      <div>
+                        <label
+                          for="phone"
+                          class="mb-1.5 block text-[12.5px] font-medium text-ink-soft"
+                          >Teléfono</label
+                        >
+                        <input
+                          id="phone"
+                          name="phone"
+                          type="tel"
+                          autocomplete="tel"
+                          value="+54911-12345678"
+                          class="field-input tabular-nums"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          for="address"
+                          class="mb-1.5 block text-[12.5px] font-medium text-ink-soft"
+                          >Dirección fiscal</label
+                        >
+                        <input
+                          id="address"
+                          name="address"
+                          type="text"
+                          autocomplete="street-address"
+                          value="CABA"
+                          class="field-input"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <!-- Password row — closed state (outline secondary) -->
+                <section
+                  class="enter d4 mt-8 border-t border-border pt-6"
+                  aria-labelledby="password-heading"
+                >
+                  <div
+                    class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div class="min-w-0">
+                      <h2
+                        id="password-heading"
+                        class="font-serif text-[15px] font-semibold tracking-tight text-ink"
+                      >
+                        Seguridad
+                      </h2>
+                      <p class="mt-1 text-[13px] text-muted">
+                        Actualizá la contraseña de acceso al panel.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      class="ease-out-soft inline-flex h-9 shrink-0 items-center justify-center rounded-md border-[1.5px] border-border-strong/70 bg-transparent px-4 text-[13px] font-medium text-ink transition-all duration-200 hover:bg-ink/[0.04] hover:border-border-strong active:scale-[0.99]"
+                    >
+                      Cambiar contraseña
+                    </button>
+                  </div>
+                </section>
+              </div>
+
+              <!-- Footer actions -->
+              <div
+                class="flex flex-col-reverse gap-3 border-t-[1.5px] border-border-strong/20 bg-canvas/50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6"
+              >
+                <p class="text-[12px] text-muted">
+                  Los campos con valor se guardan tal como están.
+                </p>
+                <button
+                  type="submit"
+                  class="ease-out-soft inline-flex h-10 w-full items-center justify-center rounded-md bg-cta px-5 text-[13px] font-medium text-cta-fg transition-all duration-200 hover:bg-accent-hover active:scale-[0.99] sm:w-auto sm:min-w-[10.5rem]"
+                >
+                  Guardar cambios
+                </button>
+              </div>
+            </form>
+          </div>
+        </main>
+      </div>
+    </div>
+  </body>
+</html>

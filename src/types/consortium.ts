@@ -5,14 +5,10 @@ export type Consortium = {
   paymentAlias: string | null;
   billingEmail: string | null;
   driveLink: string | null;
+  unitCount: number;
+  contactCount: number;
 };
 
 export type ConsortiumDetail = Consortium & {
   amount: number;
-};
-
-export type ConsortiumHistoryEntry = {
-  id: number;
-  timestamp: string;
-  description: string;
 };

@@ -2,16 +2,17 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ArrowLeft, Mail, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 
 import { useConsortium } from "@/hooks/use-consortiums";
 import { useDeleteTenantEmail, useTenantEmails } from "@/hooks/use-tenant-emails";
 import { formatFunctionalUnit } from "@/lib/tenant-email/format-unit";
-import { ContactTypeBadge, UnitBadge } from "@/components/tenant-emails/tenant-email-badges";
+import { createTenantEmailColumns } from "@/components/tenant-emails/tenant-email-columns";
 import { TenantEmailFormDialog } from "@/components/tenant-emails/tenant-email-form-dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import {
   Dialog,
   DialogContent,
@@ -22,15 +23,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import type { TenantEmail } from "@/types/tenant-email";
+
+const PAGE_SIZE = 10;
 
 type TenantEmailsScreenProps = {
   consortiumId: string;
@@ -50,6 +45,7 @@ export function TenantEmailsScreen({ consortiumId }: TenantEmailsScreenProps) {
   const deleteTenantEmail = useDeleteTenantEmail(consortiumId);
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [pageIndex, setPageIndex] = useState(0);
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<TenantEmail | null>(null);
   const [deletingEntry, setDeletingEntry] = useState<TenantEmail | null>(null);
@@ -66,13 +62,28 @@ export function TenantEmailsScreen({ consortiumId }: TenantEmailsScreenProps) {
     });
   }, [searchQuery, tenantEmails]);
 
+  const pageCount = filteredEmails.length === 0 ? 0 : Math.ceil(filteredEmails.length / PAGE_SIZE);
+  const safePageIndex = pageCount === 0 ? 0 : Math.min(pageIndex, Math.max(0, pageCount - 1));
+
+  const pageRows = useMemo(() => {
+    const start = safePageIndex * PAGE_SIZE;
+    return filteredEmails.slice(start, start + PAGE_SIZE);
+  }, [filteredEmails, safePageIndex]);
+
+  const columns = useMemo(
+    () =>
+      createTenantEmailColumns({
+        onEdit: (entry) => {
+          setEditingEntry(entry);
+          setFormDialogOpen(true);
+        },
+        onDelete: setDeletingEntry,
+      }),
+    [],
+  );
+
   function openCreateDialog() {
     setEditingEntry(null);
-    setFormDialogOpen(true);
-  }
-
-  function openEditDialog(entry: TenantEmail) {
-    setEditingEntry(entry);
     setFormDialogOpen(true);
   }
 
@@ -83,13 +94,21 @@ export function TenantEmailsScreen({ consortiumId }: TenantEmailsScreenProps) {
     }
   }
 
+  function handleSearchChange(value: string) {
+    setSearchQuery(value);
+    setPageIndex(0);
+  }
+
   async function handleDelete() {
     if (!deletingEntry) {
       return;
     }
 
     try {
-      await deleteTenantEmail.mutateAsync(deletingEntry.id);
+      await deleteTenantEmail.mutateAsync({
+        id: deletingEntry.id,
+        consortiumId,
+      });
       toast.success("Email eliminado");
       setDeletingEntry(null);
     } catch {
@@ -130,11 +149,11 @@ export function TenantEmailsScreen({ consortiumId }: TenantEmailsScreenProps) {
         Volver al consorcio
       </Button>
 
-      <div className="mt-4 space-y-1">
-        <h1 className="text-xl font-semibold tracking-tight text-balance text-foreground">
+      <div className="mt-4 space-y-2">
+        <h1 className="text-3xl font-semibold tracking-tight text-balance text-foreground">
           Emails de inquilinos · {consortium.name}
         </h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-base text-muted-foreground">
           Cada email pertenece a una unidad funcional (piso, departamento y letra).
         </p>
       </div>
@@ -149,7 +168,7 @@ export function TenantEmailsScreen({ consortiumId }: TenantEmailsScreenProps) {
               />
               <Input
                 value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
+                onChange={(event) => handleSearchChange(event.target.value)}
                 placeholder="Buscar por email o unidad"
                 className="pl-8"
                 aria-label="Buscar por email o unidad"
@@ -161,74 +180,21 @@ export function TenantEmailsScreen({ consortiumId }: TenantEmailsScreenProps) {
             </Button>
           </div>
 
-          <div className="overflow-hidden rounded-lg border border-border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="px-4">Unidad funcional</TableHead>
-                  <TableHead className="px-4">Email</TableHead>
-                  <TableHead className="px-4 text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredEmails.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={3} className="px-4 py-8 text-center text-muted-foreground">
-                      {searchQuery.trim()
-                        ? "No hay resultados para tu búsqueda."
-                        : "No hay emails registrados para este consorcio."}
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredEmails.map((entry) => (
-                    <TableRow key={entry.id}>
-                      <TableCell className="px-4">
-                        <UnitBadge entry={entry} />
-                      </TableCell>
-                      <TableCell className="px-4">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="inline-flex items-center gap-1.5 text-foreground">
-                            <Mail className="size-4 text-muted-foreground" aria-hidden="true" />
-                            {entry.email}
-                          </span>
-                          <ContactTypeBadge contactType={entry.contactType} />
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-4">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon-sm"
-                            aria-label={`Editar email ${entry.email}`}
-                            onClick={() => openEditDialog(entry)}
-                          >
-                            <Pencil className="size-4" aria-hidden="true" />
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon-sm"
-                            className="text-destructive hover:text-destructive"
-                            aria-label={`Eliminar email ${entry.email}`}
-                            onClick={() => setDeletingEntry(entry)}
-                          >
-                            <Trash2 className="size-4" aria-hidden="true" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+          <DataTable
+            columns={columns}
+            data={pageRows}
+            pageIndex={safePageIndex}
+            pageSize={PAGE_SIZE}
+            totalCount={filteredEmails.length}
+            onPageChange={setPageIndex}
+            getRowId={(row) => row.id}
+            emptyMessage={
+              searchQuery.trim()
+                ? "No hay resultados para tu búsqueda."
+                : "No hay emails registrados para este consorcio."
+            }
+          />
         </CardContent>
-        <CardFooter className="text-sm text-muted-foreground">
-          {filteredEmails.length === 1
-            ? "1 email mostrado"
-            : `${filteredEmails.length} emails mostrados`}
-        </CardFooter>
       </Card>
 
       <TenantEmailFormDialog
@@ -272,11 +238,19 @@ export function TenantEmailsScreen({ consortiumId }: TenantEmailsScreenProps) {
 
 function TenantEmailsSkeleton() {
   return (
-    <div className="w-full space-y-4">
+    <div className="flex w-full min-h-[calc(100dvh-5rem)] flex-col">
       <Skeleton className="h-8 w-40" />
-      <Skeleton className="h-8 w-72" />
-      <Skeleton className="h-4 w-96" />
-      <Skeleton className="min-h-80 w-full rounded-lg" />
+      <Skeleton className="mt-4 h-8 w-72" />
+      <Skeleton className="mt-2 h-4 w-96" />
+      <Card className="mt-6">
+        <CardContent className="space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <Skeleton className="h-9 w-full sm:max-w-sm" />
+            <Skeleton className="h-9 w-36" />
+          </div>
+          <DataTableSkeleton columnCount={3} rowCount={PAGE_SIZE} />
+        </CardContent>
+      </Card>
     </div>
   );
 }

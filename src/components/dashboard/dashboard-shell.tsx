@@ -25,10 +25,16 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
           </header>
           {/*
             Stretch children to the full main-column width so pages can center
-            with mx-auto (items-start was pinning content to the left).
-            overflow-x-clip kills any full-bleed decorative layers (grid-noise).
+            with mx-auto. Top-band grid-noise sits outside padding so it spans
+            the full inset; overflow-x-clip keeps decorative layers contained.
           */}
-          <div className="flex min-w-0 flex-1 flex-col overflow-x-clip p-6 md:p-10">{children}</div>
+          <div className="relative flex min-w-0 flex-1 flex-col overflow-x-clip">
+            <div
+              className="pointer-events-none absolute inset-x-0 top-0 h-56 grid-noise md:h-64"
+              aria-hidden="true"
+            />
+            <div className="relative flex min-w-0 flex-1 flex-col p-6 md:p-10">{children}</div>
+          </div>
         </SidebarInset>
       </SidebarProvider>
     </DashboardUserProvider>

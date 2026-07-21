@@ -96,6 +96,7 @@ describe("consortiums tRPC router", () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    await testDb.delete(schema.tenantEmails);
     await testDb.delete(schema.consortiums);
     await testDb.delete(schema.user);
   });
@@ -142,6 +143,69 @@ describe("consortiums tRPC router", () => {
         paymentAlias: sampleInput.paymentAlias,
         billingEmail: sampleInput.billingEmail,
         driveLink: sampleInput.driveLink,
+        unitCount: 0,
+        contactCount: 0,
+      },
+    ]);
+  });
+
+  it("counts distinct units and all contacts per consortium", async () => {
+    await insertUser("user-a", ROLES.admin);
+
+    const [consortium] = await testDb
+      .insert(schema.consortiums)
+      .values({ ...sampleInput, name: "Mine", ownerId: "user-a" })
+      .returning();
+
+    await testDb.insert(schema.tenantEmails).values([
+      {
+        consortiumId: consortium.id,
+        floor: "1",
+        departmentNumber: null,
+        letter: "A",
+        email: "owner@example.com",
+        contactType: "propietario",
+      },
+      {
+        consortiumId: consortium.id,
+        floor: "1",
+        departmentNumber: null,
+        letter: "A",
+        email: "tenant@example.com",
+        contactType: "inquilino",
+      },
+      {
+        consortiumId: consortium.id,
+        floor: "2",
+        departmentNumber: "3",
+        letter: "B",
+        email: "other@example.com",
+        contactType: "inquilino",
+      },
+      {
+        consortiumId: consortium.id,
+        floor: "9",
+        departmentNumber: null,
+        letter: "Z",
+        email: "deleted@example.com",
+        contactType: "propietario",
+        isDeleted: true,
+      },
+    ]);
+
+    const caller = await callerFor("admin", "user-a");
+    const list = await caller.consortiums.list();
+
+    expect(list).toEqual([
+      {
+        id: consortium.id,
+        name: "Mine",
+        location: "CABA",
+        paymentAlias: sampleInput.paymentAlias,
+        billingEmail: sampleInput.billingEmail,
+        driveLink: sampleInput.driveLink,
+        unitCount: 2,
+        contactCount: 3,
       },
     ]);
   });
@@ -238,6 +302,49 @@ describe("consortiums tRPC router", () => {
       billingEmail: null,
       driveLink: null,
     });
+  });
+
+  it("returns paginated mock history for an owned consortium", async () => {
+    await insertUser("user-admin", ROLES.admin);
+    const ownerCaller = await callerFor("admin", "user-admin");
+    const created = await ownerCaller.consortiums.create(sampleInput);
+
+    const page1Caller = await callerFor("admin", "user-admin");
+    const page1 = await page1Caller.consortiums.history({
+      id: created.id,
+      page: 1,
+      pageSize: 10,
+    });
+
+    expect(page1.total).toBe(15);
+    expect(page1.items).toHaveLength(10);
+    expect(page1.items[0]?.id).toBe(1);
+
+    const page2Caller = await callerFor("admin", "user-admin");
+    const page2 = await page2Caller.consortiums.history({
+      id: created.id,
+      page: 2,
+      pageSize: 10,
+    });
+
+    expect(page2.items).toHaveLength(5);
+    expect(page2.items[0]?.id).toBe(11);
+  });
+
+  it("rejects history for a consortium the admin cannot access", async () => {
+    await insertUser("user-a", ROLES.admin);
+    await insertUser("user-b", ROLES.admin);
+
+    const [row] = await testDb
+      .insert(schema.consortiums)
+      .values({ ...sampleInput, ownerId: "user-a" })
+      .returning();
+
+    const caller = await callerFor("admin", "user-b");
+
+    await expect(
+      caller.consortiums.history({ id: row.id, page: 1, pageSize: 10 }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
 
   it("sendComment emails via NotificacionConsorcio pipeline", async () => {

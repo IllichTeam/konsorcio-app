@@ -29,6 +29,12 @@ const consortiumFormSchema = z.object({
 
 type ConsortiumFormValues = z.infer<typeof consortiumFormSchema>;
 
+/** Identity + contact fields used to seed the edit form (counts optional). */
+type ConsortiumFormSeed = Pick<
+  ConsortiumListItem,
+  "id" | "name" | "location" | "paymentAlias" | "billingEmail" | "driveLink"
+>;
+
 const emptyValues: ConsortiumFormValues = {
   name: "",
   location: "",
@@ -42,7 +48,7 @@ type ConsortiumFormDialogProps = {
   onOpenChange: (open: boolean) => void;
   consortiumId?: string | null;
   /** When provided (e.g. from list row), skips `byId` fetch. */
-  initialConsortium?: ConsortiumListItem | null;
+  initialConsortium?: ConsortiumFormSeed | null;
 };
 
 export function ConsortiumFormDialog({
