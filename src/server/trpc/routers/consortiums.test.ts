@@ -6,11 +6,13 @@ import { createTestDb, type TestDbHandle } from "@/db/testing";
 import type { Session } from "@/lib/auth/session";
 import { ROLES } from "@/lib/auth/roles";
 
+// appRouter pulls emails + expenseEmails routers that import `server-only` modules.
+vi.mock("server-only", () => ({}));
+
 vi.mock("@/lib/auth/session", () => ({
   getSession: vi.fn(),
 }));
 
-// appRouter pulls emails + consortiums routers that import `server-only` modules.
 vi.mock("@/lib/email/send", () => ({
   sendEmail: vi.fn(),
 }));

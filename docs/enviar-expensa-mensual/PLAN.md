@@ -74,11 +74,11 @@ Decisiones cerradas (ver SPEC §10 / ADVERSARIAL-REVIEW): C1 background + poll, 
 **Goal:** botón abre dialog usable.
 
 - Componente dominio `send-monthly-expense-dialog.tsx` (o similar).
-- Reusar patrón selector del modal de comentario.
-- Form wrappers; contador X personas; link default driveLink; máx 3 PDFs.
+- UX canónica maqueta: **Todos** los activos; mensaje automático; link/alias readonly; máx 3 PDFs.
+- Form wrappers; contador X personas.
 - Preview: HTML del **mismo template** (server) — no HTML paralelo.
-- CTA Enviar: disabled mientras sube/envía; proteger doble pulsación.
-- Wire botón en `consortium-detail.tsx`.
+- CTA Enviar: disabled mientras sube/envía; proteger doble pulsación; `sendId` estable por intento.
+- Wire botón en `consortium-detail.tsx` (oculto en demo mode).
 - Toasts ES; loading states.
 - Tras éxito: navegar a `/consorcios/[id]/envios/[envioId]`.
 
@@ -105,11 +105,13 @@ Decisiones cerradas (ver SPEC §10 / ADVERSARIAL-REVIEW): C1 background + poll, 
 - Validar techos 1–3 PDFs / 5 MB (cliente + server) antes de crear el envío.
 - Empty billingEmail → omit `reply_to` (no fallar).
 - Demo mode: ocultar/disable igual que otras acciones.
-- Cleanup / doc de retención PDFs **60 días**.
-- Tests router + smoke template.
+- Idempotencia / concurrencia: claim de send + CAS de recipients (no duplicar mails evitables).
+- Cleanup / doc de retención PDFs **60 días** (manual si no hay jobs en el repo).
 - Documentar en este folder: env vars, bucket name, cómo probar con override.
+- Tests router + smoke template (**verificación — no parte de la pasada estática**).
 
-**Done when:** checklist QA en verde local.
+**Done when (estático):** hardening de código + docs alineados a UX canónica.  
+**Done when (producto):** checklist QA en verde local (pasada de verificación aparte).
 
 ---
 

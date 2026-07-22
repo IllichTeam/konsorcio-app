@@ -11,8 +11,8 @@ Estado del botón actual: `Enviar expensa mensual` en `consortium-detail.tsx` es
 El administrador de un consorcio puede:
 
 1. Abrir un dialog desde **Enviar expensa mensual**.
-2. Elegir destinatarios (misma UX de selector que el modal de comentario).
-3. Escribir un comentario, opcionalmente editar un link (default = `driveLink` del consorcio), adjuntar PDFs.
+2. Enviar a **todos** los `tenant_emails` activos del consorcio (sin selector parcial en MVP maqueta).
+3. Usar un mensaje **automático** (mes/año), ver link y alias de cobro en solo lectura, adjuntar PDFs.
 4. Ver “Se enviará a X personas” + preview del correo (mismo template que el mail real).
 5. Enviar; la UI navega de inmediato a la pantalla de estado; el envío corre en background.
 6. **Reintentar pendientes** (fallidos o cortados a mitad) sin reenviar los ya `sent`.
@@ -26,11 +26,11 @@ El administrador de un consorcio puede:
 
 - Dialog modal (no ruta dedicada de composición).
 - Subject fijo: **`Expensa Mensual`** (sin campo asunto en UI).
-- Campos: destinatarios (selector), comentario (requerido), link (libre, default `driveLink`), PDFs (**mínimo 1**, **máximo 3**, máx **5 MB** por archivo).
+- Campos: destinatarios = **Todos** los activos (sin selector parcial), mensaje automático mes/año (sin textarea), link `driveLink` y alias de cobro **readonly**, PDFs (**mínimo 1**, **máximo 3**, máx **5 MB** por archivo).
 - Contador “Se enviará a X personas”.
 - Preview del HTML del **mismo template** que se usa al enviar (server).
 - Template **nuevo** (fork de `NotificacionConsorcio`); no modificar el de notificaciones/comentarios.
-- Saludo fijo en el mail: **`Vecino/a`** (no nombre personal ni unidad).
+- Saludo fijo en el mail: **`Vecino/a`** (no nombre personal ni unidad). El builder del mensaje **no** repite ese saludo.
 - Mismo set de PDFs para todos los destinatarios.
 - `From`: `EMAIL_FROM` (override de dominio futuro).
 - `reply_to`: `consortium.billingEmail` cuando exista.
@@ -62,15 +62,18 @@ El administrador de un consorcio puede:
 
 Trigger: botón primario en detalle de consorcio.
 
-| Campo         | Comportamiento                                                                                                                                      |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Destinatarios | Selector multi, misma funcionalidad que modal “Enviar comentario” (lista de `tenant_emails` del consorcio).                                         |
-| Comentario    | Textarea requerida.                                                                                                                                 |
-| Link          | Input URL; default `consortium.driveLink`; editable; vacío permitido; si hay valor, validar URL.                                                    |
-| PDFs          | File input múltiple; **≥1 y ≤3**; solo `application/pdf`; máx **5 MB** c/u; rechazar con error en español.                                          |
-| Contador      | “Se enviará a X personas” (X = destinatarios seleccionados).                                                                                        |
-| Preview       | Panel/tab con HTML del **mismo template** del mail real (comentario + link + nombres de adjuntos; saludo `Vecino/a`).                               |
-| Confirmación  | CTA “Enviar”; disabled sin destinatarios, sin comentario, **sin al menos 1 PDF**, o mientras sube/envía. **No** permitir doble pulsación (ver §10). |
+**UX canónica (maqueta confirmada 2026-07-21):** no hay selector parcial de destinatarios, ni textarea de mensaje, ni link editable.
+
+| Campo          | Comportamiento                                                                                                                                 |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Destinatarios  | Siempre **todos** los `tenant_emails` activos del consorcio. Texto informativo + contador; sin multi-select.                                   |
+| Mensaje        | Automático con mes/año (`buildMonthlyExpenseMessage`); sin textarea. El template aporta el saludo `Hola Vecino/a,` (el builder no lo duplica). |
+| Link           | Solo lectura: valor `consortium.driveLink` (vacío permitido).                                                                                  |
+| Alias de cobro | Solo lectura: valor `consortium.paymentAlias` (visible en preview del template).                                                               |
+| PDFs           | File input múltiple; **≥1 y ≤3**; solo `application/pdf`; máx **5 MB** c/u; rechazar con error en español.                                     |
+| Contador       | “Se enviará a X personas” (X = todos los activos).                                                                                             |
+| Preview        | Panel con HTML del **mismo template** del mail real vía procedure server (`expenseEmails.preview`).                                            |
+| Confirmación   | CTA “Enviar”; disabled sin destinatarios activos, **sin al menos 1 PDF**, o mientras sube/envía. **No** permitir doble pulsación (ver §10).    |
 
 ### 3.2 Pantalla / vista de estado
 
@@ -84,7 +87,9 @@ Tras enviar (o al abrir un envío histórico):
 
 ### 3.3 Historial
 
-Registro consultable **dentro de cada consorcio** (lista reciente en detalle o bajo la misma sección de envíos). No aparece en Notificaciones admin. Mínimo: fecha, status, counts, enviado por. Detalle = misma vista de estado.
+Registro consultable **dentro de cada consorcio** (lista reciente en detalle o bajo la misma sección de envíos). No aparece en Notificaciones admin. Mínimo: fecha, status, counts, enviado por (nombre del usuario si existe en `user.name`). Detalle = misma vista de estado.
+
+**UX canónica del dialog (maqueta 2026-07-21):** destinatarios = Todos los activos; mensaje automático mes/año (sin textarea); `driveLink` y alias de cobro **readonly** (visibles en el dialog y en la preview).
 
 ---
 
@@ -226,3 +231,4 @@ Mismo gate que acciones de consorcio / `sendComment` (`protectedProcedure` + con
 13. **Retry CTA:** `Reintentar pendientes` (pending + failed).
 14. **Preview:** mismo template que el mail real.
 15. **Historial:** solo dentro de cada consorcio.
+16. **UX maqueta (2026-07-21):** destinatarios = Todos los activos; mensaje automático mes/año; `driveLink` y alias readonly; sin textarea ni selector parcial.

@@ -3,24 +3,16 @@
 import type { ColumnDef } from "@tanstack/react-table";
 
 import { Badge } from "@/components/ui/badge";
+import type { ExpenseEmailRecipientDto } from "@/lib/schemas/expense-email";
 
-export type ExpenseEmailRecipientRow = {
-  id: string;
-  email: string;
-  status: "pending" | "sent" | "failed";
-  error?: string | null;
-  /** ISO timestamp of last attempt; null while still pending without attempt. */
-  attemptedAt?: string | null;
-};
-
-const statusLabel: Record<ExpenseEmailRecipientRow["status"], string> = {
+const statusLabel: Record<ExpenseEmailRecipientDto["status"], string> = {
   pending: "Pendiente",
   sent: "Enviado",
   failed: "Fallido",
 };
 
 const statusVariant: Record<
-  ExpenseEmailRecipientRow["status"],
+  ExpenseEmailRecipientDto["status"],
   "warning" | "success" | "destructive"
 > = {
   pending: "warning",
@@ -44,9 +36,9 @@ function formatAttemptedAt(value: string | null | undefined): string {
   });
 }
 
-export const expenseEmailSendRecipientColumns: ColumnDef<ExpenseEmailRecipientRow>[] = [
+export const expenseEmailSendRecipientColumns: ColumnDef<ExpenseEmailRecipientDto>[] = [
   {
-    accessorKey: "attemptedAt",
+    accessorKey: "lastAttemptAt",
     header: "Fecha y hora",
     cell: ({ getValue }) => (
       <span className="whitespace-nowrap text-muted-foreground tabular-nums">
@@ -63,7 +55,7 @@ export const expenseEmailSendRecipientColumns: ColumnDef<ExpenseEmailRecipientRo
     accessorKey: "status",
     header: "Estado",
     cell: ({ getValue }) => {
-      const status = getValue<ExpenseEmailRecipientRow["status"]>();
+      const status = getValue<ExpenseEmailRecipientDto["status"]>();
       return <Badge variant={statusVariant[status]}>{statusLabel[status]}</Badge>;
     },
   },

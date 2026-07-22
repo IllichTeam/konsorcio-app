@@ -62,6 +62,18 @@ const envSchema = z.object({
    * only Consorcios and unfinished detail actions are hidden. Default false.
    */
   NEXT_PUBLIC_DEMO_MODE: z.preprocess((val) => val === "true" || val === true, z.boolean()),
+  /**
+   * Supabase project URL for Storage (expense PDF uploads). Optional at the
+   * schema level so tooling that imports this module never throws;
+   * `src/lib/storage/supabase-admin.ts` asserts both Storage vars before use.
+   * Server-only — never expose as `NEXT_PUBLIC_*`.
+   */
+  SUPABASE_URL: z.string().url().optional(),
+  /**
+   * Supabase service role key for private bucket upload + signed URLs.
+   * Server-only secret — never send to the browser.
+   */
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
 });
 
 export const env = envSchema.parse({
@@ -76,6 +88,8 @@ export const env = envSchema.parse({
   EMAIL_FROM: process.env.EMAIL_FROM,
   EMAIL_OVERRIDE_TO: process.env.EMAIL_OVERRIDE_TO || undefined,
   NEXT_PUBLIC_DEMO_MODE: process.env.NEXT_PUBLIC_DEMO_MODE,
+  SUPABASE_URL: process.env.SUPABASE_URL || undefined,
+  SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY || undefined,
 });
 
 export type Env = typeof env;

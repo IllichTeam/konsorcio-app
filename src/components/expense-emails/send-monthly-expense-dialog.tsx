@@ -1,12 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "@/lib/zod";
 
+import { uploadExpenseEmailPdfs } from "@/lib/api/upload-expense-emails";
+import { buildMonthlyExpenseMessage } from "@/lib/email/build-monthly-expense-message";
+import type { ExpenseEmailAttachmentRef } from "@/lib/schemas/expense-email";
+import { useCreateExpenseEmailSend, useExpenseEmailPreview } from "@/hooks/use-expense-emails";
 import { useTenantEmails } from "@/hooks/use-tenant-emails";
 import { FormPdfFiles, MAX_PDF_BYTES, MAX_PDF_COUNT } from "@/components/form/form-pdf-files";
 import { Button } from "@/components/ui/button";
@@ -18,28 +22,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
-const MONTHS_ES = [
-  "Enero",
-  "Febrero",
-  "Marzo",
-  "Abril",
-  "Mayo",
-  "Junio",
-  "Julio",
-  "Agosto",
-  "Septiembre",
-  "Octubre",
-  "Noviembre",
-  "Diciembre",
-] as const;
-
-/** Fixed body used in preview now and at send time later. */
-export function buildMonthlyExpenseMessage(consortiumName: string, date = new Date()): string {
-  const month = MONTHS_ES[date.getMonth()];
-  const year = date.getFullYear();
-  return `Hola Vecino/a, nos complace acercarle las expensas mensuales del consorcio ${consortiumName.trim()} correspondientes a ${month} de ${year}.`;
-}
 
 const sendMonthlyExpenseSchema = z.object({
   pdfs: z
@@ -74,24 +56,46 @@ type SendMonthlyExpenseDialogProps = {
   onOpenChange: (open: boolean) => void;
   consortiumId: string;
   consortiumName: string;
-  paymentAlias?: string | null;
   defaultDriveLink?: string | null;
+  paymentAlias?: string | null;
 };
 
 const EMPTY_VALUES: SendMonthlyExpenseValues = {
   pdfs: [],
 };
 
+type UploadCache = {
+  sendId: string;
+  attachments: ExpenseEmailAttachmentRef[];
+  /** Fingerprint of File list that was uploaded (name+size+lastModified). */
+  filesKey: string;
+};
+
+function filesFingerprint(files: File[]): string {
+  return files.map((file) => `${file.name}:${file.size}:${file.lastModified}`).join("|");
+}
+
+function errorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+  return fallback;
+}
+
 export function SendMonthlyExpenseDialog({
   open,
   onOpenChange,
   consortiumId,
   consortiumName,
-  paymentAlias = null,
   defaultDriveLink = null,
+  paymentAlias = null,
 }: SendMonthlyExpenseDialogProps) {
   const router = useRouter();
+  const createSend = useCreateExpenseEmailSend();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const reservedSendIdRef = useRef<string | null>(null);
+  const uploadCacheRef = useRef<UploadCache | null>(null);
+
   const { data: tenantEmails = [], isLoading: isTenantEmailsLoading } = useTenantEmails(
     open ? consortiumId : "",
   );
@@ -103,8 +107,26 @@ export function SendMonthlyExpenseDialog({
 
   const pdfs = useWatch({ control, name: "pdfs" }) ?? [];
   const linkUrl = defaultDriveLink?.trim() ?? "";
+  const aliasDisplay = paymentAlias?.trim() ?? "";
   const recipientCount = tenantEmails.length;
   const fixedMessage = buildMonthlyExpenseMessage(consortiumName);
+  const attachmentNames = pdfs.map((file) => file.name);
+
+  const {
+    data: previewData,
+    isLoading: isPreviewLoading,
+    isError: isPreviewError,
+  } = useExpenseEmailPreview(
+    {
+      consortiumId,
+      message: fixedMessage,
+      linkUrl,
+      attachmentNames,
+    },
+    { enabled: open },
+  );
+  // tsgo + TanStack `NoInfer` breaks `previewData?.html` property access; unwrap explicitly.
+  const previewHtml = previewData == null ? undefined : (previewData as { html: string }).html;
 
   useEffect(() => {
     if (!open) {
@@ -112,7 +134,16 @@ export function SendMonthlyExpenseDialog({
     }
     reset(EMPTY_VALUES);
     setIsSubmitting(false);
+    reservedSendIdRef.current = null;
+    uploadCacheRef.current = null;
   }, [open, reset]);
+
+  function ensureSendId(): string {
+    if (!reservedSendIdRef.current) {
+      reservedSendIdRef.current = crypto.randomUUID();
+    }
+    return reservedSendIdRef.current;
+  }
 
   function handleClose(nextOpen: boolean) {
     if (isSubmitting) {
@@ -120,27 +151,79 @@ export function SendMonthlyExpenseDialog({
     }
     if (!nextOpen) {
       reset(EMPTY_VALUES);
+      reservedSendIdRef.current = null;
+      uploadCacheRef.current = null;
     }
     onOpenChange(nextOpen);
   }
 
-  async function onSubmit(_values: SendMonthlyExpenseValues) {
+  async function onSubmit(values: SendMonthlyExpenseValues) {
+    if (isSubmitting) {
+      return;
+    }
+
     if (recipientCount === 0) {
       toast.error("No hay emails de inquilinos registrados para este consorcio");
       return;
     }
 
     setIsSubmitting(true);
-    // UI mock: navigate to status screen; real upload/send lands in a later pass.
-    // Message at send time: buildMonthlyExpenseMessage(consortiumName, new Date())
-    const placeholderSendId = crypto.randomUUID();
-    toast.success("Envío iniciado (maqueta)");
-    onOpenChange(false);
-    router.push(`/consorcios/${consortiumId}/envios/${placeholderSendId}`);
+
+    try {
+      const sendId = ensureSendId();
+      const filesKey = filesFingerprint(values.pdfs);
+      let attachmentRefs = uploadCacheRef.current?.attachments;
+
+      const cacheMatches =
+        uploadCacheRef.current &&
+        uploadCacheRef.current.sendId === sendId &&
+        uploadCacheRef.current.filesKey === filesKey;
+
+      if (!cacheMatches) {
+        const uploaded = await uploadExpenseEmailPdfs({
+          consortiumId,
+          sendId,
+          files: values.pdfs,
+        });
+        attachmentRefs = uploaded.attachments;
+        uploadCacheRef.current = {
+          sendId: uploaded.sendId,
+          attachments: uploaded.attachments,
+          filesKey,
+        };
+        reservedSendIdRef.current = uploaded.sendId;
+      }
+
+      if (!attachmentRefs?.length) {
+        throw new Error("No se pudieron subir los PDFs");
+      }
+
+      const result = await createSend.mutateAsync({
+        consortiumId,
+        sendId: reservedSendIdRef.current ?? sendId,
+        recipients: tenantEmails.map((row) => row.email),
+        message: fixedMessage,
+        linkUrl,
+        attachmentRefs,
+      });
+
+      toast.success("Envío iniciado");
+      onOpenChange(false);
+      reservedSendIdRef.current = null;
+      uploadCacheRef.current = null;
+      router.push(`/consorcios/${consortiumId}/envios/${result.sendId}`);
+    } catch (error) {
+      toast.error(errorMessage(error, "No se pudo iniciar el envío"));
+      setIsSubmitting(false);
+    }
   }
 
   const canSubmit =
-    !isSubmitting && !isTenantEmailsLoading && recipientCount > 0 && pdfs.length >= 1;
+    !isSubmitting &&
+    !createSend.isPending &&
+    !isTenantEmailsLoading &&
+    recipientCount > 0 &&
+    pdfs.length >= 1;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -175,12 +258,25 @@ export function SendMonthlyExpenseDialog({
             </p>
           )}
 
+          <dl className="grid gap-3 rounded-lg border border-border bg-muted/20 p-3 text-sm shadow-card">
+            <div className="space-y-1">
+              <dt className="font-medium text-foreground">Mensaje</dt>
+              <dd className="text-muted-foreground">{fixedMessage}</dd>
+            </div>
+            <div className="space-y-1">
+              <dt className="font-medium text-foreground">Link del drive</dt>
+              <dd className="break-all text-muted-foreground">{linkUrl || "—"}</dd>
+            </div>
+            <div className="space-y-1">
+              <dt className="font-medium text-foreground">Alias de cobro</dt>
+              <dd className="text-muted-foreground">{aliasDisplay || "—"}</dd>
+            </div>
+          </dl>
+
           <ExpenseEmailPreview
-            consortiumName={consortiumName}
-            paymentAlias={paymentAlias}
-            message={fixedMessage}
-            linkUrl={linkUrl}
-            attachmentNames={pdfs.map((file) => file.name)}
+            html={previewHtml}
+            isLoading={isPreviewLoading && !previewHtml}
+            isError={isPreviewError}
           />
 
           <DialogFooter>
@@ -193,7 +289,7 @@ export function SendMonthlyExpenseDialog({
               Cancelar
             </Button>
             <Button type="submit" disabled={!canSubmit || formState.isSubmitting}>
-              {isSubmitting ? "Iniciando…" : "Enviar"}
+              {isSubmitting ? "Enviando…" : "Enviar"}
             </Button>
           </DialogFooter>
         </form>
@@ -203,73 +299,41 @@ export function SendMonthlyExpenseDialog({
 }
 
 type ExpenseEmailPreviewProps = {
-  consortiumName: string;
-  paymentAlias?: string | null;
-  message: string;
-  linkUrl: string;
-  attachmentNames: string[];
+  html?: string;
+  isLoading: boolean;
+  isError: boolean;
 };
 
-function ExpenseEmailPreview({
-  consortiumName,
-  paymentAlias,
-  message,
-  linkUrl,
-  attachmentNames,
-}: ExpenseEmailPreviewProps) {
-  const alias = paymentAlias?.trim();
-
+function ExpenseEmailPreview({ html, isLoading, isError }: ExpenseEmailPreviewProps) {
   return (
     <div className="grid gap-2">
       <p className="text-sm font-medium text-foreground">Vista previa del correo</p>
-      <div className="rounded-lg border border-border bg-muted/20 p-4 shadow-card">
-        <p className="font-mono text-[10px] tracking-wide text-muted-foreground uppercase">
-          Asunto · Expensa Mensual
-        </p>
-        <div className="mt-3 space-y-3 rounded-md border border-border bg-card p-4">
-          <p className="text-sm text-muted-foreground">
-            Administración de <span className="text-foreground">{consortiumName.trim()}</span>
+      <div className="overflow-hidden rounded-lg border border-border bg-muted/20 shadow-card">
+        {isLoading ? (
+          <p className="p-4 text-sm text-muted-foreground">Cargando vista previa…</p>
+        ) : isError ? (
+          <p className="p-4 text-sm text-destructive">
+            No se pudo cargar la vista previa del correo.
           </p>
-          <p className="whitespace-pre-wrap text-sm text-foreground">{message}</p>
-          {alias || linkUrl ? (
-            <div className="space-y-2 border-t border-border pt-3">
-              <p className="text-xs font-medium text-muted-foreground">
-                A continuación dejamos información relevante:
-              </p>
-              {alias ? (
-                <p className="text-sm">
-                  <span className="text-muted-foreground">Alias de cobro: </span>
-                  <span className="text-foreground">{alias}</span>
-                </p>
-              ) : null}
-              {linkUrl ? (
-                <p className="text-sm">
-                  <span className="text-muted-foreground">Link: </span>
-                  <span className="break-all text-primary underline underline-offset-2">
-                    {linkUrl}
-                  </span>
-                </p>
-              ) : null}
-            </div>
-          ) : null}
-          {attachmentNames.length > 0 ? (
-            <div>
-              <p className="text-xs font-medium text-muted-foreground">Adjuntos</p>
-              <ul className="mt-1 list-inside list-disc text-sm text-foreground">
-                {attachmentNames.map((name) => (
-                  <li key={name}>{name}</li>
-                ))}
-              </ul>
-            </div>
-          ) : (
-            <p className="text-xs text-muted-foreground">Los PDFs adjuntos se listarán acá.</p>
-          )}
-        </div>
+        ) : html ? (
+          <iframe
+            title="Vista previa del correo de expensa mensual"
+            srcDoc={html}
+            sandbox=""
+            className="h-[22rem] w-full border-0 bg-card"
+          />
+        ) : (
+          <p className="p-4 text-sm text-muted-foreground">
+            La vista previa aparecerá cuando el correo esté listo.
+          </p>
+        )}
       </div>
       <p className="text-xs text-muted-foreground">
-        Esto es una previsualización: el email irá con el estilo y la estructura de la plantilla
-        realizada.
+        Misma plantilla que el correo real (saludo fijo Vecino/a, mensaje del mes, link, alias y
+        PDFs).
       </p>
     </div>
   );
 }
+
+export { buildMonthlyExpenseMessage };

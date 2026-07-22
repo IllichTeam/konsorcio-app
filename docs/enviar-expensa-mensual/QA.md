@@ -11,7 +11,7 @@ Antes de firmar el MVP: leer el SPEC y la [revisión crítica](./ADVERSARIAL-REV
 **Sí entra en QA del MVP**
 
 - El dialog “Enviar expensa mensual”
-- Elegir destinatarios, comentario, link, PDFs (1–3 × ≤5 MB), contador, preview (mismo template)
+- Destinatarios = todos los activos, mensaje automático, link/alias readonly, PDFs (1–3 × ≤5 MB), contador, preview (mismo template)
 - Que los mails lleguen con asunto `Expensa Mensual`, saludo `Vecino/a` y los PDFs
 - Pantalla de estado en `/consorcios/[id]/envios/[envioId]` y **Reintentar pendientes**
 - Historial de expensas **dentro del consorcio**
@@ -34,12 +34,16 @@ Prepará esto:
 2. `EMAIL_FROM` configurado
 3. `EMAIL_OVERRIDE_TO` = **tu** mail de prueba (obligatorio mientras el dominio no esté verificado)
 4. Demo mode **apagado** (`NEXT_PUBLIC_DEMO_MODE` no en `true`) — si no, no ves el botón
-5. Bucket de Storage **privado** listo (retención 60 días documentada)
-6. Un consorcio de prueba con:
+5. Bucket de Storage **privado** `expense-emails` listo (retención 60 días documentada en [STORAGE.md](./STORAGE.md); cleanup manual)
+6. `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` solo en secretos de servidor
+7. Migración `0010` aplicada (tablas `expense_email_sends` / `expense_email_recipients`)
+8. Un consorcio de prueba con:
    - al menos 3 emails de inquilinos activos
    - preferible uno **con** email de facturación y otro **sin**
    - preferible con link de Drive cargado
-7. Confirmar que “Enviar comentario” y Notificaciones andan **antes** de tocar este feature (línea base)
+9. Confirmar que “Enviar comentario” y Notificaciones andan **antes** de tocar este feature (línea base)
+
+Detalle de env / bucket / cleanup: [STORAGE.md](./STORAGE.md).
 
 ---
 
@@ -49,23 +53,23 @@ Cada ítem es un “sí/no”. Los IDs (`AC-01`…) sirven para anotar en PRs o 
 
 ### Dialog y formulario
 
-| ID    | ¿Qué tiene que pasar?                                                                                                                  |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| AC-01 | El botón **Enviar expensa mensual** abre el dialog (ya no es un botón vacío).                                                          |
-| AC-02 | Con demo mode activo, ese botón **no** aparece.                                                                                        |
-| AC-03 | El selector de destinatarios se comporta igual que en “Enviar comentario” (uno / varios / todos) y solo lista emails de ese consorcio. |
-| AC-04 | Se ve un texto tipo “Se enviará a N personas” acorde a la selección.                                                                   |
-| AC-05 | Sin comentario no se puede enviar (botón deshabilitado o error en español).                                                            |
-| AC-06 | Si el consorcio tiene link de Drive, el campo link viene precargado y se puede editar.                                                 |
-| AC-07 | Se puede borrar el link y igual enviar; el mail no muestra el botón/enlace.                                                            |
-| AC-08 | Un link inválido (texto que no es URL) muestra error y no envía.                                                                       |
-| AC-09 | Un archivo que no es PDF se rechaza con mensaje claro.                                                                                 |
-| AC-10 | Un PDF de más de 5 MB se rechaza.                                                                                                      |
-| AC-11 | Más de **3** PDFs se rechaza (cliente y servidor).                                                                                     |
-| AC-12 | **≥1 PDF obligatorio:** sin PDF no envía (CTA disabled + rechazo server).                                                              |
-| AC-13 | El preview usa el **mismo template** que el mail real (comentario, link si hay, nombres de PDFs, saludo `Vecino/a`).                   |
-| AC-14 | El asunto del mail es **`Expensa Mensual`** (no hay campo asunto en la UI).                                                            |
-| AC-15 | Mientras sube o envía, el botón no se puede spamear; doble pulsación **no** crea dos envíos.                                           |
+| ID    | ¿Qué tiene que pasar?                                                                                                                 |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| AC-01 | El botón **Enviar expensa mensual** abre el dialog (ya no es un botón vacío).                                                         |
+| AC-02 | Con demo mode activo, ese botón **no** aparece.                                                                                       |
+| AC-03 | El dialog envía siempre a **todos** los emails activos del consorcio (sin selector parcial uno/varios).                               |
+| AC-04 | Se ve un texto tipo “Se enviará a N personas” con N = cantidad de emails activos.                                                     |
+| AC-05 | El mensaje es **automático** (mes/año); no hay textarea editable.                                                                     |
+| AC-06 | Si el consorcio tiene link de Drive, se muestra en solo lectura (no se edita en el dialog).                                           |
+| AC-07 | Si no hay link de Drive, se puede enviar igual; el mail no muestra el enlace.                                                         |
+| AC-08 | El alias de cobro (si existe) aparece en la preview del template; es solo lectura.                                                    |
+| AC-09 | Un archivo que no es PDF se rechaza con mensaje claro.                                                                                |
+| AC-10 | Un PDF de más de 5 MB se rechaza.                                                                                                     |
+| AC-11 | Más de **3** PDFs se rechaza (cliente y servidor).                                                                                    |
+| AC-12 | **≥1 PDF obligatorio:** sin PDF no envía (CTA disabled + rechazo server).                                                             |
+| AC-13 | El preview usa el **mismo template** que el mail real (mensaje, link si hay, alias, nombres de PDFs, saludo `Vecino/a` una sola vez). |
+| AC-14 | El asunto del mail es **`Expensa Mensual`** (no hay campo asunto en la UI).                                                           |
+| AC-15 | Mientras sube o envía, el botón no se puede spamear; doble pulsación **no** crea dos envíos.                                          |
 
 ### Correo (Resend)
 
@@ -127,7 +131,7 @@ Cada ítem es un “sí/no”. Los IDs (`AC-01`…) sirven para anotar en PRs o 
 
 1. Entrá con un usuario que administre el consorcio de prueba.
 2. Confirmá que el override apunta a tu mail.
-3. Abrí el dialog → elegí todos → escribí comentario → adjuntá 1 o 2 PDFs chicos → mirá el preview (saludo `Vecino/a`) → Enviar.
+3. Abrí el dialog → confirmá que va a todos → adjuntá 1 o 2 PDFs chicos → mirá el preview (saludo `Vecino/a` una sola vez, mensaje del mes, alias/link) → Enviar.
 4. Deberías ir **al toque** a `/consorcios/…/envios/…` y terminar en “enviado” (progreso se actualiza solo).
 5. En tu inbox: un mail por destinatario, asunto `Expensa Mensual` (con `[para: …]` si override), PDFs abribles, Reply-To = email del consorcio, link en el cuerpo si lo pusiste.
 6. El historial **del consorcio** muestra este envío.
@@ -138,13 +142,11 @@ Cubre sobre todo: AC-01, 04, 06, 13–17, 19–28, 38.
 
 | Probá esto                   | Resultado esperado |
 | ---------------------------- | ------------------ |
-| Ningún destinatario          | No envía           |
-| Comentario vacío             | No envía           |
+| Ningún destinatario activo   | No envía           |
 | Archivo .png / .docx         | Rechazo claro      |
 | PDF > 5 MB                   | Rechazo claro      |
 | 4 PDFs                       | Rechazo claro      |
 | 0 PDFs                       | No envía (AC-12)   |
-| Link inventado (“hola”)      | Error de URL       |
 | Doble click rápido en Enviar | Un solo envío      |
 
 ### Fallo parcial + reintento
@@ -167,7 +169,7 @@ Cubre sobre todo: AC-01, 04, 06, 13–17, 19–28, 38.
 
 ### Preview
 
-- Cambiá comentario / link / nombres de PDF → el preview se actualiza y coincide con el mail que llega (mismo template; saludo `Vecino/a`).
+- Cambiá los PDFs adjuntos → el preview se actualiza (nombres) y coincide con el mail que llega (mismo template; saludo `Vecino/a` una sola vez; mensaje automático del mes).
 
 ### Historial
 
@@ -187,14 +189,14 @@ Cubre sobre todo: AC-01, 04, 06, 13–17, 19–28, 38.
 | Situación                               | Esperado                                                                           |
 | --------------------------------------- | ---------------------------------------------------------------------------------- |
 | Consorcio sin email de facturación      | Envía OK; sin Reply-To                                                             |
-| Consorcio sin Drive                     | Campo link vacío; se puede enviar sin link                                         |
+| Consorcio sin Drive                     | Link vacío / oculto en mail; se puede enviar sin link                              |
 | Sin ningún PDF                          | No envía (AC-12)                                                                   |
 | 3 PDFs de ~5 MB                         | Acepta; 4.º se rechaza                                                             |
-| Un solo destinatario                    | Contador 1; un mail; estado enviado                                                |
+| Un solo destinatario activo             | Contador 1; un mail; estado enviado                                                |
 | ~50 destinatarios                       | Termina o se puede recuperar con Reintentar pendientes; no deja datos incoherentes |
 | Corte a mitad de envío                  | No marca todo como enviado; se pueden reintentar pendientes                        |
 | Subís PDFs y cancelás el dialog         | No se crea envío; pueden quedar archivos huérfanos (aceptable si está documentado) |
-| Inquilino borrado (soft delete)         | No aparece en el selector                                                          |
+| Inquilino borrado (soft delete)         | No entra en el set “Todos”                                                         |
 | Spam al botón reintentar / enviar       | No duplica mails de más; botón deshabilitado mientras corre                        |
 | Nombre de PDF raro (acentos, muy largo) | No rompe el mail                                                                   |
 
@@ -217,7 +219,7 @@ Cubre sobre todo: AC-01, 04, 06, 13–17, 19–28, 38.
 **Decisiones / docs**
 
 - [x] SPEC: C1, C2, C3, C4, C5, C6 y menores aplicados (2026-07-21)
-- [ ] Bucket y variables de entorno documentados en esta carpeta
+- [x] Bucket y variables de entorno documentados en esta carpeta ([STORAGE.md](./STORAGE.md))
 
 **Funcional**
 
