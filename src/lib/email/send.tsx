@@ -7,7 +7,7 @@ import { NotificacionConsorcio } from "@/emails/notificacion-consorcio";
 
 import { getResendClient } from "./client";
 import { isEmailToOverridden, resolveEmailTo } from "./resolve-to";
-import type { Recipient, SendEmailInput, SendEmailResult } from "./types";
+import type { Recipient, SendEmailParams, SendEmailResult } from "./types";
 
 /** Resend's batch API accepts at most this many emails per request. */
 const BATCH_SIZE_LIMIT = 100;
@@ -40,6 +40,7 @@ async function buildBatchEmail(
   body: string,
   consortium?: string,
   sender?: string,
+  replyTo?: string,
 ) {
   const html = await render(
     <NotificacionConsorcio
@@ -57,6 +58,7 @@ async function buildBatchEmail(
     to: [resolveEmailTo(recipient.email)],
     subject: resolvedSubject,
     html,
+    ...(replyTo ? { reply_to: replyTo } : {}),
   };
 }
 
@@ -69,8 +71,8 @@ async function buildBatchEmail(
  * transient error affecting one chunk doesn't prevent delivery to the rest
  * of the recipients.
  */
-export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult> {
-  const { subject, body, recipients, consortium, sender } = input;
+export async function sendEmail(input: SendEmailParams): Promise<SendEmailResult> {
+  const { subject, body, recipients, consortium, sender, replyTo } = input;
 
   if (recipients.length === 0) {
     return { status: "failed", sent: 0, failed: 0, resendIds: [], error: "No recipients" };
@@ -84,7 +86,7 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
     try {
       const batchEmails = await Promise.all(
         recipientChunk.map((recipient) =>
-          buildBatchEmail(recipient, subject, body, consortium, sender),
+          buildBatchEmail(recipient, subject, body, consortium, sender, replyTo),
         ),
       );
 

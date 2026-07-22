@@ -176,6 +176,64 @@ describe("sendEmail", () => {
     expect(batchEmails[1].subject).toBe("[para: user-1@example.com] Recordatorio");
   });
 
+  it("includes `reply_to` on every batch email when `replyTo` is set", async () => {
+    sendMock.mockImplementation(async (batchEmails: unknown[]) => ({
+      data: { data: batchEmails.map((_, index) => ({ id: `id-${index}` })) },
+      error: null,
+    }));
+
+    const recipients = makeRecipients(2);
+    await sendEmail({
+      subject: "Hola",
+      body: "Cuerpo",
+      recipients,
+      replyTo: "admin@example.com",
+    });
+
+    const batchEmails = sendMock.mock.calls[0][0] as Array<{ reply_to?: string }>;
+    expect(batchEmails).toHaveLength(2);
+    expect(batchEmails.every((email) => email.reply_to === "admin@example.com")).toBe(true);
+  });
+
+  it("omits `reply_to` from batch emails when `replyTo` is not provided", async () => {
+    sendMock.mockImplementation(async (batchEmails: unknown[]) => ({
+      data: { data: batchEmails.map((_, index) => ({ id: `id-${index}` })) },
+      error: null,
+    }));
+
+    const recipients = makeRecipients(2);
+    await sendEmail({ subject: "Hola", body: "Cuerpo", recipients });
+
+    const batchEmails = sendMock.mock.calls[0][0] as Array<{ reply_to?: string }>;
+    expect(batchEmails).toHaveLength(2);
+    expect(batchEmails.every((email) => !("reply_to" in email))).toBe(true);
+  });
+
+  it("keeps `reply_to` when EMAIL_OVERRIDE_TO redirects `to`", async () => {
+    mockEnv.EMAIL_OVERRIDE_TO = "illich570@gmail.com";
+
+    sendMock.mockImplementation(async (batchEmails: unknown[]) => ({
+      data: { data: batchEmails.map((_, index) => ({ id: `id-${index}` })) },
+      error: null,
+    }));
+
+    const recipients = makeRecipients(2);
+    await sendEmail({
+      subject: "Recordatorio",
+      body: "Cuerpo",
+      recipients,
+      replyTo: "admin@example.com",
+    });
+
+    const batchEmails = sendMock.mock.calls[0][0] as Array<{
+      to: string[];
+      reply_to?: string;
+    }>;
+    expect(batchEmails[0].to).toEqual(["illich570@gmail.com"]);
+    expect(batchEmails[1].to).toEqual(["illich570@gmail.com"]);
+    expect(batchEmails.every((email) => email.reply_to === "admin@example.com")).toBe(true);
+  });
+
   it("collects ids and reports 'sent' when every chunk succeeds", async () => {
     sendMock.mockResolvedValue({
       data: { data: [{ id: "id-a" }, { id: "id-b" }] },
