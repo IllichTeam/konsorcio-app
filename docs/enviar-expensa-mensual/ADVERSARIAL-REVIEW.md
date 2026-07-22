@@ -1,55 +1,46 @@
 # Revisión crítica — Enviar expensa mensual
 
-Documento para **humanos**: qué está mal o incompleto en el SPEC/PLAN, por qué importa, y qué hay que decidir antes de codear.
+Documento para **humanos**: qué estaba mal o incompleto en el SPEC/PLAN, por qué importa, y qué se decidió antes de codear.
 
-Fecha: 2026-07-21 · Todavía no hay código del feature.
+Fecha: 2026-07-21 · Todavía no hay código del feature.  
+**Actualizado:** 2026-07-21 — todas las decisiones abiertas quedaron cerradas.
 
 ---
 
 ## ¿Se puede empezar a programar?
 
-**Todavía no del todo.** La idea del producto está clara y reutiliza bien lo que ya existe (Resend, emails de inquilinos, modal de comentario). Pero hay **varias decisiones abiertas** que, si no se cierran, cada quien va a implementar algo distinto.
-
-Hay que cerrar al menos los puntos **C1, C2 y C5** (y C6 de storage) antes de tocar la base de datos (Fase 0). **C3 y C4 ya están cerrados.**
+**Sí.** C1–C6 y los puntos menores están cerrados. Siguiente paso: **Fase 0** (schema + bucket Storage).
 
 ---
 
-## Problemas críticos (decidir antes de codear)
+## Problemas críticos (cerrados)
 
-### C1 — ¿Quién manda los correos: la pantalla “espera” o trabaja en segundo plano?
+### C1 — ¿Quién manda los correos: la pantalla “espera” o trabaja en segundo plano? ✅ Cerrado
 
-**En criollo:** Cuando apretás “Enviar”, ¿la app se queda pensando hasta mandar los 50 mails, o te lleva ya a una pantalla de progreso y sigue mandando atrás?
-
-Hoy el SPEC mezcla las dos ideas (a veces dice “devolver el id y navegar”, a veces “hacer el envío en el mismo pedido HTTP”). Son comportamientos distintos.
-
-| Opción                                                    | Qué ve el usuario                       | Riesgo                                                                             |
-| --------------------------------------------------------- | --------------------------------------- | ---------------------------------------------------------------------------------- |
-| A — Esperar en el dialog hasta terminar                   | Spinner largo; al final “listo” o error | Con 50 mails + PDFs el servidor puede cortar a los 60s y **no sabés qué se mandó** |
-| B — Crear el envío, ir a “estado”, y mandar en background | Ves progreso / fallidos al toque        | Hay que programar ese “background” bien (recomendado)                              |
-
-**Decisión recomendada:** opción B.
+**Decisión (2026-07-21):** **opción B** — crear el envío, ir a “estado”, y mandar en background.
 
 1. El servidor guarda el envío y la lista de destinatarios.
 2. Devuelve un id al toque.
 3. La UI abre la pantalla de estado y va actualizando sola.
 4. Los mails se mandan en segundo plano (no dependen de que el browser tenga el dialog abierto).
-5. Si el servidor se cae a mitad: quedan destinatarios “pendientes” y se puede **continuar / reintentar**.
+5. Si el servidor se cae a mitad: quedan destinatarios “pendientes” y se puede **reintentar pendientes**.
+
+| Opción                                                           | Qué ve el usuario                       | Riesgo                                                                             |
+| ---------------------------------------------------------------- | --------------------------------------- | ---------------------------------------------------------------------------------- |
+| A — Esperar en el dialog hasta terminar                          | Spinner largo; al final “listo” o error | Con 50 mails + PDFs el servidor puede cortar a los 60s y **no sabés qué se mandó** |
+| **B — Crear el envío, ir a “estado”, y mandar en background** ✅ | Ves progreso / fallidos al toque        | Hay que programar ese “background” bien                                            |
 
 ---
 
-### C2 — ¿Tablas nuevas o reusar el log de notificaciones?
+### C2 — ¿Tablas nuevas o reusar el log de notificaciones? ✅ Cerrado
 
-**En criollo:** ¿Dónde guardamos “este envío de expensa del consorcio X, a estas personas, con este resultado”?
+**Decisión (2026-07-21):** **opción A** — tablas nuevas solo para expensas, **vinculadas a cada consorcio/envío**.
 
-Hoy existe `email_log` (notificaciones / comentarios). Ese log:
+- `expense_email_sends` + `expense_email_recipients`
+- Ligadas a `consortium_id` / `send_id`
+- Dejar `email_log` como está (notificaciones / comentarios)
 
-- no está ligado a un consorcio,
-- no guarda el estado **por persona** (solo una lista),
-- no alcanza para “reenviar solo los que fallaron”.
-
-El SPEC deja dos caminos abiertos (A = tablas nuevas, B = adaptar el log viejo).
-
-**Decisión recomendada:** tablas nuevas solo para expensas (`expense_email_sends` + `expense_email_recipients`). Dejar el log viejo como está para notificaciones y comentarios.
+El log viejo no alcanza: no está ligado a un consorcio, no guarda estado por persona, no sirve para reintentar solo pendientes/fallidos.
 
 ---
 
@@ -71,55 +62,43 @@ El SPEC deja dos caminos abiertos (A = tablas nuevas, B = adaptar el log viejo).
 | -------------------- | ----------------------- |
 | `EMAIL_TO_OVERRIDE`  | `EMAIL_OVERRIDE_TO`     |
 
-Corregido en SPEC. QA/PLAN ya usaban el nombre bueno.
+---
+
+### C5 — ¿Cuántos PDFs y de qué tamaño? ✅ Cerrado
+
+**Decisión (2026-07-21):**
+
+- Máximo **3 PDFs** por envío.
+- Máximo **5 MB por archivo**.
+- Con 3 × 5 MB = 15 MB en crudo queda bajo el techo de Resend (~40 MB after Base64).
+- Si se pasa: error claro en español **antes** de crear el envío (cliente + servidor).
 
 ---
 
-### C5 — ¿Cuántos PDFs y de qué tamaño total?
+### C6 — Cómo se suben los PDFs a Supabase (seguridad) ✅ Cerrado
 
-**En criollo:** Resend no acepta un mail “infinito”. El límite real es ~**40 MB** del mensaje **después** de codificar los adjuntos (eso infla el tamaño ~33%).
+**Decisión (2026-07-21):** **Supabase Storage**, bucket **privado** (MVP).
 
-Si permitimos 10 PDFs de 5 MB cada uno → 50 MB en crudo → se pasa del límite y Resend rechaza el envío.
-
-Hoy: el SPEC no fija cantidad máxima; el PLAN sugiere “hasta 10” sin mirar ese techo.
-
-**Decisión recomendada:**
-
-- Máximo **5 PDFs** por envío.
-- Máximo **5 MB por archivo** (ya acordado).
-- Además, la **suma** de todos los PDFs no puede pasar ~**25 MB** en crudo (margen de seguridad bajo el límite de Resend).
-- Si se pasa: error claro en español **antes** de crear el envío.
-
----
-
-### C6 — Cómo se suben los PDFs a Supabase (seguridad)
-
-**En criollo:** Los PDFs tienen que vivir un rato en Supabase para que Resend los pueda bajar. Mal configurado = cualquiera con el link ve liquidaciones, o el browser no puede subir, o Resend no puede leer el archivo.
-
-Todavía no hay bucket ni reglas en el repo.
-
-**Decisión recomendada (MVP):**
-
-- Bucket **privado**.
 - Subida preferentemente por una **ruta del servidor** (el browser no habla directo con claves peligrosas).
-- Carpetas del estilo: `expense-emails/{id-consorcio}/{id-envio}/archivo.pdf`.
-- Los links que usa Resend deben durar **todo** el envío (si el link vence a los 60s y mandás 50 mails, fallan a mitad).
-- Nunca mandar la “service role” key al navegador.
+- Carpetas: `expense-emails/{consortiumId}/{sendId}/archivo.pdf`.
+- Links firmados con duración suficiente para **todo** el envío (no 60s).
+- Nunca mandar la service role key al navegador.
+- Retención: **60 días** (ver punto menor 7).
 
 ---
 
-## Cosas menores pero conviene cerrarlas
+## Cosas menores ✅ Cerradas
 
-| #   | Tema                                | Pregunta simple                                          | Sugerencia                                                  |
-| --- | ----------------------------------- | -------------------------------------------------------- | ----------------------------------------------------------- |
-| 1   | Asunto del mail                     | ¿`Expensas Mensual` está bien o preferís otra redacción? | Ej. `Expensa mensual`                                       |
-| 2   | URL de la pantalla de estado        | ¿`/envios/` o `/expensas/`?                              | `/consorcios/[id]/envios/[envioId]`                         |
-| 3   | Nombre del destinatario             | En la DB no hay “nombre”; hay unidad (depto)             | Igual que en comentario: mostrar la unidad                  |
-| 4   | ¿Se puede apretar Enviar dos veces? | Evitar dos envíos iguales                                | Deshabilitar botón + ignorar duplicado corto                |
-| 5   | Reintentar vs continuar             | Falló vs se cortó el servidor                            | “Reenviar fallidos” ≠ “Continuar pendientes” (ambos útiles) |
-| 6   | Preview del mail                    | ¿De dónde sale el HTML?                                  | Mismo template que el mail real (server)                    |
-| 7   | ¿Cuánto tiempo guardamos los PDFs?  | 90 días vs para siempre                                  | 90 días, o mientras exista el registro del envío            |
-| 8   | Historial                           | ¿Aparece en Notificaciones admin?                        | No: historial de expensa vive en el consorcio               |
+| #   | Tema                                | Decisión (2026-07-21)                                                               |
+| --- | ----------------------------------- | ----------------------------------------------------------------------------------- |
+| 1   | Asunto del mail                     | **`Expensa Mensual`**                                                               |
+| 2   | URL de la pantalla de estado        | **`/consorcios/[id]/envios/[envioId]`**                                             |
+| 3   | Nombre del destinatario             | Ni nombre ni unidad: saludo fijo **`Vecino/a`**                                     |
+| 4   | ¿Se puede apretar Enviar dos veces? | No: deshabilitar CTA + validar con cautela la doble pulsación (no crear dos envíos) |
+| 5   | Reintentar vs continuar             | Una sola acción UI: **`Reintentar pendientes`** (cubre fallidos y pendientes)       |
+| 6   | Preview del mail                    | Sale del **mismo template** que el mail real (server)                               |
+| 7   | ¿Cuánto tiempo guardamos los PDFs?  | **60 días**                                                                         |
+| 8   | Historial                           | Vive **dentro de cada consorcio** (no en Notificaciones admin)                      |
 
 ---
 
@@ -147,7 +126,7 @@ Todavía no hay bucket ni reglas en el repo.
 - Remitente de la plataforma + **Responder a** el mail del consorcio (no fingir ser un Gmail ajeno).
 - Con PDFs: un mail por persona (Resend no deja adjuntos en envío batch).
 - PDFs en Storage, no en Postgres.
-- Guardar resultado **por persona** para reintentar solo fallidos.
+- Guardar resultado **por persona** para reintentar solo pendientes/fallidos.
 - Mismo tipo de selector de destinatarios que el comentario.
 - Template de mail **nuevo** (no romper el de notificaciones).
 - En modo demo el botón no se muestra (ya está).
@@ -155,25 +134,12 @@ Todavía no hay bucket ni reglas en el repo.
 
 ---
 
-## Cambios concretos que deberían hacerse al SPEC/PLAN
+## Cambios aplicados al SPEC/PLAN
 
-Cuando apruebes las decisiones de arriba, actualizar docs así:
-
-1. Flujo = devolver id + envío en background + pantalla que actualiza sola. _(pendiente C1)_
-2. Tablas = opción A (nuevas), sin mezclar con `email_log`. _(pendiente C2)_
-3. ✅ Al menos 1 PDF _(C3 cerrado)_. Pendiente: máximo 5 + suma ≤ ~25 MB _(C5)_.
-4. ✅ Variable `EMAIL_OVERRIDE_TO` _(C4 cerrado)_.
-5. Documentar bucket privado + subida por servidor + duración de links. _(pendiente C6)_
-6. Fijar asunto final y ruta `/envios/`.
-7. Decidir retención de PDFs (90 días o mientras exista el envío).
-
----
-
-## Orden sugerido para decidir (reunión corta)
-
-1. C1 — ¿Background + pantalla de estado? (sí/no)
-2. C2 — ¿Tablas nuevas? (sí → A)
-3. ~~C3 +~~ C5 — topes de cantidad/tamaño de PDFs _(C3 ya cerrado: ≥1)_
-4. ~~C4 — corregir nombre de env~~ ✅
-5. C6 — subida por servidor + bucket privado
-6. Asunto del mail + URL `/envios/`
+1. ✅ Flujo = devolver id + envío en background + pantalla que actualiza sola _(C1)_
+2. ✅ Tablas = opción A (nuevas), ligadas a consorcio/envío, sin mezclar con `email_log` _(C2)_
+3. ✅ Al menos 1 PDF; máximo **3** × **5 MB** _(C3 + C5)_
+4. ✅ Variable `EMAIL_OVERRIDE_TO` _(C4)_
+5. ✅ Bucket privado Supabase + subida por servidor + retención 60 días _(C6 + menor 7)_
+6. ✅ Asunto `Expensa Mensual`; ruta `/consorcios/[id]/envios/[envioId]`
+7. ✅ Saludo `Vecino/a`; CTA `Reintentar pendientes`; preview = mismo template; historial en el consorcio; anti doble-click

@@ -4,16 +4,18 @@ Construcción por partes. Cada fase debe dejar el repo usable (sin romper notifi
 
 Dependencias de skills al implementar: `vercel-react-best-practices`, `drizzle`, `supabase-postgres-best-practices`. Forms: `react-hook-form` + zod + wrappers en `src/components/form/`. Data: tRPC + TanStack Query. UI ES / código EN.
 
+Decisiones cerradas (ver SPEC §10 / ADVERSARIAL-REVIEW): C1 background + poll, C2 tablas nuevas ligadas al consorcio, C5 máx 3×5 MB, C6 Supabase privado 60 días, asunto `Expensa Mensual`, ruta `/envios/`, saludo `Vecino/a`, CTA `Reintentar pendientes`.
+
 ---
 
 ## Fase 0 — Foundation (schema + types)
 
 **Goal:** modelo de datos listo sin UI.
 
-- Decidir Opción A (`expense_email_sends` + `expense_email_recipients`) vs evolucionar `email_log` (§5 SPEC). Preferir A si queremos no ensuciar el log de notificaciones admin.
+- Tablas **opción A** (cerrada): `expense_email_sends` + `expense_email_recipients`, con `consortium_id` / `send_id`. No tocar `email_log`.
 - Migración Drizzle + tipos Zod en `src/lib/schemas/`.
-- Bucket Supabase Storage (privado) + policies mínimas (upload/read solo server / signed URLs).
-- Extender `email_log` solo si se elige B; si A, dejar notificaciones como están.
+- Bucket Supabase Storage **privado** + policies mínimas (upload/read solo server / signed URLs). Path: `expense-emails/{consortiumId}/{sendId}/…`. Retención documentada: **60 días**.
+- Dejar notificaciones/comentarios como están.
 
 **Done when:** `pnpm drizzle-kit` migrate OK; schemas exportados; bucket existe en doc de env.
 
@@ -23,9 +25,10 @@ Dependencias de skills al implementar: `vercel-react-best-practices`, `drizzle`,
 
 **Goal:** poder mandar 1 mail de prueba con PDF vía código server, sin dialog final.
 
-- Template nuevo `expensa-mensual.tsx` (+ preview `pnpm email`).
+- Template nuevo `expensa-mensual.tsx` (+ preview `pnpm email`): saludo **`Vecino/a`**, comentario, link, nombres de adjuntos.
 - Función `sendExpenseEmail` (o generalizar `send` con branch attachments):
   - `emails.send` (no batch).
+  - subject fijo **`Expensa Mensual`** (+ `[para: …]` si override).
   - `reply_to` desde billingEmail.
   - `attachments: [{ path, filename }]`.
   - `resolveEmailTo` / override.
@@ -40,27 +43,29 @@ Dependencias de skills al implementar: `vercel-react-best-practices`, `drizzle`,
 
 **Goal:** admin puede poner archivos en Storage sin pasar multi-MB por tRPC JSON.
 
-- Signed upload (client → Supabase) o route `POST` multipart server-side.
-- Validación: ≥1 PDF al enviar; PDF MIME; ≤ 5 MB c/u; cantidad máxima pendiente de C5 (propuesta review: ≤5 + Σ ~25 MB).
+- Route `POST` multipart **server-side** (preferido; bucket privado).
+- Validación: **≥1 y ≤3** PDFs; PDF MIME; ≤ **5 MB** c/u.
 - Devolver `{ storagePath, filename, sizeBytes }[]` al form.
 
-**Done when:** upload de 2 PDFs de <5MB funciona en local; rechazo de 0 PDFs al submit, >5MB y non-PDF.
+**Done when:** upload de 2 PDFs de <5MB funciona en local; rechazo de 0 PDFs, >3 PDFs, >5MB y non-PDF.
 
 ---
 
-## Fase 3 — tRPC send + runner sync
+## Fase 3 — tRPC send + runner background
 
-**Goal:** mutation crea job, fan-out, persiste per-recipient.
+**Goal:** mutation crea job, responde `sendId`, fan-out en background, persiste per-recipient.
 
 - `consortiums.sendMonthlyExpense` (o router `expenseEmails.send`):
   - input: consortiumId, recipients, message, link?, attachmentRefs.
-  - subject fijo.
-  - insert send + recipients → return `sendId`.
-  - runner sync en la mutation **o** fire-and-continue con `waitUntil` si hace falta no bloquear — preferir: mutation arranca envío y cliente polléa (si timeout, filas quedan `pending`/`failed` recuperables).
-- `getSend` + `retryFailed`.
+  - subject fijo `Expensa Mensual`.
+  - insert send + recipients → **return `sendId` de inmediato**.
+  - runner en background (`waitUntil` / fire-and-continue); cliente polléa estado.
+  - Si timeout/corte: filas quedan `pending`/`failed` recuperables.
+- `getSend` + `retryPending` (CTA **Reintentar pendientes**: `pending` + `failed`; no reenviar `sent`).
+- Anti-duplicado cauteloso en submit (no dos envíos por doble click).
 - `maxDuration` en route handlers relevantes.
 
-**Done when:** llamar mutation con 2–3 recipients mock → filas `sent`/`failed` coherentes; retry solo falla.
+**Done when:** llamar mutation con 2–3 recipients mock → UI puede pollar; filas `sent`/`failed` coherentes; retry solo pendientes/fallidos.
 
 ---
 
@@ -70,12 +75,14 @@ Dependencias de skills al implementar: `vercel-react-best-practices`, `drizzle`,
 
 - Componente dominio `send-monthly-expense-dialog.tsx` (o similar).
 - Reusar patrón selector del modal de comentario.
-- Form wrappers; contador X personas; link default driveLink.
-- Preview (render server action o HTML precomputado / iframe `srcDoc`).
+- Form wrappers; contador X personas; link default driveLink; máx 3 PDFs.
+- Preview: HTML del **mismo template** (server) — no HTML paralelo.
+- CTA Enviar: disabled mientras sube/envía; proteger doble pulsación.
 - Wire botón en `consortium-detail.tsx`.
 - Toasts ES; loading states.
+- Tras éxito: navegar a `/consorcios/[id]/envios/[envioId]`.
 
-**Done when:** flujo manual E2E en browser con override: dialog → enviar → redirect estado.
+**Done when:** flujo manual E2E en browser con override: dialog → enviar → redirect estado (sin esperar fan-out en el dialog).
 
 ---
 
@@ -83,25 +90,26 @@ Dependencias de skills al implementar: `vercel-react-best-practices`, `drizzle`,
 
 **Goal:** producto “¿cuándo lo enviaste?” + retry.
 
-- Página `/consorcios/[id]/envios/[envioId]` (nombre ES).
+- Página **`/consorcios/[id]/envios/[envioId]`**.
 - Polling TanStack Query mientras `sending`.
-- Tabla destinatarios (`DataTable`).
-- CTA Reenviar fallidos.
-- Lista corta de envíos recientes en detalle del consorcio (opcional pero útil).
+- Tabla destinatarios (`DataTable`) — email, status, error (sin columna nombre).
+- CTA **Reintentar pendientes**.
+- Historial de envíos recientes **dentro del detalle del consorcio** (no en Notificaciones admin).
 
-**Done when:** envío parcial muestra fallidos; retry los marca sent; refresh conserva estado.
+**Done when:** envío parcial muestra fallidos; retry los marca sent; refresh conserva estado; historial visible en el consorcio.
 
 ---
 
 ## Fase 6 — Hardening
 
-- Límites de tamaño total vs 40MB Base64 Resend (validar Σ sizes antes de enviar).
+- Validar techos 1–3 PDFs / 5 MB (cliente + server) antes de crear el envío.
 - Empty billingEmail → omit `reply_to` (no fallar).
 - Demo mode: ocultar/disable igual que otras acciones.
+- Cleanup / doc de retención PDFs **60 días**.
 - Tests router + smoke template.
 - Documentar en este folder: env vars, bucket name, cómo probar con override.
 
-**Done when:** checklist QA (archivo generado por review) en verde local.
+**Done when:** checklist QA en verde local.
 
 ---
 

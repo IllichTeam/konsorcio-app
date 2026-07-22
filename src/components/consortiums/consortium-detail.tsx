@@ -9,6 +9,7 @@ import { defaultAuthenticatedPath } from "@/lib/navigation/dashboard-nav";
 import { useConsortium, useConsortiumHistory } from "@/hooks/use-consortiums";
 import { ConsortiumFormDialog } from "@/components/consortiums/consortium-form-dialog";
 import { consortiumHistoryColumns } from "@/components/consortiums/consortium-history-columns";
+import { SendMonthlyExpenseDialog } from "@/components/expense-emails/send-monthly-expense-dialog";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -31,6 +32,7 @@ export function ConsortiumDetail({ consortiumId }: ConsortiumDetailProps) {
     pageSize: HISTORY_PAGE_SIZE,
   });
   const [formDialogOpen, setFormDialogOpen] = useState(false);
+  const [expenseDialogOpen, setExpenseDialogOpen] = useState(false);
 
   if (isLoading) {
     return <ConsortiumDetailSkeleton />;
@@ -75,7 +77,7 @@ export function ConsortiumDetail({ consortiumId }: ConsortiumDetailProps) {
           <div className="mt-3 flex flex-wrap items-center gap-2">
             {process.env.NEXT_PUBLIC_DEMO_MODE !== "true" ? (
               <>
-                <Button className="w-fit">
+                <Button className="w-fit" onClick={() => setExpenseDialogOpen(true)}>
                   <FileText className="size-4" aria-hidden="true" />
                   Enviar expensa mensual
                 </Button>
@@ -149,6 +151,14 @@ export function ConsortiumDetail({ consortiumId }: ConsortiumDetailProps) {
         onOpenChange={setFormDialogOpen}
         consortiumId={consortiumId}
         initialConsortium={consortium}
+      />
+      <SendMonthlyExpenseDialog
+        open={expenseDialogOpen}
+        onOpenChange={setExpenseDialogOpen}
+        consortiumId={consortiumId}
+        consortiumName={consortium.name}
+        paymentAlias={consortium.paymentAlias}
+        defaultDriveLink={consortium.driveLink}
       />
     </div>
   );
