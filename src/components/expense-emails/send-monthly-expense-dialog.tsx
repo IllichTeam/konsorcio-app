@@ -38,7 +38,7 @@ const MONTHS_ES = [
 export function buildMonthlyExpenseMessage(consortiumName: string, date = new Date()): string {
   const month = MONTHS_ES[date.getMonth()];
   const year = date.getFullYear();
-  return `Hola Vecino/a, nos complace acercarle las expensas mensuales del consorcio ${consortiumName} correspondientes a ${month} de ${year}.`;
+  return `Hola Vecino/a, nos complace acercarle las expensas mensuales del consorcio ${consortiumName.trim()} correspondientes a ${month} de ${year}.`;
 }
 
 const sendMonthlyExpenseSchema = z.object({
@@ -103,7 +103,6 @@ export function SendMonthlyExpenseDialog({
 
   const pdfs = useWatch({ control, name: "pdfs" }) ?? [];
   const linkUrl = defaultDriveLink?.trim() ?? "";
-  const alias = paymentAlias?.trim() ?? "";
   const recipientCount = tenantEmails.length;
   const fixedMessage = buildMonthlyExpenseMessage(consortiumName);
 
@@ -154,34 +153,10 @@ export function SendMonthlyExpenseDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
-          <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="min-w-0 space-y-1">
-              <dt className="text-sm font-medium text-foreground">Alias de cobro</dt>
-              <dd className="truncate text-sm text-foreground">{alias || "—"}</dd>
-            </div>
-            <div className="min-w-0 space-y-1">
-              <dt className="text-sm font-medium text-foreground">Link</dt>
-              <dd className="text-sm">
-                {linkUrl ? (
-                  <a
-                    href={linkUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="break-all text-primary underline underline-offset-2"
-                  >
-                    {linkUrl}
-                  </a>
-                ) : (
-                  <span className="text-muted-foreground">—</span>
-                )}
-              </dd>
-            </div>
-          </dl>
-
           <FormPdfFiles
             control={control}
             name="pdfs"
-            label="PDFs adjuntos"
+            label="PDFs a adjuntar"
             description={`Entre 1 y ${MAX_PDF_COUNT} archivos PDF, máximo 5 MB cada uno.`}
             disabled={isSubmitting}
           />
@@ -194,7 +169,8 @@ export function SendMonthlyExpenseDialog({
             </p>
           ) : (
             <p className="text-sm font-medium text-primary">
-              Se enviará a todos los inquilinos y propietarios registrados de {consortiumName}.
+              Se enviará a todos los inquilinos y propietarios registrados en{" "}
+              {consortiumName.trim()}.
               <br />({recipientCount} personas)
             </p>
           )}
@@ -252,7 +228,7 @@ function ExpenseEmailPreview({
         </p>
         <div className="mt-3 space-y-3 rounded-md border border-border bg-card p-4">
           <p className="text-sm text-muted-foreground">
-            Administración de <span className="text-foreground">{consortiumName}</span>
+            Administración de <span className="text-foreground">{consortiumName.trim()}</span>
           </p>
           <p className="whitespace-pre-wrap text-sm text-foreground">{message}</p>
           {alias || linkUrl ? (
