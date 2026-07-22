@@ -1,4 +1,4 @@
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, max } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
 import { db } from "@/db";
@@ -13,6 +13,7 @@ import {
   listExpenseEmailSendsInputSchema,
   previewExpenseEmailInputSchema,
   previewExpenseEmailResultSchema,
+  type ExpenseEmailAttachmentRef,
 } from "@/lib/schemas/expense-email";
 import { renderExpenseEmailHtml } from "@/lib/email/render-expense-email";
 import { isAttachmentRefForSend } from "@/lib/storage/expense-emails";
@@ -26,8 +27,74 @@ import { scheduleExpenseEmailSend } from "@/server/expense-emails/schedule-expen
 import { createTRPCRouter, protectedProcedure } from "@/server/trpc/init";
 import { findAccessibleConsortium } from "@/server/trpc/lib/consortium-access";
 
+type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
+}
+
+/** Walk Drizzle / driver error wrappers for Postgres unique_violation. */
+function isPgUniqueViolation(error: unknown): boolean {
+  let current: unknown = error;
+  while (current && typeof current === "object") {
+    const candidate = current as { code?: string; cause?: unknown };
+    if (candidate.code === "23505") {
+      return true;
+    }
+    current = candidate.cause;
+  }
+  return false;
+}
+
+/**
+ * Next per-consortium `send_number` (MAX+1, or 1 when empty).
+ * Callers must handle unique races with ≤1 retry outside this helper.
+ */
+async function nextSendNumber(tx: DbTransaction, consortiumId: string): Promise<number> {
+  const [row] = await tx
+    .select({ maxSendNumber: max(expenseEmailSends.sendNumber) })
+    .from(expenseEmailSends)
+    .where(eq(expenseEmailSends.consortiumId, consortiumId));
+
+  return (row?.maxSendNumber ?? 0) + 1;
+}
+
+async function insertQueuedExpenseEmailSend(
+  tx: DbTransaction,
+  input: {
+    sendId: string;
+    consortiumId: string;
+    body: string;
+    linkUrl: string | null;
+    attachmentRefs: ExpenseEmailAttachmentRef[];
+    sentByUserId: string;
+    recipientEmails: string[];
+  },
+): Promise<void> {
+  const sendNumber = await nextSendNumber(tx, input.consortiumId);
+
+  await tx.insert(expenseEmailSends).values({
+    id: input.sendId,
+    consortiumId: input.consortiumId,
+    sendNumber,
+    subject: EXPENSE_EMAIL_SUBJECT,
+    body: input.body,
+    linkUrl: input.linkUrl,
+    status: "queued",
+    attachmentRefs: input.attachmentRefs,
+    sentByUserId: input.sentByUserId,
+    recipientCount: input.recipientEmails.length,
+    sentCount: 0,
+    failedCount: 0,
+  });
+
+  await tx.insert(expenseEmailRecipients).values(
+    input.recipientEmails.map((email) => ({
+      sendId: input.sendId,
+      email,
+      status: "pending" as const,
+    })),
+  );
 }
 
 function uniqueNormalizedEmails(emails: string[]): string[] {
@@ -169,30 +236,19 @@ export const expenseEmailsRouter = createTRPCRouter({
       const linkUrl =
         normalizeLinkUrl(input.linkUrl) ?? normalizeLinkUrl(consortium.driveLink ?? undefined);
       const body = input.message.trim();
+      const insertPayload = {
+        sendId: input.sendId,
+        consortiumId: input.consortiumId,
+        body,
+        linkUrl,
+        attachmentRefs: input.attachmentRefs,
+        sentByUserId: ctx.session.user.id,
+        recipientEmails: activeEmails,
+      };
 
       try {
         await db.transaction(async (tx) => {
-          await tx.insert(expenseEmailSends).values({
-            id: input.sendId,
-            consortiumId: input.consortiumId,
-            subject: EXPENSE_EMAIL_SUBJECT,
-            body,
-            linkUrl,
-            status: "queued",
-            attachmentRefs: input.attachmentRefs,
-            sentByUserId: ctx.session.user.id,
-            recipientCount: activeEmails.length,
-            sentCount: 0,
-            failedCount: 0,
-          });
-
-          await tx.insert(expenseEmailRecipients).values(
-            activeEmails.map((email) => ({
-              sendId: input.sendId,
-              email,
-              status: "pending" as const,
-            })),
-          );
+          await insertQueuedExpenseEmailSend(tx, insertPayload);
         });
       } catch (error) {
         // Concurrent create with the same PK — treat as idempotent success.
@@ -205,6 +261,38 @@ export const expenseEmailsRouter = createTRPCRouter({
         if (race && race.consortiumId === input.consortiumId) {
           maybeRescheduleQueuedSend(race.status, race.id);
           return { sendId: race.id };
+        }
+
+        // Concurrent creates racing on (consortium_id, send_number) — retry once.
+        if (isPgUniqueViolation(error)) {
+          try {
+            await db.transaction(async (tx) => {
+              await insertQueuedExpenseEmailSend(tx, insertPayload);
+            });
+          } catch (retryError) {
+            const [retryRace] = await db
+              .select()
+              .from(expenseEmailSends)
+              .where(eq(expenseEmailSends.id, input.sendId))
+              .limit(1);
+
+            if (retryRace && retryRace.consortiumId === input.consortiumId) {
+              maybeRescheduleQueuedSend(retryRace.status, retryRace.id);
+              return { sendId: retryRace.id };
+            }
+
+            console.error("Failed to create expense email send after send_number retry", {
+              sendId: input.sendId,
+              message: retryError instanceof Error ? retryError.message : String(retryError),
+            });
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: "No se pudo crear el envío",
+            });
+          }
+
+          scheduleExpenseEmailSend(input.sendId);
+          return { sendId: input.sendId };
         }
 
         console.error("Failed to create expense email send", {

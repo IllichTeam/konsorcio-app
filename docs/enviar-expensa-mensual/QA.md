@@ -35,7 +35,7 @@ Prepará esto:
 3. `EMAIL_OVERRIDE_TO` = **tu** mail de prueba (obligatorio mientras el dominio no esté verificado)
 4. Demo mode **apagado** (`NEXT_PUBLIC_DEMO_MODE` no en `true`) — si no, no ves el botón
 5. Bucket de Storage **privado** `expense-emails` listo (retención 60 días documentada en [STORAGE.md](./STORAGE.md); cleanup manual)
-6. `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` solo en secretos de servidor
+6. `SUPABASE_URL` + `SUPABASE_SECRET_KEY` (`sb_secret_…`) solo en secretos de servidor
 7. Migración `0010` aplicada (tablas `expense_email_sends` / `expense_email_recipients`)
 8. Un consorcio de prueba con:
    - al menos 3 emails de inquilinos activos

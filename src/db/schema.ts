@@ -7,6 +7,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 
@@ -146,6 +147,11 @@ export const expenseEmailSends = pgTable(
     consortiumId: uuid("consortium_id")
       .notNull()
       .references(() => consortiums.id),
+    /**
+     * Per-consortium sequential display id (starts at 1). Assigned only on the
+     * first successful create insert — not on upload or retryPending.
+     */
+    sendNumber: integer("send_number").notNull(),
     subject: text("subject").notNull(),
     body: text("body").notNull(),
     linkUrl: text("link_url"),
@@ -170,6 +176,10 @@ export const expenseEmailSends = pgTable(
     index("expense_email_sends_consortium_id_created_at_idx").on(
       table.consortiumId,
       table.createdAt,
+    ),
+    uniqueIndex("expense_email_sends_consortium_id_send_number_unique").on(
+      table.consortiumId,
+      table.sendNumber,
     ),
   ],
 );

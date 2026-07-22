@@ -1,8 +1,8 @@
 # SERVICES-REPORT — Enviar expensa mensual (operativo)
 
-**Fecha:** 2026-07-21  
+**Fecha:** 2026-07-22  
 **Alcance:** migraciones, bucket Storage, smoke Storage, readiness Resend/override.  
-**No se enviaron correos.** No se inventaron secretos ni se editó código de feature.
+**No se enviaron correos.** Secretos no se documentan (solo presencia de claves).
 
 ---
 
@@ -23,8 +23,9 @@
 | `DB_DRIVER`                 | sí                    | `pglite`                                                 |
 | `DATABASE_URL`              | clave sí, valor vacío | —                                                        |
 | `DIRECT_DATABASE_URL`       | no                    | requerida por `pnpm db:migrate:prod` vía `.env.supabase` |
-| `SUPABASE_URL`              | no                    | bloquea Storage                                          |
-| `SUPABASE_SERVICE_ROLE_KEY` | no                    | bloquea Storage                                          |
+| `SUPABASE_URL`              | **sí**                | proyecto `irunwiijywgpshzwhuql`                          |
+| `SUPABASE_SECRET_KEY`       | **sí**                | prefijo `sb_secret_…` (modelo moderno; no legacy JWT)    |
+| `SUPABASE_SERVICE_ROLE_KEY` | no                    | **retirada** del código; no usar                         |
 | `RESEND_API_KEY`            | sí                    | prefijo `re_…`                                           |
 | `EMAIL_FROM`                | sí                    | `ExpensasYa <noreply@notificaciones.expensasya.com>`     |
 | `EMAIL_OVERRIDE_TO`         | **no**                | **bloquea envíos reales futuros**                        |
@@ -58,28 +59,28 @@ Script establecido para Postgres real: `pnpm db:migrate:prod`
 
 ---
 
-## 3. Bucket Supabase `expense-emails` — BLOQUEADO
+## 3. Bucket Supabase `expense-emails` — OK
 
-| Ítem            | Resultado                                                        |
-| --------------- | ---------------------------------------------------------------- |
-| Acción prevista | crear/verificar bucket privado `expense-emails` vía service role |
-| Bloqueo         | `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` ausentes en `.env`  |
-| Público         | no verificado (no hubo API call)                                 |
-| Service role    | no expuesto; no se logueó ninguna key                            |
+| Ítem       | Resultado                                                                |
+| ---------- | ------------------------------------------------------------------------ |
+| Acción     | creado vía API con `SUPABASE_SECRET_KEY` (no existía; había otro bucket) |
+| Nombre     | `expense-emails`                                                         |
+| Público    | **no** (private)                                                         |
+| Secret key | no expuesta en logs; no se documentó el valor                            |
 
 ---
 
-## 4. Smoke Storage — BLOQUEADO (no ejecutado)
+## 4. Smoke Storage — OK (2026-07-22)
 
-Pasos previstos (no corridos):
+Pasos corridos:
 
-1. Upload PDF mínimo a prefijo smoke / consorcio aislado
-2. Crear signed URL
-3. Verificar GET firmado OK
-4. Confirmar GET público denegado
-5. `remove` del objeto temporal
+1. Upload PDF mínimo a prefijo `{consortiumId}/{sendId}/smoke.pdf` — **OK**
+2. Crear signed URL (TTL 60 s) — **OK**
+3. GET firmado → body `%PDF…` status 200 — **OK**
+4. GET público → denegado (status 400) — **OK**
+5. `remove` del objeto temporal — **OK**
 
-**Motivo:** mismas credenciales Storage ausentes. Sin basura creada.
+Sin basura residual en el bucket.
 
 ---
 
@@ -96,21 +97,21 @@ Hasta configurar `EMAIL_OVERRIDE_TO` con un inbox de prueba, **no** se deben aut
 
 ---
 
-## 6. Bloqueo único (confirmado)
-
-Operativo real incompleto por configuración local insuficiente:
+## 6. Bloqueos restantes
 
 1. **Falta `.env.supabase`** → no se puede aplicar `0010` al Postgres real (`pnpm db:migrate:prod`).
-2. **Faltan `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`** → no bucket ni smoke Storage.
-3. **Falta `EMAIL_OVERRIDE_TO`** → override no configurado; gate para futuros envíos reales.
+2. **Falta `EMAIL_OVERRIDE_TO`** → override no configurado; gate para futuros envíos reales.
+3. Vars Storage en **Vercel** (prod/preview) — pendiente si el deploy las necesita.
 
-**Detención aquí** sin inventar valores. Reanudar cuando existan:
+**Resuelto en esta pasada:** `SUPABASE_URL` + `SUPABASE_SECRET_KEY` en `.env` local; bucket + smoke Storage.
 
-- `.env.supabase` poblado desde `.env.supabase.example` (credenciales ya autorizadas del proyecto),
-- vars Storage server-only en `.env` (o el overlay que use el equipo),
-- `EMAIL_OVERRIDE_TO` apuntando al inbox de QA.
+Reanudar cuando existan:
 
-Luego, en orden: `pnpm db:migrate:prod` → crear/verificar bucket privado → smoke Storage → (otra tarea) envío controlado con override.
+- `.env.supabase` poblado desde `.env.supabase.example`,
+- `EMAIL_OVERRIDE_TO` apuntando al inbox de QA,
+- (opcional) mismas vars Storage en Vercel.
+
+Luego, en orden: `pnpm db:migrate:prod` → smoke end-to-end con override → QA browser.
 
 ---
 
@@ -120,9 +121,9 @@ Luego, en orden: `pnpm db:migrate:prod` → crear/verificar bucket privado → s
 | ------------------------------- | ------------------------------------------- |
 | Migrate local PGlite `0010`     | **OK** (tablas + lease columns verificadas) |
 | Migrate Postgres real           | **bloqueado** (sin `.env.supabase`)         |
-| Bucket `expense-emails` privado | **bloqueado** (sin credenciales Storage)    |
-| Smoke Storage                   | **bloqueado** / no ejecutado                |
+| Bucket `expense-emails` privado | **OK** (creado 2026-07-22)                  |
+| Smoke Storage                   | **OK**                                      |
+| API keys modelo                 | **secret** (`sb_secret_…`); legacy retirado |
 | Resend API + From               | presentes                                   |
 | `EMAIL_OVERRIDE_TO`             | **no configurado**                          |
 | Correos enviados                | 0                                           |
-| Código feature tocado           | no                                          |

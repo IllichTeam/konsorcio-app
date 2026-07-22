@@ -57,7 +57,6 @@ type SendMonthlyExpenseDialogProps = {
   consortiumId: string;
   consortiumName: string;
   defaultDriveLink?: string | null;
-  paymentAlias?: string | null;
 };
 
 const EMPTY_VALUES: SendMonthlyExpenseValues = {
@@ -88,7 +87,6 @@ export function SendMonthlyExpenseDialog({
   consortiumId,
   consortiumName,
   defaultDriveLink = null,
-  paymentAlias = null,
 }: SendMonthlyExpenseDialogProps) {
   const router = useRouter();
   const createSend = useCreateExpenseEmailSend();
@@ -107,7 +105,6 @@ export function SendMonthlyExpenseDialog({
 
   const pdfs = useWatch({ control, name: "pdfs" }) ?? [];
   const linkUrl = defaultDriveLink?.trim() ?? "";
-  const aliasDisplay = paymentAlias?.trim() ?? "";
   const recipientCount = tenantEmails.length;
   const fixedMessage = buildMonthlyExpenseMessage(consortiumName);
   const attachmentNames = pdfs.map((file) => file.name);
@@ -257,21 +254,6 @@ export function SendMonthlyExpenseDialog({
               <br />({recipientCount} personas)
             </p>
           )}
-
-          <dl className="grid gap-3 rounded-lg border border-border bg-muted/20 p-3 text-sm shadow-card">
-            <div className="space-y-1">
-              <dt className="font-medium text-foreground">Mensaje</dt>
-              <dd className="text-muted-foreground">{fixedMessage}</dd>
-            </div>
-            <div className="space-y-1">
-              <dt className="font-medium text-foreground">Link del drive</dt>
-              <dd className="break-all text-muted-foreground">{linkUrl || "—"}</dd>
-            </div>
-            <div className="space-y-1">
-              <dt className="font-medium text-foreground">Alias de cobro</dt>
-              <dd className="text-muted-foreground">{aliasDisplay || "—"}</dd>
-            </div>
-          </dl>
 
           <ExpenseEmailPreview
             html={previewHtml}

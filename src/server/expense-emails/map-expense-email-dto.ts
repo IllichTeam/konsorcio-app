@@ -12,6 +12,7 @@ export function toExpenseEmailSendDto(
   return {
     id: row.id,
     consortiumId: row.consortiumId,
+    sendNumber: row.sendNumber,
     subject: row.subject,
     body: row.body,
     linkUrl: row.linkUrl ?? null,

@@ -5,42 +5,18 @@ import Link from "next/link";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 
 import { expenseEmailSendRecipientColumns } from "@/components/expense-emails/expense-email-send-recipient-columns";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useConsortium } from "@/hooks/use-consortiums";
-import {
-  expenseEmailSendStatusLabel,
-  useExpenseEmailSend,
-  useRetryExpenseEmailPending,
-} from "@/hooks/use-expense-emails";
-import type { ExpenseEmailSendStatus } from "@/lib/schemas/expense-email";
+import { useExpenseEmailSend, useRetryExpenseEmailPending } from "@/hooks/use-expense-emails";
 
 const PAGE_SIZE = 10;
 
 type ExpenseEmailSendStatusScreenProps = {
   consortiumId: string;
   sendId: string;
-};
-
-const statusVariant: Record<
-  ExpenseEmailSendStatus,
-  "soft" | "success" | "warning" | "destructive" | "outline"
-> = {
-  queued: "outline",
-  sending: "soft",
-  sent: "success",
-  partial: "warning",
-  failed: "destructive",
 };
 
 function isNotFoundError(error: unknown): boolean {
@@ -108,10 +84,6 @@ export function ExpenseEmailSendStatusScreen({
   // Enabled whenever there is work left; server rejects fresh in-flight retries (CONFLICT).
   const canRetry = hasRetryable && !retryPending.isPending;
   const pageRows = recipients.slice(pageIndex * PAGE_SIZE, pageIndex * PAGE_SIZE + PAGE_SIZE);
-  const statusMeta = {
-    label: expenseEmailSendStatusLabel(send.status),
-    variant: statusVariant[send.status],
-  };
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 overflow-x-clip">
@@ -127,21 +99,17 @@ export function ExpenseEmailSendStatusScreen({
         </Button>
 
         <h1 className="mt-4 text-3xl font-semibold tracking-tight text-balance text-foreground">
-          Estado del envío
+          Estado del envío nº {send.sendNumber}
         </h1>
       </div>
 
       <Card className="shadow-card" size="sm">
-        <CardHeader className="border-b">
-          <CardTitle>Resumen</CardTitle>
+        <CardHeader>
           <CardDescription>
             {send.status === "queued" || send.status === "sending"
               ? "El envío continúa en segundo plano. Esta pantalla se actualiza sola; si se corta, usá Reintentar pendientes."
               : "Resultado del envío de expensa mensual."}
           </CardDescription>
-          <CardAction>
-            <Badge variant={statusMeta.variant}>{statusMeta.label}</Badge>
-          </CardAction>
         </CardHeader>
         <CardContent>
           <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">

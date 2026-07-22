@@ -188,7 +188,7 @@ Body-only (`batch.send`) permanece para notificaciones/comentarios.
 | Bucket        | **Privado**                                                                        |
 | R2            | Contender si egress Free se quema; no MVP salvo dolor real                         |
 | Path layout   | `expense-emails/{consortiumId}/{sendId}/…`                                         |
-| Upload        | Preferir **ruta del servidor** (multipart); no exponer service role al browser     |
+| Upload        | Preferir **ruta del servidor** (multipart); no exponer secret key al browser       |
 | Links         | Firmados con TTL suficiente para completar todo el fan-out (no 60s)                |
 | Retención     | **60 días**; luego cleanup (job o lifecycle)                                       |
 | Límite upload | **1–3** PDFs; **5 MB** / PDF; validar client + server                              |

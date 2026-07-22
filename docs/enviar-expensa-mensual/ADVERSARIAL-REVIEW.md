@@ -82,7 +82,7 @@ El log viejo no alcanza: no está ligado a un consorcio, no guarda estado por pe
 - Subida preferentemente por una **ruta del servidor** (el browser no habla directo con claves peligrosas).
 - Carpetas: `expense-emails/{consortiumId}/{sendId}/archivo.pdf`.
 - Links firmados con duración suficiente para **todo** el envío (no 60s).
-- Nunca mandar la service role key al navegador.
+- Nunca mandar la secret key (`sb_secret_…`) al navegador.
 - Retención: **60 días** (ver punto menor 7).
 
 ---

@@ -17,7 +17,8 @@
 **Discovery:** done (2026-07-21). SPEC + PLAN escritos.  
 **Review decisions:** done (2026-07-21). C1–C6 + menores cerrados → docs actualizados.  
 **UI / maqueta:** done (2026-07-21). Dialog + pantalla de estado cableados; Enviar navega con `sendId` placeholder. Sin Resend ni runner.  
-**Fase 0:** done (2026-07-21). Schema Drizzle + Zod + migración generada (no aplicada) + doc Storage.  
+**Fase 0:** done (2026-07-21). Schema Drizzle + Zod + migración generada (local PGlite aplicada; prod no) + doc Storage.  
+**Storage ops:** done (2026-07-22). `SUPABASE_SECRET_KEY` moderna en `.env`; bucket privado creado; smoke API OK.  
 **Fase 1:** done (2026-07-21). Template `ExpensaMensual` + `renderExpenseEmailHtml` + `sendExpenseEmail` + concurrency/429 helper. Sin tests ni llamadas a Resend.  
 **Fase 2:** done (2026-07-21). Cliente Supabase admin + `POST /api/expense-emails/upload` + helpers signed URL. Sin smoke real ni tests.  
 **Fase 3:** done (2026-07-21). Router `expenseEmails` (create / getSend / retryPending / listRecentByConsortium) + runner background vía `after()` + `maxDuration` en tRPC. Sin smoke real ni tests.  
@@ -110,7 +111,7 @@ No hay script `typecheck` en `package.json`; se usó el equivalente `pnpm exec t
 - **Validaciones 1–3 PDFs / ≤5 MB / PDF real:** cliente (`FormPdfFiles` + zod dialog) + server upload (MIME/magic `%PDF`, techos) + create Zod `attachmentRefs` 1–3; paths con `isAttachmentRefForSend` más estricto (sin `..`, un solo leaf bajo `{consortium}/{send}/`).
 - **Destinatarios:** create sigue exigiendo igualdad exacta con `tenant_emails` activos (`isDeleted = false`).
 - **billingEmail vacío** → omite `reply_to`; subject fijo + `[para: …]` con `EMAIL_OVERRIDE_TO`.
-- **Signed URLs:** privadas, TTL 6 h, **regeneradas en cada run/retry**; no se loguean URLs ni service role (upload log solo `message`).
+- **Signed URLs:** privadas, TTL 6 h, **regeneradas en cada run/retry**; no se loguean URLs ni secret key (upload log solo `message`).
 - **Idempotencia / concurrencia:**
   - create: PK `sendId` + ack idempotente; si queda `queued`, re-agenda runner.
   - runner: **lease persistido** (`claim_token` + `claim_expires_at`). Un único `UPDATE ... WHERE` reclama `queued`/`partial`/`failed` o `sending` con lease vencido y escribe un token nuevo; PostgreSQL reevalúa la condición tras concurrencia, por lo que solo un runner obtiene `returning()`.
@@ -319,9 +320,9 @@ Zod añadido en [`src/lib/schemas/expense-email.ts`](../../src/lib/schemas/expen
 
 ### Env (server-only)
 
-- `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` en [`src/env.ts`](../../src/env.ts) (opcionales al boot; assert al usar)
+- `SUPABASE_URL` + `SUPABASE_SECRET_KEY` (`sb_secret_…`) en [`src/env.ts`](../../src/env.ts) (opcionales al boot; assert al usar)
 - Placeholders en [`.env.example`](../../.env.example)
-- Nunca `NEXT_PUBLIC_*` para service role
+- Nunca `NEXT_PUBLIC_*` para la secret key; legacy `SUPABASE_SERVICE_ROLE_KEY` retirado
 
 ### Cliente + helpers Storage
 
@@ -467,10 +468,9 @@ Estados como `text` + `$type` (sin `pgEnum`, patrón del repo). Índices: histor
 
 El repo **no** gestiona Storage declarativamente. Setup documentado en:
 
-- [`docs/enviar-expensa-mensual/STORAGE.md`](./STORAGE.md) — bucket privado, policies server-only/signed URLs, retención 60 días, checklist manual
-- Env cableado en código (Fase 2); bucket remoto sigue **manual**
+- [`docs/enviar-expensa-mensual/STORAGE.md`](./STORAGE.md) — bucket privado, policies server-only/signed URLs, retención 60 días, checklist
 
-**No** se creó el bucket en remoto ni se añadieron credenciales.
+**Actualizado 2026-07-22:** credenciales modernas en `.env` (`SUPABASE_URL` + `SUPABASE_SECRET_KEY`); bucket `expense-emails` creado; smoke upload/signed URL/public deny/cleanup OK.
 
 ---
 
@@ -522,20 +522,22 @@ Archivos (ahora con datos reales):
 ## Bloqueadores abiertos
 
 Ninguno para el **código** verificado (lint/ts/test/build).  
-Operativos / QA pendientes (bloquean smoke real y sign-off):
+Storage local **resuelto** (2026-07-22): secret key moderna + bucket + smoke OK.  
+Operativos / QA pendientes (bloquean envío real y sign-off):
 
-- Bucket privado `expense-emails` en Supabase (manual)
-- `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` en `.env` local / Vercel
-- Migración `0010` aplicada
-- `RESEND_API_KEY` / `EMAIL_FROM` (y opcional `EMAIL_OVERRIDE_TO`) para envío real
+- [x] Bucket privado `expense-emails` en Supabase _(2026-07-22)_
+- [x] `SUPABASE_URL` + `SUPABASE_SECRET_KEY` en `.env` local _(2026-07-22)_
+- [ ] Mismas vars Storage en Vercel (prod/preview)
+- [ ] Migración `0010` en Postgres real (falta `.env.supabase`)
+- [ ] `EMAIL_OVERRIDE_TO` para envío real controlado (`RESEND_API_KEY` / `EMAIL_FROM` ya presentes)
 - Límite de body de la plataforma (Vercel ~4.5 MB en algunos planes) vs 3×5 MB — verificar en deploy
 - Plan Vercel con `maxDuration` ≥ 120s en `/api/trpc` (si el plan topea en 60s, fan-outs grandes quedan recuperables vía retry)
 - E2E / QA checklist browser (AC-01…AC-42) — **no** firmada
 
 ## Próximo paso
 
-1. Operativo: migrate `0010` + bucket Storage + env Resend/Supabase.
-2. Smoke reales + sign-off QA.md cuando se autorice.
+1. `.env.supabase` + `EMAIL_OVERRIDE_TO` → `pnpm db:migrate:prod`.
+2. Smoke end-to-end con override + sign-off QA.md cuando se autorice.
 
 ---
 
@@ -551,12 +553,13 @@ Por restricción explícita del usuario, **no** se corrieron tests, linters, typ
 
 ### Storage (manual)
 
-- [ ] Crear bucket privado `expense-emails` en Supabase Dashboard (pasos en [STORAGE.md](./STORAGE.md))
-- [ ] Confirmar sin acceso público; service role solo en secretos de servidor
-- [ ] Setear `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` en `.env` / Vercel
-- [ ] Smoke (Fase 2): `POST /api/expense-emails/upload` con 1–2 PDFs <5 MB → 200 + paths
+- [x] Crear bucket privado `expense-emails` (API admin, 2026-07-22; ver [STORAGE.md](./STORAGE.md))
+- [x] Confirmar sin acceso público; secret key solo en secretos de servidor _(smoke GET public denegado)_
+- [x] Setear `SUPABASE_URL` + `SUPABASE_SECRET_KEY` en `.env` local _(2026-07-22)_
+- [ ] Setear mismas vars en Vercel
+- [x] Smoke API Storage: upload PDF mínimo + signed URL + cleanup _(2026-07-22)_
+- [ ] Smoke app: `POST /api/expense-emails/upload` autenticado con 1–2 PDFs <5 MB → 200 + paths
 - [ ] Smoke: rechazo 0 PDFs, >3, >5 MB, non-PDF
-- [ ] Smoke: signed URL abre el PDF; objeto no es público sin firma
 - [ ] Verificar límite de body de la plataforma con ~15 MB multipart
 - [ ] Pasada manual de cleanup >60 días (procedimiento en STORAGE.md)
 
@@ -620,7 +623,7 @@ Por restricción explícita del usuario, **no** se corrieron tests, linters, typ
 - [ ] Camino feliz con override + PDF real
 - [ ] Parcial + Reintentar pendientes; corte a mitad recuperable
 - [ ] Reply-To con/sin billingEmail
-- [ ] Sin service role / signed URLs en Network tab del browser ni logs de cliente
+- [ ] Sin secret key / signed URLs en Network tab del browser ni logs de cliente
 - [x] `pnpm lint` / typecheck (`tsgo`) / `pnpm test` / `pnpm build` _(2026-07-22)_
 - [ ] Sign-off MVP en QA.md
 
@@ -628,20 +631,21 @@ Por restricción explícita del usuario, **no** se corrieron tests, linters, typ
 
 ## Changelog docs
 
-| Fecha      | Cambio                                                                                                                                  |
-| ---------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-07-21 | SPEC, PLAN, PROGRESS iniciales post-discovery                                                                                           |
-| 2026-07-21 | Añadidos ADVERSARIAL-REVIEW.md + QA.md                                                                                                  |
-| 2026-07-21 | Review + QA reescritos en lenguaje claro para humanos                                                                                   |
-| 2026-07-21 | Cerrados C3 (≥1 PDF) y C4 (`EMAIL_OVERRIDE_TO`)                                                                                         |
-| 2026-07-21 | Cerrados C1, C2, C5, C6 + 8 menores; SPEC/PLAN/QA/PROGRESS/REVIEW sync                                                                  |
-| 2026-07-21 | UI maqueta: Dialog + status page; Fase 4 done (shell); Fase 5 parcial                                                                   |
-| 2026-07-21 | **Fase 0:** schema + Zod + migración `0010` (no aplicada) + STORAGE.md                                                                  |
-| 2026-07-21 | Confirmada decisión maqueta (Todos / mensaje auto / link readonly)                                                                      |
-| 2026-07-21 | **Fase 1:** template + render + `sendExpenseEmail` + concurrency/429                                                                    |
-| 2026-07-21 | **Fase 2:** Storage client + upload route + signed URL helpers; contrato sendId reservado                                               |
-| 2026-07-21 | **Fase 3:** tRPC `expenseEmails` create/get/retry/list + runner `after()` + maxDuration 120                                             |
-| 2026-07-21 | **Fase 4:** dialog upload→create→navigate; preview `expenseEmails.preview`; saludo sin duplicar; SPEC/QA sync UX canónica               |
-| 2026-07-21 | **Fase 5:** status `getSend`+poll+retry; historial en consorcio; gap `sentByUserId` sin nombre                                          |
-| 2026-07-21 | **Fase 6 (estática):** lease token + fencing; `sentByUserName`; STORAGE env/cleanup manual; docs UX sync; verificación pendiente        |
-| 2026-07-22 | **Verificación código:** lint/tsgo/test/build OK; +10 archivos de unit tests; fixes tipos/lint; QA browser/servicios reales no firmados |
+| Fecha      | Cambio                                                                                                                                   |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-07-22 | **Storage ops:** `SUPABASE_SECRET_KEY` (moderno); bucket `expense-emails` + smoke OK; docs sync; legacy service_role retirado del código |
+| 2026-07-21 | SPEC, PLAN, PROGRESS iniciales post-discovery                                                                                            |
+| 2026-07-21 | Añadidos ADVERSARIAL-REVIEW.md + QA.md                                                                                                   |
+| 2026-07-21 | Review + QA reescritos en lenguaje claro para humanos                                                                                    |
+| 2026-07-21 | Cerrados C3 (≥1 PDF) y C4 (`EMAIL_OVERRIDE_TO`)                                                                                          |
+| 2026-07-21 | Cerrados C1, C2, C5, C6 + 8 menores; SPEC/PLAN/QA/PROGRESS/REVIEW sync                                                                   |
+| 2026-07-21 | UI maqueta: Dialog + status page; Fase 4 done (shell); Fase 5 parcial                                                                    |
+| 2026-07-21 | **Fase 0:** schema + Zod + migración `0010` (no aplicada) + STORAGE.md                                                                   |
+| 2026-07-21 | Confirmada decisión maqueta (Todos / mensaje auto / link readonly)                                                                       |
+| 2026-07-21 | **Fase 1:** template + render + `sendExpenseEmail` + concurrency/429                                                                     |
+| 2026-07-21 | **Fase 2:** Storage client + upload route + signed URL helpers; contrato sendId reservado                                                |
+| 2026-07-21 | **Fase 3:** tRPC `expenseEmails` create/get/retry/list + runner `after()` + maxDuration 120                                              |
+| 2026-07-21 | **Fase 4:** dialog upload→create→navigate; preview `expenseEmails.preview`; saludo sin duplicar; SPEC/QA sync UX canónica                |
+| 2026-07-21 | **Fase 5:** status `getSend`+poll+retry; historial en consorcio; gap `sentByUserId` sin nombre                                           |
+| 2026-07-21 | **Fase 6 (estática):** lease token + fencing; `sentByUserName`; STORAGE env/cleanup manual; docs UX sync; verificación pendiente         |
+| 2026-07-22 | **Verificación código:** lint/tsgo/test/build OK; +10 archivos de unit tests; fixes tipos/lint; QA browser/servicios reales no firmados  |

@@ -197,7 +197,6 @@ export function ConsortiumDetail({ consortiumId }: ConsortiumDetailProps) {
         consortiumId={consortiumId}
         consortiumName={consortium.name}
         defaultDriveLink={consortium.driveLink}
-        paymentAlias={consortium.paymentAlias}
       />
     </div>
   );

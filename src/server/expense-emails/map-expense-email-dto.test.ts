@@ -11,6 +11,7 @@ import {
 const sendRow = {
   id: "22222222-2222-4222-8222-222222222222",
   consortiumId: "11111111-1111-4111-8111-111111111111",
+  sendNumber: 3,
   subject: "Expensa Mensual",
   body: "Mensaje",
   linkUrl: "https://drive.example/x",
@@ -48,6 +49,7 @@ describe("map expense email DTOs", () => {
   it("serializes send timestamps and sender display name", () => {
     expect(toExpenseEmailSendDto(sendRow, "Ana Admin")).toMatchObject({
       id: sendRow.id,
+      sendNumber: 3,
       status: "partial",
       sentByUserName: "Ana Admin",
       createdAt: "2026-07-21T12:00:00.000Z",

@@ -2,7 +2,7 @@
 
 Documentación del feature de envío de expensas mensuales (correo masivo con comentario, link y PDFs vía Resend).
 
-**Estado:** decisiones C1–C6 y menores cerradas. **Fases 0–5** hechas en código. **Fase 6** hardening + **verificación de código** (lint/ts/test/build) done; migrate/smoke/QA browser pendientes. Ver [PROGRESS.md](./PROGRESS.md).
+**Estado:** decisiones C1–C6 y menores cerradas. **Fases 0–5** hechas en código. **Fase 6** hardening + **verificación de código** done. Storage local: `SUPABASE_SECRET_KEY` + bucket `expense-emails` + smoke OK (2026-07-22). Pendiente: migrate prod, `EMAIL_OVERRIDE_TO`, QA browser. Ver [PROGRESS.md](./PROGRESS.md).
 
 | Doc                                              | Rol                                                          |
 | ------------------------------------------------ | ------------------------------------------------------------ |

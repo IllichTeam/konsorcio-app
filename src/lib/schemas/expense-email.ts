@@ -141,6 +141,8 @@ export const listExpenseEmailSendsInputSchema = z.object({
 export const expenseEmailSendDtoSchema = z.object({
   id: z.string().uuid(),
   consortiumId: z.string().uuid(),
+  /** Per-consortium sequential display number (unpadded in UI). */
+  sendNumber: z.number().int().positive(),
   subject: z.string(),
   body: z.string(),
   linkUrl: z.string().nullable(),

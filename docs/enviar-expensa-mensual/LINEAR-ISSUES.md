@@ -1,43 +1,38 @@
 # Issues de Linear — Enviar expensa mensual
 
-Documento de preparación. **Estos issues todavía no fueron creados ni modificados en Linear.**
+Log de Done en Linear (proyecto **proyecto toro**, equipo **Irada**). Solo título corto; sin descripción ni criterios.
 
-Al registrarlos:
+## Registrados (Done)
 
-- Proyecto: **proyecto toro**
-- Equipo: **Irada**
-- Estado final: **Done**
-- Antes de crear cada issue, buscar uno existente con el mismo alcance y reutilizarlo si corresponde.
-- Crear solo el título corto, sin descripción ni criterios de aceptación.
+### Fases del feature
 
-## Títulos propuestos
+| Issue                                                                                      | Título                                     | Alcance                                        |
+| ------------------------------------------------------------------------------------------ | ------------------------------------------ | ---------------------------------------------- |
+| [IRA-42](https://linear.app/irada/issue/IRA-42/crear-esquema-y-storage-de-expensas)        | Crear esquema y storage de expensas        | Fase 0: tablas, Zod, migración, doc bucket     |
+| [IRA-43](https://linear.app/irada/issue/IRA-43/preparar-emails-de-expensas-con-adjuntos)   | Preparar emails de expensas con adjuntos   | Fase 1: template, render, Resend, concurrencia |
+| [IRA-44](https://linear.app/irada/issue/IRA-44/implementar-subida-y-envio-de-expensas)     | Implementar subida y envío de expensas     | Fases 2–3: upload, signed URLs, tRPC, runner   |
+| [IRA-45](https://linear.app/irada/issue/IRA-45/conectar-dialogo-de-envio-de-expensas)      | Conectar diálogo de envío de expensas      | Fase 4: dialog → create → preview              |
+| [IRA-47](https://linear.app/irada/issue/IRA-47/implementar-estado-e-historial-de-expensas) | Implementar estado e historial de expensas | Fase 5: polling, DataTable, historial          |
+| [IRA-46](https://linear.app/irada/issue/IRA-46/reforzar-reintentos-de-expensas)            | Reforzar reintentos de expensas            | Fase 6: lease, claims, hardening               |
 
-- [ ] `Crear esquema y storage de expensas`
-- [ ] `Preparar emails de expensas con adjuntos`
-- [ ] `Implementar subida y envío de expensas`
-- [ ] `Conectar diálogo de envío de expensas`
-- [ ] `Implementar estado e historial de expensas`
-- [ ] `Reforzar reintentos de expensas`
+### Ops / follow-ups
 
-## Correspondencia con el plan
+| Issue                                                                                   | Título                                  | Por qué separado                            |
+| --------------------------------------------------------------------------------------- | --------------------------------------- | ------------------------------------------- |
+| [IRA-40](https://linear.app/irada/issue/IRA-40/configurar-storage-de-expensas)          | Configurar storage de expensas          | Bucket + secret key + smoke Storage (ops)   |
+| [IRA-41](https://linear.app/irada/issue/IRA-41/numerar-envios-de-expensa-por-consorcio) | Numerar envíos de expensa por consorcio | `send_number` + UI Nº / Acciones (post-MVP) |
 
-| Título                                       | Alcance ya implementado                                                        |
-| -------------------------------------------- | ------------------------------------------------------------------------------ |
-| `Crear esquema y storage de expensas`        | Fase 0: tablas, contratos Zod, migración y documentación del bucket privado    |
-| `Preparar emails de expensas con adjuntos`   | Fase 1: template, render compartido, Resend individual, concurrencia y backoff |
-| `Implementar subida y envío de expensas`     | Fases 2–3: upload multipart, signed URLs, tRPC, runner background y retry      |
-| `Conectar diálogo de envío de expensas`      | Fase 4: upload → create → navegación y preview del template real               |
-| `Implementar estado e historial de expensas` | Fase 5: polling, DataTable, reintento e historial por consorcio                |
-| `Reforzar reintentos de expensas`            | Fase 6: lease de runners, claims, validaciones y documentación operativa       |
+## Cómo registrar más
 
-## Pendiente antes del cierre técnico
+1. Buscar issue existente con el mismo alcance; reutilizar si cabe.
+2. Crear solo título corto en español (estilo: `CRUD emails de inquilinos`).
+3. Proyecto **proyecto toro**, estado **Done**.
+4. Anotar acá con link.
 
-Los issues pueden registrarse como Done por implementación, pero la verificación sigue pendiente por decisión del usuario:
+## Pendiente de verificación (no bloquea el log Done)
 
-- migración `0010` sin aplicar;
-- bucket privado y variables de Supabase sin configurar;
-- tests, lint, typecheck y build sin ejecutar;
-- smokes de Storage, Resend, polling y reintentos sin ejecutar;
-- QA AC-01–AC-42 sin firmar.
+Implementación registrada; QA/smoke puede seguir pendiente:
 
-La checklist completa está en [PROGRESS.md](./PROGRESS.md).
+- migrate remoto / env Vercel según [PROGRESS.md](./PROGRESS.md) / [SERVICES-REPORT.md](./SERVICES-REPORT.md)
+- smoke Resend con `EMAIL_OVERRIDE_TO`
+- sign-off AC en [QA.md](./QA.md)

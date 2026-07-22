@@ -70,10 +70,10 @@ const envSchema = z.object({
    */
   SUPABASE_URL: z.string().url().optional(),
   /**
-   * Supabase service role key for private bucket upload + signed URLs.
-   * Server-only secret — never send to the browser.
+   * Supabase secret API key (`sb_secret_…`) for private bucket upload + signed URLs.
+   * Replaces the legacy `service_role` JWT. Server-only — never send to the browser.
    */
-  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
+  SUPABASE_SECRET_KEY: z.string().min(1).optional(),
 });
 
 export const env = envSchema.parse({
@@ -89,7 +89,7 @@ export const env = envSchema.parse({
   EMAIL_OVERRIDE_TO: process.env.EMAIL_OVERRIDE_TO || undefined,
   NEXT_PUBLIC_DEMO_MODE: process.env.NEXT_PUBLIC_DEMO_MODE,
   SUPABASE_URL: process.env.SUPABASE_URL || undefined,
-  SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY || undefined,
+  SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY || undefined,
 });
 
 export type Env = typeof env;

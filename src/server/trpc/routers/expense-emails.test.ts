@@ -23,8 +23,20 @@ vi.mock("@/server/trpc/lib/consortium-access", () => ({
 const selectMock = vi.fn();
 const insertValuesMock = vi.fn().mockResolvedValue(undefined);
 const insertMock = vi.fn(() => ({ values: insertValuesMock }));
-const transactionMock = vi.fn(async (fn: (tx: { insert: typeof insertMock }) => Promise<void>) => {
-  await fn({ insert: insertMock });
+
+function makeTx(maxSendNumber: number | null = null) {
+  return {
+    select: vi.fn(() => ({
+      from: () => ({
+        where: async () => [{ maxSendNumber }],
+      }),
+    })),
+    insert: insertMock,
+  };
+}
+
+const transactionMock = vi.fn(async (fn: (tx: ReturnType<typeof makeTx>) => Promise<void>) => {
+  await fn(makeTx(null));
 });
 
 vi.mock("@/db", () => ({
@@ -102,7 +114,7 @@ describe("expenseEmails tRPC router", () => {
     vi.clearAllMocks();
     insertValuesMock.mockResolvedValue(undefined);
     transactionMock.mockImplementation(async (fn) => {
-      await fn({ insert: insertMock });
+      await fn(makeTx(null));
     });
     vi.mocked(findAccessibleConsortium).mockResolvedValue({
       id: consortiumId,
@@ -192,7 +204,42 @@ describe("expenseEmails tRPC router", () => {
     ).resolves.toEqual({ sendId });
 
     expect(transactionMock).toHaveBeenCalled();
+    expect(insertValuesMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: sendId,
+        consortiumId,
+        sendNumber: 1,
+      }),
+    );
     expect(scheduleExpenseEmailSend).toHaveBeenCalledWith(sendId);
+  });
+
+  it("allocates sendNumber as MAX+1 inside the create transaction", async () => {
+    mockSelectSequence([() => [], () => [{ email: "a@example.com" }]]);
+    transactionMock.mockImplementation(async (fn) => {
+      await fn(makeTx(4));
+    });
+
+    const api = await caller();
+    await api.expenseEmails.create({
+      consortiumId,
+      sendId,
+      recipients: ["a@example.com"],
+      message: "Mensaje",
+      attachmentRefs: [
+        {
+          storagePath: `expense-emails/${consortiumId}/${sendId}/a.pdf`,
+          filename: "a.pdf",
+          sizeBytes: 10,
+        },
+      ],
+    });
+
+    expect(insertValuesMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sendNumber: 5,
+      }),
+    );
   });
 
   it("returns preview HTML from the shared renderer", async () => {

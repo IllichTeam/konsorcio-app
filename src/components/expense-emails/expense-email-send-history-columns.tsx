@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { ColumnDef } from "@tanstack/react-table";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { expenseEmailSendStatusLabel } from "@/hooks/use-expense-emails";
 import type { ExpenseEmailSendDto, ExpenseEmailSendStatus } from "@/lib/schemas/expense-email";
 
@@ -30,34 +31,24 @@ function formatCreatedAt(value: string): string {
   });
 }
 
-/**
- * Prefer `sentByUserName` (joined from `user.name`); fall back to a short id.
- */
-function formatSentBy(userId: string | null, userName: string | null): string {
-  const name = userName?.trim();
-  if (name) {
-    return name;
-  }
-  if (!userId) {
-    return "—";
-  }
-  return userId.slice(0, 8);
-}
-
 export function createExpenseEmailSendHistoryColumns(
   consortiumId: string,
 ): ColumnDef<ExpenseEmailSendDto>[] {
   return [
     {
+      accessorKey: "sendNumber",
+      header: "Nº",
+      cell: ({ getValue }) => (
+        <span className="tabular-nums text-foreground">{getValue<number>()}</span>
+      ),
+    },
+    {
       accessorKey: "createdAt",
       header: "Fecha",
-      cell: ({ row, getValue }) => (
-        <Link
-          href={`/consorcios/${consortiumId}/envios/${row.original.id}`}
-          className="whitespace-nowrap text-primary tabular-nums hover:underline"
-        >
+      cell: ({ getValue }) => (
+        <span className="whitespace-nowrap tabular-nums text-foreground">
           {formatCreatedAt(getValue<string>())}
-        </Link>
+        </span>
       ),
     },
     {
@@ -82,12 +73,17 @@ export function createExpenseEmailSendHistoryColumns(
       },
     },
     {
-      id: "sentBy",
-      header: "Enviado por",
+      id: "actions",
+      header: "Acciones",
+      enableSorting: false,
       cell: ({ row }) => (
-        <span className="text-sm text-muted-foreground">
-          {formatSentBy(row.original.sentByUserId, row.original.sentByUserName)}
-        </span>
+        <Button
+          variant="outline"
+          size="sm"
+          render={<Link href={`/consorcios/${consortiumId}/envios/${row.original.id}`} />}
+        >
+          Ver detalle
+        </Button>
       ),
     },
   ];
