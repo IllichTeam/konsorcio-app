@@ -384,6 +384,8 @@ describe("consortiums tRPC router", () => {
       consortium: created.name,
       sender: "Administración",
       replyTo: sampleInput.billingEmail,
+      linkUrl: sampleInput.driveLink,
+      paymentAlias: sampleInput.paymentAlias,
     });
   });
 

@@ -36,16 +36,27 @@ export const EXPENSE_EMAIL_SIGNED_URL_TTL_SECONDS = 6 * 60 * 60;
 export const EXPENSE_EMAIL_STALE_SENDING_MS = 2 * 60 * 1000;
 
 /**
- * Drive / payment link from UI or DB (`string`), empty allowed.
- * Use a plain string + refine so callers with `string` props type-check
- * (a `z.url()` union brands the input and collapses tRPC query data to `never`).
+ * Drive / payment link: keep only parseable absolute URLs.
+ * Empty, whitespace, or junk (e.g. a leftover "Link" label) become `""`
+ * so preview/send omit the drive row instead of failing validation.
+ * Plain `string` (not `z.url()`) so callers with `string` props type-check
+ * and tRPC query data does not collapse to `never`.
  */
+export function normalizeExpenseEmailLinkUrl(value: string | null | undefined): string {
+  if (value == null) {
+    return "";
+  }
+  const trimmed = value.trim();
+  if (trimmed === "" || !URL.canParse(trimmed)) {
+    return "";
+  }
+  return trimmed;
+}
+
 export const expenseEmailOptionalLinkUrlSchema = z
   .string()
-  .refine((value) => value === "" || URL.canParse(value), {
-    message: "URL inválida",
-  })
-  .optional();
+  .optional()
+  .transform((value) => (value === undefined ? undefined : normalizeExpenseEmailLinkUrl(value)));
 
 export const expenseEmailSendStatusSchema = z.enum([
   "queued",

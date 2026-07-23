@@ -85,6 +85,13 @@
       "when": 1784737424185,
       "tag": "0011_redundant_slyde",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1784773816427,
+      "tag": "0012_lucky_wolfsbane",
+      "breakpoints": true
     }
   ]
 }

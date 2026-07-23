@@ -41,6 +41,9 @@ async function buildBatchEmail(
   consortium?: string,
   sender?: string,
   replyTo?: string,
+  footerContact?: string | null,
+  linkUrl?: string | null,
+  paymentAlias?: string | null,
 ) {
   const html = await render(
     <NotificacionConsorcio
@@ -48,6 +51,9 @@ async function buildBatchEmail(
       mensaje={body}
       consorcio={consortium}
       remitente={sender}
+      footerContact={footerContact}
+      linkUrl={linkUrl}
+      paymentAlias={paymentAlias}
     />,
   );
 
@@ -72,7 +78,17 @@ async function buildBatchEmail(
  * of the recipients.
  */
 export async function sendEmail(input: SendEmailParams): Promise<SendEmailResult> {
-  const { subject, body, recipients, consortium, sender, replyTo } = input;
+  const {
+    subject,
+    body,
+    recipients,
+    consortium,
+    sender,
+    replyTo,
+    footerContact,
+    linkUrl,
+    paymentAlias,
+  } = input;
 
   if (recipients.length === 0) {
     return { status: "failed", sent: 0, failed: 0, resendIds: [], error: "No recipients" };
@@ -86,7 +102,17 @@ export async function sendEmail(input: SendEmailParams): Promise<SendEmailResult
     try {
       const batchEmails = await Promise.all(
         recipientChunk.map((recipient) =>
-          buildBatchEmail(recipient, subject, body, consortium, sender, replyTo),
+          buildBatchEmail(
+            recipient,
+            subject,
+            body,
+            consortium,
+            sender,
+            replyTo,
+            footerContact,
+            linkUrl,
+            paymentAlias,
+          ),
         ),
       );
 

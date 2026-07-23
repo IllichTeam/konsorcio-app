@@ -18,6 +18,7 @@ export const user = pgTable("user", {
   banExpires: timestamp("ban_expires"),
   phone: text("phone"),
   address: text("address"),
+  postalCode: text("postal_code"),
 });
 
 export const session = pgTable(

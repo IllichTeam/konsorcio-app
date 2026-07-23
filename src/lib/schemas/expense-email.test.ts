@@ -40,12 +40,21 @@ describe("expense email schemas", () => {
     ).toBe(false);
   });
 
-  it("accepts empty or valid drive links and rejects junk URLs", () => {
+  it("accepts empty or valid drive links and coerces junk URLs to empty", () => {
     expect(expenseEmailOptionalLinkUrlSchema.safeParse("").success).toBe(true);
     expect(expenseEmailOptionalLinkUrlSchema.safeParse("https://drive.google.com/x").success).toBe(
       true,
     );
-    expect(expenseEmailOptionalLinkUrlSchema.safeParse("not-a-url").success).toBe(false);
+    const junk = expenseEmailOptionalLinkUrlSchema.safeParse("not-a-url");
+    expect(junk.success).toBe(true);
+    if (junk.success) {
+      expect(junk.data).toBe("");
+    }
+    const label = expenseEmailOptionalLinkUrlSchema.safeParse("Link");
+    expect(label.success).toBe(true);
+    if (label.success) {
+      expect(label.data).toBe("");
+    }
     expect(expenseEmailOptionalLinkUrlSchema.safeParse(undefined).success).toBe(true);
   });
 

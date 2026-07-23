@@ -4,6 +4,7 @@ import { TRPCError } from "@trpc/server";
 import { db } from "@/db";
 import { consortiums, emailLog, tenantEmails, type ConsortiumRow } from "@/db/schema";
 import { sendEmail } from "@/lib/email/send";
+import { normalizeExpenseEmailLinkUrl } from "@/lib/schemas/expense-email";
 import {
   consortiumDetailSchema,
   consortiumHistoryInputSchema,
@@ -253,6 +254,8 @@ export const consortiumsRouter = createTRPCRouter({
 
       const recipients = input.recipients;
       const subject = `Comentario — ${consortium.name}`;
+      const linkUrl = normalizeExpenseEmailLinkUrl(consortium.driveLink) || null;
+      const paymentAlias = consortium.paymentAlias?.trim() || null;
 
       const result = await sendEmail({
         subject,
@@ -261,6 +264,8 @@ export const consortiumsRouter = createTRPCRouter({
         consortium: consortium.name,
         sender: COMMENT_SENDER,
         replyTo: consortium.billingEmail,
+        linkUrl,
+        paymentAlias,
       });
 
       try {

@@ -20,7 +20,12 @@ describe("ExpensaMensual", () => {
     expect(html).toContain("Torre Norte");
     expect(html).toContain("Nos complace acercarle las expensas mensuales.");
     expect(html).toContain("ALIAS.TORRE");
+    expect(html).toContain("<strong");
     expect(html).toContain("https://drive.example/folder");
+    expect(html).toContain('href="https://drive.example/folder"');
+    expect(html).toContain("Link de drive");
+    expect(html).toContain("Un cordial saludo, Administración");
+    expect(html).not.toContain("Un cordial saludo,<br");
     expect(html).toContain("Liquidacion.pdf");
     expect(html).toContain("Anexo.pdf");
     expect(html.match(/Hola Vecino\/a/g)?.length).toBe(1);
@@ -34,5 +39,34 @@ describe("ExpensaMensual", () => {
     expect(html).toContain("Solo mensaje");
     expect(html).not.toContain("Alias de cobro");
     expect(html).not.toContain("href=");
+  });
+
+  it("hides the drive link row when linkUrl is not a valid URL", async () => {
+    const html = await render(
+      <ExpensaMensual mensaje="Sin drive" linkUrl="Link" paymentAlias={null} />,
+    );
+
+    expect(html).toContain("Sin drive");
+    expect(html).not.toContain("A continuación dejamos información relevante");
+    expect(html).not.toContain('href="Link"');
+  });
+
+  it("renders the sender footer contact line when provided", async () => {
+    const html = await render(
+      <ExpensaMensual
+        mensaje="Con pie"
+        footerContact="Gurruchaga 2222 - CP: 1414 / Teléfono: +54911-12345678"
+      />,
+    );
+
+    expect(html).toContain("Gurruchaga 2222 - CP: 1414 / Teléfono: +54911-12345678");
+    expect(html).not.toContain("123 Calle Principal");
+  });
+
+  it("hides the footer address row when contact is missing", async () => {
+    const html = await render(<ExpensaMensual mensaje="Sin pie" />);
+
+    expect(html).toContain("Sin pie");
+    expect(html).not.toContain("123 Calle Principal");
   });
 });

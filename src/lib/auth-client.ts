@@ -13,7 +13,8 @@ import { ac, authRoles } from "@/lib/auth/permissions";
  * inferred types (and future `authClient.admin.*` calls) include the
  * `role`/`banned`/`banReason`/`banExpires` fields added to the session user.
  *
- * `inferAdditionalFields` keeps `phone` / `address` on updateUser + session user.
+ * `inferAdditionalFields` keeps `phone` / `address` / `postalCode` on
+ * updateUser + session user.
  */
 export const authClient = createAuthClient({
   plugins: [
@@ -29,6 +30,10 @@ export const authClient = createAuthClient({
           required: false,
         },
         address: {
+          type: "string",
+          required: false,
+        },
+        postalCode: {
           type: "string",
           required: false,
         },
