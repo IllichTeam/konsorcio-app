@@ -32,6 +32,8 @@ export type ExpensaMensualProps = {
   remitente?: string;
   logoUrl?: string;
   unsubscribeUrl?: string;
+  /** Sender profile line: address / phone / postal code. */
+  footerContact?: string | null;
 };
 
 const colors = {
@@ -58,13 +60,16 @@ export function ExpensaMensual({
   remitente = "Administración",
   logoUrl,
   unsubscribeUrl,
+  footerContact,
 }: ExpensaMensualProps) {
   const preview = consorcio ? `Expensa mensual de ${consorcio}` : "Expensa mensual de su consorcio";
 
   const alias = paymentAlias?.trim() || null;
-  const resolvedLink = linkUrl?.trim() || null;
+  const trimmedLink = linkUrl?.trim() || "";
+  const resolvedLink = trimmedLink !== "" && URL.canParse(trimmedLink) ? trimmedLink : null;
   const hasInfoBlock = Boolean(alias || resolvedLink);
   const hasAttachments = attachmentNames.length > 0;
+  const resolvedFooterContact = footerContact?.trim() || null;
 
   return (
     <Html lang="es">
@@ -149,12 +154,12 @@ export function ExpensaMensual({
                         {alias ? (
                           <Text style={infoRow}>
                             <span style={infoLabel}>Alias de cobro: </span>
-                            {alias}
+                            <strong style={strongText}>{alias}</strong>
                           </Text>
                         ) : null}
                         {resolvedLink ? (
                           <Text style={infoRow}>
-                            <span style={infoLabel}>Link: </span>
+                            <span style={infoLabel}>Link de drive: </span>
                             <Link href={resolvedLink} style={infoLink}>
                               {resolvedLink}
                             </Link>
@@ -178,11 +183,7 @@ export function ExpensaMensual({
                       Si tiene cualquier duda, no dude en responder a este correo.
                     </Text>
 
-                    <Text style={farewell}>
-                      Un cordial saludo,
-                      <br />
-                      {remitente}
-                    </Text>
+                    <Text style={farewell}>{`Un cordial saludo, ${remitente}`}</Text>
                   </Section>
                 </td>
                 <td width={16} style={sideCell} aria-hidden="true">
@@ -205,9 +206,9 @@ export function ExpensaMensual({
 
             <Hr style={hr} />
 
-            <Text style={footerAddress}>
-              123 Calle Principal, Piso 1, Ciudad Autónoma de Buenos Aires, C1000
-            </Text>
+            {resolvedFooterContact ? (
+              <Text style={footerAddress}>{resolvedFooterContact}</Text>
+            ) : null}
 
             {unsubscribeUrl ? (
               <>
@@ -236,6 +237,7 @@ ExpensaMensual.PreviewProps = {
   paymentAlias: "rivadavia.expensas",
   attachmentNames: ["expensa-julio-2026.pdf", "detalle-gastos.pdf"],
   remitente: "Administración Edificio Rivadavia",
+  footerContact: "Av. Corrientes 1847, Piso 5 Of. B, CABA - CP: 1043 / Teléfono: +54911-12345678",
 } satisfies ExpensaMensualProps;
 
 const fontFamily =
@@ -396,6 +398,7 @@ const infoLabel: React.CSSProperties = {
 
 const infoLink: React.CSSProperties = {
   color: colors.link,
+  fontWeight: 700,
   textDecoration: "underline",
   wordBreak: "break-all",
 };

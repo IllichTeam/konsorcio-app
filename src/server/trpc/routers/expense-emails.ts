@@ -11,11 +11,13 @@ import {
   expenseEmailSendIdInputSchema,
   expenseEmailSendIdResultSchema,
   listExpenseEmailSendsInputSchema,
+  normalizeExpenseEmailLinkUrl,
   previewExpenseEmailInputSchema,
   previewExpenseEmailResultSchema,
   type ExpenseEmailAttachmentRef,
 } from "@/lib/schemas/expense-email";
 import { renderExpenseEmailHtml } from "@/lib/email/render-expense-email";
+import { loadEmailFooterContact } from "@/lib/email/load-sender-contact";
 import { isAttachmentRefForSend } from "@/lib/storage/expense-emails";
 import { z } from "@/lib/zod";
 import {
@@ -132,11 +134,8 @@ async function loadActiveTenantEmails(consortiumId: string): Promise<string[]> {
 }
 
 function normalizeLinkUrl(linkUrl: string | undefined): string | null {
-  if (linkUrl == null) {
-    return null;
-  }
-  const trimmed = linkUrl.trim();
-  return trimmed === "" ? null : trimmed;
+  const normalized = normalizeExpenseEmailLinkUrl(linkUrl);
+  return normalized === "" ? null : normalized;
 }
 
 /**
@@ -164,14 +163,18 @@ export const expenseEmailsRouter = createTRPCRouter({
         ctx.session.user.role,
       );
 
-      const linkUrl = input.linkUrl === undefined ? (consortium.driveLink ?? "") : input.linkUrl;
+      const linkUrl =
+        input.linkUrl !== undefined
+          ? normalizeLinkUrl(input.linkUrl)
+          : normalizeLinkUrl(consortium.driveLink ?? undefined);
 
       const html = await renderExpenseEmailHtml({
         consorcio: consortium.name,
         mensaje: input.message.trim(),
-        linkUrl: linkUrl.trim() || null,
+        linkUrl,
         paymentAlias: consortium.paymentAlias,
         attachmentNames: input.attachmentNames,
+        footerContact: await loadEmailFooterContact(ctx.session.user.id),
       });
 
       return { html };

@@ -16,6 +16,10 @@ vi.mock("@/lib/email/render-expense-email", () => ({
   renderExpenseEmailHtml: vi.fn(async () => "<html>preview</html>"),
 }));
 
+vi.mock("@/lib/email/load-sender-contact", () => ({
+  loadEmailFooterContact: vi.fn(async () => "Gurruchaga 2222 - CP: 1414 / Teléfono: 91123878467"),
+}));
+
 vi.mock("@/server/trpc/lib/consortium-access", () => ({
   findAccessibleConsortium: vi.fn(),
 }));
@@ -266,6 +270,32 @@ describe("expenseEmails tRPC router", () => {
         attachmentNames: ["a.pdf"],
       }),
     ).resolves.toEqual({ html: "<html>preview</html>" });
+
+    const { renderExpenseEmailHtml } = await import("@/lib/email/render-expense-email");
+    expect(renderExpenseEmailHtml).toHaveBeenCalledWith(
+      expect.objectContaining({
+        footerContact: "Gurruchaga 2222 - CP: 1414 / Teléfono: 91123878467",
+      }),
+    );
+  });
+
+  it("still returns preview HTML when linkUrl is not a valid URL", async () => {
+    const api = await caller();
+    await expect(
+      api.expenseEmails.preview({
+        consortiumId,
+        message: "Mensaje",
+        linkUrl: "Link",
+        attachmentNames: [],
+      }),
+    ).resolves.toEqual({ html: "<html>preview</html>" });
+
+    const { renderExpenseEmailHtml } = await import("@/lib/email/render-expense-email");
+    expect(renderExpenseEmailHtml).toHaveBeenCalledWith(
+      expect.objectContaining({
+        linkUrl: null,
+      }),
+    );
   });
 
   describe("retryPending", () => {

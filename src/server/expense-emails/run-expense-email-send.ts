@@ -11,6 +11,7 @@ import {
   type ExpenseEmailSendRow,
 } from "@/db/schema";
 import { EXPENSE_EMAIL_SEND_CONCURRENCY, mapWithConcurrency } from "@/lib/email/concurrency";
+import { loadEmailFooterContact } from "@/lib/email/load-sender-contact";
 import { sendExpenseEmail } from "@/lib/email/send-expense-email";
 import {
   EXPENSE_EMAIL_STALE_SENDING_MS,
@@ -227,6 +228,8 @@ export async function runExpenseEmailSend(sendId: string): Promise<void> {
     return;
   }
 
+  const footerContact = send.sentByUserId ? await loadEmailFooterContact(send.sentByUserId) : null;
+
   const workRecipients = await db
     .select()
     .from(expenseEmailRecipients)
@@ -312,6 +315,7 @@ export async function runExpenseEmailSend(sendId: string): Promise<void> {
       paymentAlias,
       attachments,
       billingEmail,
+      footerContact,
     });
 
     if (result.ok) {

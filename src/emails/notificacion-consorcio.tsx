@@ -16,9 +16,15 @@ export type NotificacionConsorcioProps = {
   nombre?: string;
   consorcio?: string;
   mensaje: string;
+  /** Consortium drive / payment link; omitted or empty hides the link row. */
+  linkUrl?: string | null;
+  /** Payment alias from the consortium; omitted or empty hides the alias row. */
+  paymentAlias?: string | null;
   remitente?: string;
   logoUrl?: string;
   unsubscribeUrl?: string;
+  /** Sender profile line: address / phone / postal code. */
+  footerContact?: string | null;
 };
 
 const colors = {
@@ -38,13 +44,21 @@ export function NotificacionConsorcio({
   nombre = "Vecino",
   consorcio,
   mensaje,
+  linkUrl,
+  paymentAlias,
   remitente = "Administración",
   logoUrl,
   unsubscribeUrl,
+  footerContact,
 }: NotificacionConsorcioProps) {
   const preview = consorcio
     ? `Nueva notificación de la administración de ${consorcio}`
     : "Nueva notificación de la administración";
+  const alias = paymentAlias?.trim() || null;
+  const trimmedLink = linkUrl?.trim() || "";
+  const resolvedLink = trimmedLink !== "" && URL.canParse(trimmedLink) ? trimmedLink : null;
+  const hasInfoBlock = Boolean(alias || resolvedLink);
+  const resolvedFooterContact = footerContact?.trim() || null;
 
   return (
     <Html lang="es">
@@ -128,15 +142,31 @@ export function NotificacionConsorcio({
                       <Text style={messageText}>{mensaje}</Text>
                     </Section>
 
+                    {hasInfoBlock ? (
+                      <Section style={infoSection}>
+                        <Text style={infoIntro}>A continuación dejamos información relevante:</Text>
+                        {alias ? (
+                          <Text style={infoRow}>
+                            <span style={infoLabel}>Alias de cobro: </span>
+                            <strong style={strongText}>{alias}</strong>
+                          </Text>
+                        ) : null}
+                        {resolvedLink ? (
+                          <Text style={infoRow}>
+                            <span style={infoLabel}>Link de drive: </span>
+                            <Link href={resolvedLink} style={infoLink}>
+                              {resolvedLink}
+                            </Link>
+                          </Text>
+                        ) : null}
+                      </Section>
+                    ) : null}
+
                     <Text style={paragraph}>
                       Si tiene cualquier duda, no dude en responder a este correo.
                     </Text>
 
-                    <Text style={farewell}>
-                      Un cordial saludo,
-                      <br />
-                      {remitente}
-                    </Text>
+                    <Text style={farewell}>{`Un cordial saludo, ${remitente}`}</Text>
                   </Section>
                 </td>
                 <td width={16} style={sideCell} aria-hidden="true">
@@ -159,9 +189,9 @@ export function NotificacionConsorcio({
 
             <Hr style={hr} />
 
-            <Text style={footerAddress}>
-              123 Calle Principal, Piso 1, Ciudad Autónoma de Buenos Aires, C1000
-            </Text>
+            {resolvedFooterContact ? (
+              <Text style={footerAddress}>{resolvedFooterContact}</Text>
+            ) : null}
 
             {unsubscribeUrl ? (
               <>
@@ -187,7 +217,10 @@ NotificacionConsorcio.PreviewProps = {
   consorcio: "Edificio Rivadavia 1234",
   mensaje:
     "Le informamos que el ascensor principal estará fuera de servicio el sábado 20 de 9:00 a 14:00 por mantenimiento programado.",
+  linkUrl: "https://drive.google.com/drive/folders/ejemplo",
+  paymentAlias: "rivadavia.expensas",
   remitente: "Administración Edificio Rivadavia",
+  footerContact: "Av. Corrientes 1847, Piso 5 Of. B, CABA - CP: 1043 / Teléfono: +54911-12345678",
 } satisfies NotificacionConsorcioProps;
 
 const fontFamily =
@@ -323,6 +356,36 @@ const messageText: React.CSSProperties = {
   lineHeight: "24px",
   margin: 0,
   whiteSpace: "pre-line",
+};
+
+const infoSection: React.CSSProperties = {
+  margin: "0 0 20px",
+};
+
+const infoIntro: React.CSSProperties = {
+  color: colors.textMuted,
+  fontSize: "13px",
+  fontWeight: 600,
+  lineHeight: "20px",
+  margin: "0 0 8px",
+};
+
+const infoRow: React.CSSProperties = {
+  color: colors.text,
+  fontSize: "15px",
+  lineHeight: "24px",
+  margin: "0 0 6px",
+};
+
+const infoLabel: React.CSSProperties = {
+  color: colors.textMuted,
+};
+
+const infoLink: React.CSSProperties = {
+  color: colors.link,
+  fontWeight: 700,
+  textDecoration: "underline",
+  wordBreak: "break-all",
 };
 
 const farewell: React.CSSProperties = {

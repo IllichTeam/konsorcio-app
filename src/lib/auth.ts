@@ -57,6 +57,11 @@ export function createAuth(database: Parameters<typeof drizzleAdapter>[0] = db) 
           required: false,
           input: true,
         },
+        postalCode: {
+          type: "string",
+          required: false,
+          input: true,
+        },
       },
     },
     session: {

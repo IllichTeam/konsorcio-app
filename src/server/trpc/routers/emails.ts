@@ -11,6 +11,7 @@ import {
 } from "@/lib/schemas/email";
 import { listRecipients } from "@/lib/email/recipients";
 import { sendEmail } from "@/lib/email/send";
+import { loadEmailFooterContact } from "@/lib/email/load-sender-contact";
 import { z } from "@/lib/zod";
 import { adminProcedure, createTRPCRouter } from "@/server/trpc/init";
 
@@ -56,7 +57,12 @@ export const emailsRouter = createTRPCRouter({
     .input(sendEmailInputSchema)
     .output(sendEmailResultSchema)
     .mutation(async ({ ctx, input }) => {
-      const result = await sendEmail(input);
+      const footerContact = await loadEmailFooterContact(ctx.session.user.id);
+
+      const result = await sendEmail({
+        ...input,
+        footerContact,
+      });
 
       try {
         await db.insert(emailLog).values({

@@ -27,6 +27,11 @@ export function isValidProfilePhone(phone: string): boolean {
   return withoutAreaCode.length >= 8;
 }
 
+/** Argentine-style numeric postal code: exactly 4 digits. */
+export function isValidPostalCode(postalCode: string): boolean {
+  return /^\d{4}$/.test(postalCode.trim());
+}
+
 /** Rejects empty-looking or number-only fiscal addresses. */
 export function isValidFiscalAddress(address: string): boolean {
   const trimmed = address.trim();
@@ -49,6 +54,7 @@ const profileSchema = z
     email: z.string(),
     phone: z.string(),
     address: z.string(),
+    postalCode: z.string(),
     currentPassword: z.string(),
     newPassword: z.string(),
     confirmPassword: z.string(),
@@ -69,6 +75,15 @@ const profileSchema = z
         code: z.ZodIssueCode.custom,
         path: ["address"],
         message: "Se necesita una dirección fiscal real",
+      });
+    }
+
+    const postalCode = values.postalCode.trim();
+    if (postalCode.length > 0 && !isValidPostalCode(postalCode)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["postalCode"],
+        message: "El código postal debe tener exactamente 4 dígitos",
       });
     }
 
@@ -164,6 +179,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
         email: user.email,
         phone: optionalField(user.phone),
         address: optionalField(user.address),
+        postalCode: optionalField(user.postalCode),
         currentPassword: "",
         newPassword: "",
         confirmPassword: "",
@@ -180,6 +196,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
       email: user.email,
       phone: optionalField(user.phone),
       address: optionalField(user.address),
+      postalCode: optionalField(user.postalCode),
       currentPassword: "",
       newPassword: "",
       confirmPassword: "",
@@ -215,6 +232,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
   async function onSubmit(values: ProfileValues) {
     const phone = values.phone.trim();
     const address = values.address.trim();
+    const postalCode = values.postalCode.trim();
     const shouldChangePassword =
       changePasswordOpen &&
       (values.currentPassword.length > 0 ||
@@ -246,6 +264,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
       name: values.name.trim(),
       phone,
       address,
+      postalCode,
     });
 
     if (updateError) {
@@ -257,6 +276,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
       name: values.name.trim(),
       phone,
       address,
+      postalCode,
     });
 
     toast.success("Perfil actualizado");
@@ -265,6 +285,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
       email: user.email,
       phone,
       address,
+      postalCode,
       currentPassword: "",
       newPassword: "",
       confirmPassword: "",
@@ -299,7 +320,8 @@ export function ProfileForm({ user }: ProfileFormProps) {
                   Información personal
                 </h2>
                 <p className="text-xs text-muted-foreground">
-                  El teléfono y la dirección fiscal aparecen en los correos que enviás.
+                  El teléfono, la dirección fiscal y el código postal aparecen en los correos que
+                  enviás.
                 </p>
               </div>
 
@@ -330,13 +352,25 @@ export function ProfileForm({ user }: ProfileFormProps) {
                 description="Incluí el código 911 y al menos 8 números más"
               />
 
-              <FormInput
-                control={control}
-                name="address"
-                label="Dirección Fiscal"
-                autoComplete="street-address"
-                placeholder="Av. Corrientes 1847, Piso 5 Of. B, CABA"
-              />
+              <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_7.5rem] sm:items-start">
+                <FormInput
+                  control={control}
+                  name="address"
+                  label="Dirección Fiscal"
+                  autoComplete="street-address"
+                  placeholder="Av. Corrientes 1847, Piso 5 Of. B, CABA"
+                />
+                <FormInput
+                  control={control}
+                  name="postalCode"
+                  label="Código postal"
+                  inputMode="numeric"
+                  autoComplete="postal-code"
+                  placeholder="1000"
+                  maxLength={4}
+                  sanitize={(value) => value.replace(/\D/g, "").slice(0, 4)}
+                />
+              </div>
             </section>
 
             <section className="space-y-2" aria-labelledby="password-heading">

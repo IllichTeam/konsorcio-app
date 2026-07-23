@@ -9,7 +9,10 @@ import { z } from "@/lib/zod";
 
 import { uploadExpenseEmailPdfs } from "@/lib/api/upload-expense-emails";
 import { buildMonthlyExpenseMessage } from "@/lib/email/build-monthly-expense-message";
-import type { ExpenseEmailAttachmentRef } from "@/lib/schemas/expense-email";
+import {
+  normalizeExpenseEmailLinkUrl,
+  type ExpenseEmailAttachmentRef,
+} from "@/lib/schemas/expense-email";
 import { useCreateExpenseEmailSend, useExpenseEmailPreview } from "@/hooks/use-expense-emails";
 import { useTenantEmails } from "@/hooks/use-tenant-emails";
 import { FormPdfFiles, MAX_PDF_BYTES, MAX_PDF_COUNT } from "@/components/form/form-pdf-files";
@@ -104,7 +107,7 @@ export function SendMonthlyExpenseDialog({
   });
 
   const pdfs = useWatch({ control, name: "pdfs" }) ?? [];
-  const linkUrl = defaultDriveLink?.trim() ?? "";
+  const linkUrl = normalizeExpenseEmailLinkUrl(defaultDriveLink);
   const recipientCount = tenantEmails.length;
   const fixedMessage = buildMonthlyExpenseMessage(consortiumName);
   const attachmentNames = pdfs.map((file) => file.name);

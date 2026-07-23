@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   isInvalidCurrentPasswordError,
   isValidFiscalAddress,
+  isValidPostalCode,
   isValidProfilePhone,
   profileSchema,
 } from "@/components/profile/profile-form";
@@ -40,6 +41,7 @@ const user = {
   email: "illich570@gmail.com",
   phone: null,
   address: null,
+  postalCode: null,
   image: null,
   role: "admin" as const,
   createdAt: new Date(),
@@ -56,6 +58,7 @@ function baseValues(
     email: string;
     phone: string;
     address: string;
+    postalCode: string;
     currentPassword: string;
     newPassword: string;
     confirmPassword: string;
@@ -66,6 +69,7 @@ function baseValues(
     email: "illich570@gmail.com",
     phone: "",
     address: "",
+    postalCode: "",
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
@@ -93,6 +97,15 @@ describe("phone and address helpers", () => {
     expect(isValidFiscalAddress("12345678")).toBe(false);
     expect(isValidFiscalAddress("ab")).toBe(false);
   });
+
+  it("accepts exactly four digit postal codes", () => {
+    expect(isValidPostalCode("1000")).toBe(true);
+    expect(isValidPostalCode("1414")).toBe(true);
+    expect(isValidPostalCode("100")).toBe(false);
+    expect(isValidPostalCode("10000")).toBe(false);
+    expect(isValidPostalCode("10.0")).toBe(false);
+    expect(isValidPostalCode("abcd")).toBe(false);
+  });
 });
 
 describe("profileSchema password rules", () => {
@@ -101,9 +114,20 @@ describe("profileSchema password rules", () => {
       baseValues({
         phone: "+54911-12345678",
         address: "Av. Corrientes 1847, CABA",
+        postalCode: "1043",
       }),
     );
     expect(result.success).toBe(true);
+  });
+
+  it("rejects invalid postal codes when provided", () => {
+    const result = profileSchema.safeParse(
+      baseValues({
+        postalCode: "12",
+      }),
+    );
+    expect(result.success).toBe(false);
+    expect(issuePaths(result)).toEqual(["postalCode"]);
   });
 
   it("requires all three password fields when only current is filled", () => {

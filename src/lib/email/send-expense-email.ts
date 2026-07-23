@@ -39,6 +39,8 @@ export type SendExpenseEmailParams = {
   billingEmail?: string | null;
   remitente?: string;
   unsubscribeUrl?: string;
+  /** Sender profile footer: address / phone / postal code. */
+  footerContact?: string | null;
 };
 
 export type SendExpenseEmailResult =
@@ -72,6 +74,7 @@ export async function sendExpenseEmail(
     billingEmail,
     remitente,
     unsubscribeUrl,
+    footerContact,
   } = input;
 
   if (attachments.length === 0) {
@@ -89,6 +92,7 @@ export async function sendExpenseEmail(
     attachmentNames,
     remitente,
     unsubscribeUrl,
+    footerContact,
   });
 
   const subject = isEmailToOverridden()
