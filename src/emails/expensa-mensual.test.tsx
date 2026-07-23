@@ -4,10 +4,11 @@ import { describe, expect, it } from "vitest";
 import { ExpensaMensual } from "@/emails/expensa-mensual";
 
 describe("ExpensaMensual", () => {
-  it("renders the fixed greeting, message, alias, link and attachment names", async () => {
+  it("renders the fixed greeting, period, message, alias, link and attachment names", async () => {
     const html = await render(
       <ExpensaMensual
         consorcio="Torre Norte"
+        periodo="Julio de 2026"
         mensaje="Nos complace acercarle las expensas mensuales."
         linkUrl="https://drive.example/folder"
         paymentAlias="ALIAS.TORRE"
@@ -18,6 +19,8 @@ describe("ExpensaMensual", () => {
 
     expect(html).toContain("Hola Vecino/a");
     expect(html).toContain("Torre Norte");
+    expect(html).toContain("del período:");
+    expect(html).toContain("Julio de 2026");
     expect(html).toContain("Nos complace acercarle las expensas mensuales.");
     expect(html).toContain("ALIAS.TORRE");
     expect(html).toContain("<strong");
@@ -33,9 +36,15 @@ describe("ExpensaMensual", () => {
 
   it("hides alias and link rows when they are empty", async () => {
     const html = await render(
-      <ExpensaMensual mensaje="Solo mensaje" linkUrl="" paymentAlias="  " />,
+      <ExpensaMensual
+        periodo="Julio de 2026"
+        mensaje="Solo mensaje"
+        linkUrl=""
+        paymentAlias="  "
+      />,
     );
 
+    expect(html).toContain("Julio de 2026");
     expect(html).toContain("Solo mensaje");
     expect(html).not.toContain("Alias de cobro");
     expect(html).not.toContain("href=");
@@ -43,7 +52,12 @@ describe("ExpensaMensual", () => {
 
   it("hides the drive link row when linkUrl is not a valid URL", async () => {
     const html = await render(
-      <ExpensaMensual mensaje="Sin drive" linkUrl="Link" paymentAlias={null} />,
+      <ExpensaMensual
+        periodo="Julio de 2026"
+        mensaje="Sin drive"
+        linkUrl="Link"
+        paymentAlias={null}
+      />,
     );
 
     expect(html).toContain("Sin drive");
@@ -54,6 +68,7 @@ describe("ExpensaMensual", () => {
   it("renders the sender footer contact line when provided", async () => {
     const html = await render(
       <ExpensaMensual
+        periodo="Julio de 2026"
         mensaje="Con pie"
         footerContact="Gurruchaga 2222 - CP: 1414 / Teléfono: +54911-12345678"
       />,
@@ -64,7 +79,7 @@ describe("ExpensaMensual", () => {
   });
 
   it("hides the footer address row when contact is missing", async () => {
-    const html = await render(<ExpensaMensual mensaje="Sin pie" />);
+    const html = await render(<ExpensaMensual periodo="Julio de 2026" mensaje="Sin pie" />);
 
     expect(html).toContain("Sin pie");
     expect(html).not.toContain("123 Calle Principal");

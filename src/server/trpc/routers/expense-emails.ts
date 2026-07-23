@@ -3,6 +3,9 @@ import { TRPCError } from "@trpc/server";
 
 import { db } from "@/db";
 import { expenseEmailRecipients, expenseEmailSends, tenantEmails, user } from "@/db/schema";
+import { formatExpensePeriod } from "@/lib/email/build-monthly-expense-message";
+import { loadEmailFooterContact } from "@/lib/email/load-sender-contact";
+import { renderExpenseEmailHtml } from "@/lib/email/render-expense-email";
 import {
   createExpenseEmailSendInputSchema,
   EXPENSE_EMAIL_SUBJECT,
@@ -16,8 +19,6 @@ import {
   previewExpenseEmailResultSchema,
   type ExpenseEmailAttachmentRef,
 } from "@/lib/schemas/expense-email";
-import { renderExpenseEmailHtml } from "@/lib/email/render-expense-email";
-import { loadEmailFooterContact } from "@/lib/email/load-sender-contact";
 import { isAttachmentRefForSend } from "@/lib/storage/expense-emails";
 import { z } from "@/lib/zod";
 import {
@@ -170,6 +171,7 @@ export const expenseEmailsRouter = createTRPCRouter({
 
       const html = await renderExpenseEmailHtml({
         consorcio: consortium.name,
+        periodo: formatExpensePeriod(),
         mensaje: input.message.trim(),
         linkUrl,
         paymentAlias: consortium.paymentAlias,
