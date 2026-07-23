@@ -91,8 +91,9 @@ export function ExpenseEmailSendStatusScreen({
         <Button
           variant="ghost"
           size="sm"
+          nativeButton={false}
           render={<Link href={`/consorcios/${consortiumId}`} />}
-          className="-ml-2 w-fit text-muted-foreground"
+          className="-ml-2 w-fit bg-background text-muted-foreground"
         >
           <ArrowLeft className="size-4" aria-hidden="true" />
           Volver a {consortium.name}
@@ -182,8 +183,9 @@ function StatusBackLink({
       <Button
         variant="ghost"
         size="sm"
+        nativeButton={false}
         render={<Link href={`/consorcios/${consortiumId}`} />}
-        className="-ml-2"
+        className="-ml-2 w-fit bg-background text-muted-foreground"
       >
         <ArrowLeft className="size-4" aria-hidden="true" />
         {consortiumName ? `Volver a ${consortiumName}` : "Volver al consorcio"}

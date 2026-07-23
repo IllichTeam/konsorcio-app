@@ -17,12 +17,19 @@ function getLegacyDashboardRedirect(pathname: string): string | null {
     return "/resumen";
   }
 
-  const legacyConsortiumDetailMatch = pathname.match(
-    /^\/(?:dashboard\/)?consorcios\/([^/]+)(\/.*)?$/,
+  // Brief /resumen/[id] hub from a prior routing mistake — send to canonical /consorcios/[id].
+  const legacyResumenDetailMatch = pathname.match(/^\/resumen\/([^/]+)(\/.*)?$/);
+  if (legacyResumenDetailMatch) {
+    const [, id, rest = ""] = legacyResumenDetailMatch;
+    return `/consorcios/${id}${rest}`;
+  }
+
+  const legacyDashboardConsortiumMatch = pathname.match(
+    /^\/dashboard\/consorcios\/([^/]+)(\/.*)?$/,
   );
-  if (legacyConsortiumDetailMatch) {
-    const [, id, rest = ""] = legacyConsortiumDetailMatch;
-    return `/resumen/${id}${rest}`;
+  if (legacyDashboardConsortiumMatch) {
+    const [, id, rest = ""] = legacyDashboardConsortiumMatch;
+    return `/consorcios/${id}${rest}`;
   }
 
   return null;

@@ -59,8 +59,9 @@ export function ConsortiumDetail({ consortiumId }: ConsortiumDetailProps) {
         <Button
           variant="ghost"
           size="sm"
+          nativeButton={false}
           render={<Link href={defaultAuthenticatedPath} />}
-          className="-ml-2"
+          className="-ml-2 w-fit bg-background text-muted-foreground"
         >
           <ArrowLeft className="size-4" aria-hidden="true" />
           Volver a consorcios
@@ -75,8 +76,9 @@ export function ConsortiumDetail({ consortiumId }: ConsortiumDetailProps) {
       <Button
         variant="ghost"
         size="sm"
+        nativeButton={false}
         render={<Link href={defaultAuthenticatedPath} />}
-        className="-ml-2 w-fit text-muted-foreground"
+        className="-ml-2 w-fit bg-background text-muted-foreground"
       >
         <ArrowLeft className="size-4" aria-hidden="true" />
         Volver a consorcios
@@ -99,7 +101,8 @@ export function ConsortiumDetail({ consortiumId }: ConsortiumDetailProps) {
                 <Button
                   variant="outline"
                   className="w-fit"
-                  render={<Link href={`/resumen/${consortiumId}/emails-inquilinos`} />}
+                  nativeButton={false}
+                  render={<Link href={`/consorcios/${consortiumId}/emails-inquilinos`} />}
                 >
                   <Mail className="size-4" aria-hidden="true" />
                   Emails de inquilinos

@@ -19,7 +19,10 @@ const fontMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Konsorcio",
+  title: {
+    default: "ExpensasYa",
+    template: "%s - ExpensasYa",
+  },
   description: "Gestión de consorcios",
 };
 

@@ -21,7 +21,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
         <SidebarInset className="min-w-0 overflow-x-clip">
           <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-4 md:hidden">
             <SidebarTrigger />
-            <span className="font-heading text-sm font-semibold text-primary">Konsorcio</span>
+            <span className="font-heading text-sm font-semibold text-primary">ExpensasYa</span>
           </header>
           {/*
             Stretch children to the full main-column width so pages can center

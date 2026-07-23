@@ -80,6 +80,7 @@ export function createExpenseEmailSendHistoryColumns(
         <Button
           variant="outline"
           size="sm"
+          nativeButton={false}
           render={<Link href={`/consorcios/${consortiumId}/envios/${row.original.id}`} />}
         >
           Ver detalle
