@@ -19,6 +19,8 @@ export type SendExpenseEmailParams = {
   to: string;
   /** Consortium display name for the template. */
   consortium: string;
+  /** Dedicated period line (e.g. from `formatExpensePeriod`). */
+  periodo: string;
   /** Automatic monthly message body. */
   message: string;
   /** Optional drive / payment link (readonly in maqueta UI). */
@@ -67,6 +69,7 @@ export async function sendExpenseEmail(
   const {
     to,
     consortium,
+    periodo,
     message,
     linkUrl,
     paymentAlias,
@@ -86,6 +89,7 @@ export async function sendExpenseEmail(
 
   const html = await renderExpenseEmailHtml({
     consorcio: consortium,
+    periodo,
     mensaje: message,
     linkUrl,
     paymentAlias,

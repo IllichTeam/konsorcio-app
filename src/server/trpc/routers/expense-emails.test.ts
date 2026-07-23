@@ -274,6 +274,7 @@ describe("expenseEmails tRPC router", () => {
     const { renderExpenseEmailHtml } = await import("@/lib/email/render-expense-email");
     expect(renderExpenseEmailHtml).toHaveBeenCalledWith(
       expect.objectContaining({
+        periodo: expect.stringMatching(/ de \d{4}$/),
         footerContact: "Gurruchaga 2222 - CP: 1414 / Teléfono: 91123878467",
       }),
     );
