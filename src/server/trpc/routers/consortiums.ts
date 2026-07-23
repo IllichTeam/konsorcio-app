@@ -1,10 +1,20 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, count, desc, eq, inArray, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
 import { db } from "@/db";
-import { consortiums, emailLog, tenantEmails, type ConsortiumRow } from "@/db/schema";
+import {
+  consortiumActivities,
+  consortiums,
+  emailLog,
+  expenseEmailSends,
+  tenantEmails,
+  type ConsortiumRow,
+} from "@/db/schema";
 import { sendEmail } from "@/lib/email/send";
-import { normalizeExpenseEmailLinkUrl } from "@/lib/schemas/expense-email";
+import {
+  normalizeExpenseEmailLinkUrl,
+  type ExpenseEmailSendStatus,
+} from "@/lib/schemas/expense-email";
 import {
   consortiumDetailSchema,
   consortiumHistoryInputSchema,
@@ -15,36 +25,16 @@ import {
   sendConsortiumCommentInputSchema,
   updateConsortiumAmountInputSchema,
   updateConsortiumInputSchema,
+  type ConsortiumActivityPayload,
   type ConsortiumHistoryEntry,
 } from "@/lib/schemas/consortium";
 import { z } from "@/lib/zod";
+import { recordConsortiumActivity } from "@/server/consortiums/record-consortium-activity";
 import { createTRPCRouter, protectedProcedure } from "@/server/trpc/init";
 import { findAccessibleConsortium, ownershipFilter } from "@/server/trpc/lib/consortium-access";
 
 const COMMENT_SENDER = "Administración";
-
-/** Mock action history until the domain is modeled in the DB. */
-const MOCK_HISTORY: ConsortiumHistoryEntry[] = [
-  { id: 1, timestamp: "2026-07-20 09:12", description: "Se actualizó el monto de caja" },
-  { id: 2, timestamp: "2026-07-18 16:40", description: "Se envió la expensa mensual" },
-  { id: 3, timestamp: "2026-07-15 11:05", description: "Se editaron los datos del consorcio" },
-  { id: 4, timestamp: "2026-07-12 14:22", description: "Se agregó un email de inquilino" },
-  { id: 5, timestamp: "2026-07-10 10:00", description: "Se envió un comentario a los inquilinos" },
-  { id: 6, timestamp: "2026-07-08 18:31", description: "Se eliminó un email de inquilino" },
-  { id: 7, timestamp: "2026-07-05 09:45", description: "Se actualizó el alias de cobro" },
-  { id: 8, timestamp: "2026-07-02 13:18", description: "Se actualizó el link del drive" },
-  { id: 9, timestamp: "2026-06-28 17:50", description: "Se envió la expensa mensual" },
-  { id: 10, timestamp: "2026-06-25 08:20", description: "Se cambió el email de facturación" },
-  { id: 11, timestamp: "2026-06-20 12:00", description: "Se creó el consorcio" },
-  {
-    id: 12,
-    timestamp: "2026-06-18 15:33",
-    description: "Se sincronizaron los emails de inquilinos",
-  },
-  { id: 13, timestamp: "2026-06-15 11:11", description: "Se actualizó la ubicación" },
-  { id: 14, timestamp: "2026-06-12 19:05", description: "Se reenvió la notificación de expensa" },
-  { id: 15, timestamp: "2026-06-10 10:30", description: "Se registró el primer monto de caja" },
-];
+const MESSAGE_PREVIEW_MAX = 120;
 
 const listColumns = {
   id: consortiums.id,
@@ -59,6 +49,22 @@ const detailColumns = {
   ...listColumns,
   amount: consortiums.amount,
 } as const;
+
+type UpdateComparable = {
+  name: string;
+  location: string;
+  paymentAlias: string | null;
+  billingEmail: string | null;
+  driveLink: string | null;
+};
+
+const UPDATE_FIELD_KEYS = [
+  "name",
+  "location",
+  "paymentAlias",
+  "billingEmail",
+  "driveLink",
+] as const satisfies ReadonlyArray<keyof UpdateComparable>;
 
 function toListItem(row: Pick<ConsortiumRow, keyof typeof listColumns>) {
   return {
@@ -76,6 +82,54 @@ function toDetail(row: ConsortiumRow) {
     ...toListItem(row),
     amount: row.amount,
   };
+}
+
+function changedUpdateFields(previous: UpdateComparable, next: UpdateComparable): string[] {
+  return UPDATE_FIELD_KEYS.filter((key) => previous[key] !== next[key]);
+}
+
+function truncatePreview(message: string): string {
+  const trimmed = message.trim();
+  if (trimmed.length <= MESSAGE_PREVIEW_MAX) {
+    return trimmed;
+  }
+  return `${trimmed.slice(0, MESSAGE_PREVIEW_MAX - 1)}…`;
+}
+
+function toHistoryEntry(row: {
+  id: string;
+  type: ConsortiumHistoryEntry["type"];
+  summary: string;
+  payload: ConsortiumHistoryEntry["payload"] | null;
+  createdAt: Date;
+  sendStatus?: ExpenseEmailSendStatus;
+}): ConsortiumHistoryEntry {
+  return {
+    id: row.id,
+    type: row.type,
+    summary: row.summary,
+    timestamp: row.createdAt.toISOString(),
+    payload: row.payload ?? {},
+    ...(row.sendStatus ? { sendStatus: row.sendStatus } : {}),
+  };
+}
+
+async function loadExpenseSendStatuses(
+  sendIds: string[],
+): Promise<Map<string, ExpenseEmailSendStatus>> {
+  if (sendIds.length === 0) {
+    return new Map();
+  }
+
+  const rows = await db
+    .select({
+      id: expenseEmailSends.id,
+      status: expenseEmailSends.status,
+    })
+    .from(expenseEmailSends)
+    .where(inArray(expenseEmailSends.id, sendIds));
+
+  return new Map(rows.map((row) => [row.id, row.status]));
 }
 
 export const consortiumsRouter = createTRPCRouter({
@@ -116,10 +170,7 @@ export const consortiumsRouter = createTRPCRouter({
       return row ?? null;
     }),
 
-  /**
-   * Paginated action history for a consortium.
-   * Backed by mock data until history is persisted.
-   */
+  /** Paginated curated action history for a consortium. */
   history: protectedProcedure
     .input(consortiumHistoryInputSchema)
     .output(consortiumHistoryPageSchema)
@@ -128,9 +179,44 @@ export const consortiumsRouter = createTRPCRouter({
 
       const offset = (input.page - 1) * input.pageSize;
 
+      const [items, totals] = await Promise.all([
+        db
+          .select({
+            id: consortiumActivities.id,
+            type: consortiumActivities.type,
+            summary: consortiumActivities.summary,
+            payload: consortiumActivities.payload,
+            createdAt: consortiumActivities.createdAt,
+          })
+          .from(consortiumActivities)
+          .where(eq(consortiumActivities.consortiumId, input.id))
+          .orderBy(desc(consortiumActivities.createdAt))
+          .limit(input.pageSize)
+          .offset(offset),
+        db
+          .select({ total: count() })
+          .from(consortiumActivities)
+          .where(eq(consortiumActivities.consortiumId, input.id)),
+      ]);
+
+      const expenseSendIds = [
+        ...new Set(
+          items
+            .filter((row) => row.type === "expense_sent" && row.payload?.sendId)
+            .map((row) => row.payload!.sendId!),
+        ),
+      ];
+      const sendStatusById = await loadExpenseSendStatuses(expenseSendIds);
+
       return {
-        items: MOCK_HISTORY.slice(offset, offset + input.pageSize),
-        total: MOCK_HISTORY.length,
+        items: items.map((row) => {
+          const sendId = row.type === "expense_sent" ? row.payload?.sendId : undefined;
+          return toHistoryEntry({
+            ...row,
+            sendStatus: sendId ? sendStatusById.get(sendId) : undefined,
+          });
+        }),
+        total: totals[0]?.total ?? 0,
       };
     }),
 
@@ -158,6 +244,12 @@ export const consortiumsRouter = createTRPCRouter({
     .input(updateConsortiumInputSchema)
     .output(consortiumDetailSchema)
     .mutation(async ({ ctx, input }) => {
+      const previous = await findAccessibleConsortium(
+        input.id,
+        ctx.session.user.id,
+        ctx.session.user.role,
+      );
+
       const [row] = await db
         .update(consortiums)
         .set({
@@ -180,6 +272,35 @@ export const consortiumsRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND", message: "Consorcio no encontrado" });
       }
 
+      const fieldsChanged = changedUpdateFields(previous, input);
+      if (fieldsChanged.length === 1 && fieldsChanged[0] === "driveLink") {
+        await recordConsortiumActivity({
+          consortiumId: row.id,
+          actorUserId: ctx.session.user.id,
+          type: "drive_link_updated",
+          summary: "Se actualizó el link del drive",
+          payload: {
+            previousDriveLink: previous.driveLink,
+            newDriveLink: input.driveLink,
+          },
+        });
+      } else if (fieldsChanged.length > 0) {
+        const payload: ConsortiumActivityPayload = {
+          fieldsChanged,
+        };
+        if (fieldsChanged.includes("driveLink")) {
+          payload.previousDriveLink = previous.driveLink;
+          payload.newDriveLink = input.driveLink;
+        }
+        await recordConsortiumActivity({
+          consortiumId: row.id,
+          actorUserId: ctx.session.user.id,
+          type: "consortium_updated",
+          summary: "Se editaron los datos del consorcio",
+          payload,
+        });
+      }
+
       return toDetail(row);
     }),
 
@@ -187,6 +308,12 @@ export const consortiumsRouter = createTRPCRouter({
     .input(updateConsortiumAmountInputSchema)
     .output(consortiumDetailSchema)
     .mutation(async ({ ctx, input }) => {
+      const previous = await findAccessibleConsortium(
+        input.id,
+        ctx.session.user.id,
+        ctx.session.user.role,
+      );
+
       const [row] = await db
         .update(consortiums)
         .set({
@@ -203,6 +330,19 @@ export const consortiumsRouter = createTRPCRouter({
 
       if (!row) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Consorcio no encontrado" });
+      }
+
+      if (previous.amount !== input.amount) {
+        await recordConsortiumActivity({
+          consortiumId: row.id,
+          actorUserId: ctx.session.user.id,
+          type: "amount_updated",
+          summary: "Se actualizó el monto de caja",
+          payload: {
+            previousAmount: previous.amount,
+            newAmount: input.amount,
+          },
+        });
       }
 
       return toDetail(row);
@@ -289,5 +429,16 @@ export const consortiumsRouter = createTRPCRouter({
           message: "No se pudo enviar el correo",
         });
       }
+
+      await recordConsortiumActivity({
+        consortiumId: consortium.id,
+        actorUserId: ctx.session.user.id,
+        type: "notification_sent",
+        summary: "Se envió una notificación a los inquilinos",
+        payload: {
+          messagePreview: truncatePreview(input.message),
+          recipientCount: recipients.length,
+        },
+      });
     }),
 });

@@ -51,8 +51,8 @@ function makeTx(maxSendNumber: number | null = null) {
   };
 }
 
-const transactionMock = vi.fn(async (fn: (tx: ReturnType<typeof makeTx>) => Promise<void>) => {
-  await fn(makeTx(null));
+const transactionMock = vi.fn(async (fn: (tx: ReturnType<typeof makeTx>) => Promise<unknown>) => {
+  return fn(makeTx(null));
 });
 
 vi.mock("@/db", () => ({
@@ -132,7 +132,7 @@ describe("expenseEmails tRPC router", () => {
     insertValuesMock.mockResolvedValue(undefined);
     updateReturningMock.mockResolvedValue([]);
     transactionMock.mockImplementation(async (fn) => {
-      await fn(makeTx(null));
+      return fn(makeTx(null));
     });
     vi.mocked(findAccessibleConsortium).mockResolvedValue({
       id: consortiumId,
@@ -229,13 +229,24 @@ describe("expenseEmails tRPC router", () => {
         sendNumber: 1,
       }),
     );
+    expect(insertValuesMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "expense_sent",
+        consortiumId,
+        payload: expect.objectContaining({
+          sendId,
+          sendNumber: 1,
+          recipientCount: 2,
+        }),
+      }),
+    );
     expect(scheduleExpenseEmailSend).toHaveBeenCalledWith(sendId);
   });
 
   it("allocates sendNumber as MAX+1 inside the create transaction", async () => {
     mockSelectSequence([() => [], () => [{ email: "a@example.com" }]]);
     transactionMock.mockImplementation(async (fn) => {
-      await fn(makeTx(4));
+      return fn(makeTx(4));
     });
 
     const api = await caller();
@@ -256,6 +267,17 @@ describe("expenseEmails tRPC router", () => {
     expect(insertValuesMock).toHaveBeenCalledWith(
       expect.objectContaining({
         sendNumber: 5,
+      }),
+    );
+    expect(insertValuesMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "expense_sent",
+        summary: expect.stringMatching(/^Se envió la expensa mensual de .+ de \d{4}$/),
+        payload: expect.objectContaining({
+          sendId,
+          sendNumber: 5,
+          recipientCount: 1,
+        }),
       }),
     );
   });

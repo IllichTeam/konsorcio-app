@@ -3,6 +3,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 
 import { Badge } from "@/components/ui/badge";
+import { formatDate } from "@/lib/format-date";
 import type { ExpenseEmailRecipientDto } from "@/lib/schemas/expense-email";
 
 const statusLabel: Record<ExpenseEmailRecipientDto["status"], string> = {
@@ -20,29 +21,13 @@ const statusVariant: Record<
   failed: "destructive",
 };
 
-function formatAttemptedAt(value: string | null | undefined): string {
-  if (!value) {
-    return "—";
-  }
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return "—";
-  }
-
-  return date.toLocaleString("es-AR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  });
-}
-
 export const expenseEmailSendRecipientColumns: ColumnDef<ExpenseEmailRecipientDto>[] = [
   {
     accessorKey: "lastAttemptAt",
-    header: "Fecha y hora",
+    header: "Fecha",
     cell: ({ getValue }) => (
       <span className="whitespace-nowrap text-muted-foreground tabular-nums">
-        {formatAttemptedAt(getValue<string | null | undefined>())}
+        {formatDate(getValue<string | null | undefined>())}
       </span>
     ),
   },
