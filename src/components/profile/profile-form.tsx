@@ -15,6 +15,34 @@ import { PasswordVisibilityToggle } from "@/components/form/password-visibility-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 
+const MIN_PASSWORD_LENGTH = 8;
+
+/** Digits only; must include Buenos Aires area code 911 plus ≥8 more digits. */
+export function isValidProfilePhone(phone: string): boolean {
+  const digits = phone.replace(/\D/g, "");
+  if (!digits.includes("911")) {
+    return false;
+  }
+  const withoutAreaCode = digits.replace("911", "");
+  return withoutAreaCode.length >= 8;
+}
+
+/** Rejects empty-looking or number-only fiscal addresses. */
+export function isValidFiscalAddress(address: string): boolean {
+  const trimmed = address.trim();
+  if (trimmed.length < 5) {
+    return false;
+  }
+  if (!/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/.test(trimmed)) {
+    return false;
+  }
+  const withoutSeparators = trimmed.replace(/[\s\-.,/#º°]/g, "");
+  if (/^\d+$/.test(withoutSeparators)) {
+    return false;
+  }
+  return true;
+}
+
 const profileSchema = z
   .object({
     name: z.string().min(1, "El nombre es obligatorio"),
@@ -26,38 +54,91 @@ const profileSchema = z
     confirmPassword: z.string(),
   })
   .superRefine((values, ctx) => {
-    if (values.newPassword.length > 0 || values.confirmPassword.length > 0) {
-      if (values.newPassword.length < 8) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["newPassword"],
-          message: "Mínimo 8 caracteres",
-        });
-      }
-      if (values.currentPassword.length === 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["currentPassword"],
-          message: "Ingresa tu contraseña actual",
-        });
-      }
-      if (values.confirmPassword.length === 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["confirmPassword"],
-          message: "Repite la nueva contraseña",
-        });
-      } else if (values.newPassword !== values.confirmPassword) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["confirmPassword"],
-          message: "Las contraseñas no coinciden",
-        });
-      }
+    const phone = values.phone.trim();
+    if (phone.length > 0 && !isValidProfilePhone(phone)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["phone"],
+        message: "Usá un teléfono con 911 y al menos 8 números más",
+      });
+    }
+
+    const address = values.address.trim();
+    if (address.length > 0 && !isValidFiscalAddress(address)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["address"],
+        message: "Se necesita una dirección fiscal real",
+      });
+    }
+
+    const attemptingPasswordChange =
+      values.currentPassword.length > 0 ||
+      values.newPassword.length > 0 ||
+      values.confirmPassword.length > 0;
+
+    // Touching any security field requires all three to be complete and valid.
+    if (!attemptingPasswordChange) {
+      return;
+    }
+
+    if (values.currentPassword.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["currentPassword"],
+        message: "Ingresá tu contraseña actual",
+      });
+    }
+
+    if (values.newPassword.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["newPassword"],
+        message: "Ingresá la nueva contraseña",
+      });
+    } else if (values.newPassword.length < MIN_PASSWORD_LENGTH) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["newPassword"],
+        message: "Mínimo 8 caracteres",
+      });
+    } else if (values.currentPassword.length > 0 && values.newPassword === values.currentPassword) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["newPassword"],
+        message: "La nueva contraseña debe ser distinta a la actual",
+      });
+    }
+
+    if (values.confirmPassword.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["confirmPassword"],
+        message: "Repetí la nueva contraseña",
+      });
+    } else if (
+      values.newPassword.length >= MIN_PASSWORD_LENGTH &&
+      values.newPassword !== values.confirmPassword
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["confirmPassword"],
+        message: "Las contraseñas no coinciden",
+      });
     }
   });
 
 type ProfileValues = z.infer<typeof profileSchema>;
+
+/** Exported for unit tests of profile field rules. */
+export { profileSchema, MIN_PASSWORD_LENGTH };
+
+export function isInvalidCurrentPasswordError(error: {
+  code?: string | undefined;
+  message?: string | undefined;
+}) {
+  return error.code === "INVALID_PASSWORD" || /invalid password/i.test(error.message ?? "");
+}
 
 type ProfileFormProps = {
   user: SessionUser;
@@ -75,18 +156,23 @@ export function ProfileForm({ user }: ProfileFormProps) {
   const [showNew, setShowNew] = React.useState(false);
   const [showConfirm, setShowConfirm] = React.useState(false);
 
-  const { control, handleSubmit, formState, reset } = useForm<ProfileValues>({
-    resolver: zodResolver(profileSchema),
-    defaultValues: {
-      name: user.name,
-      email: user.email,
-      phone: optionalField(user.phone),
-      address: optionalField(user.address),
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    },
-  });
+  const { control, handleSubmit, formState, reset, watch, setValue, setError, clearErrors } =
+    useForm<ProfileValues>({
+      resolver: zodResolver(profileSchema),
+      defaultValues: {
+        name: user.name,
+        email: user.email,
+        phone: optionalField(user.phone),
+        address: optionalField(user.address),
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      },
+    });
+
+  const newPassword = watch("newPassword");
+  const currentPassword = watch("currentPassword");
+  const isNewPasswordValid = newPassword.length >= MIN_PASSWORD_LENGTH;
 
   React.useEffect(() => {
     reset({
@@ -99,6 +185,19 @@ export function ProfileForm({ user }: ProfileFormProps) {
       confirmPassword: "",
     });
   }, [user, reset]);
+
+  React.useEffect(() => {
+    clearErrors("currentPassword");
+  }, [currentPassword, clearErrors]);
+
+  React.useEffect(() => {
+    if (isNewPasswordValid) {
+      return;
+    }
+    setValue("confirmPassword", "");
+    setShowConfirm(false);
+    clearErrors("confirmPassword");
+  }, [isNewPasswordValid, setValue, clearErrors]);
 
   function closePasswordPanel() {
     setChangePasswordOpen(false);
@@ -116,6 +215,32 @@ export function ProfileForm({ user }: ProfileFormProps) {
   async function onSubmit(values: ProfileValues) {
     const phone = values.phone.trim();
     const address = values.address.trim();
+    const shouldChangePassword =
+      changePasswordOpen &&
+      (values.currentPassword.length > 0 ||
+        values.newPassword.length > 0 ||
+        values.confirmPassword.length > 0);
+
+    // Verify current password against the credential used to sign in before
+    // updating profile fields, so a wrong password never partially saves.
+    if (shouldChangePassword) {
+      const { error: passwordError } = await authClient.changePassword({
+        currentPassword: values.currentPassword,
+        newPassword: values.newPassword,
+      });
+
+      if (passwordError) {
+        if (isInvalidCurrentPasswordError(passwordError)) {
+          setError("currentPassword", {
+            type: "server",
+            message: "La contraseña actual es incorrecta",
+          });
+        } else {
+          toast.error(passwordError.message ?? "No se pudo cambiar la contraseña");
+        }
+        return;
+      }
+    }
 
     const { error: updateError } = await authClient.updateUser({
       name: values.name.trim(),
@@ -126,18 +251,6 @@ export function ProfileForm({ user }: ProfileFormProps) {
     if (updateError) {
       toast.error(updateError.message ?? "No se pudo guardar el perfil");
       return;
-    }
-
-    if (changePasswordOpen && values.newPassword.length > 0) {
-      const { error: passwordError } = await authClient.changePassword({
-        currentPassword: values.currentPassword,
-        newPassword: values.newPassword,
-      });
-
-      if (passwordError) {
-        toast.error(passwordError.message ?? "No se pudo cambiar la contraseña");
-        return;
-      }
     }
 
     patchUser({
@@ -214,6 +327,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
                 label="Teléfono"
                 autoComplete="tel"
                 placeholder="+54911-12345678"
+                description="Incluí el código 911 y al menos 8 números más"
               />
 
               <FormInput
@@ -225,7 +339,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
               />
             </section>
 
-            <section className="space-y-4" aria-labelledby="password-heading">
+            <section className="space-y-2" aria-labelledby="password-heading">
               <h2
                 id="password-heading"
                 className="text-sm font-semibold tracking-tight text-foreground"
@@ -293,10 +407,17 @@ export function ProfileForm({ user }: ProfileFormProps) {
                       type={showConfirm ? "text" : "password"}
                       autoComplete="new-password"
                       placeholder="Repetí la nueva contraseña"
+                      disabled={!isNewPasswordValid}
+                      description={
+                        isNewPasswordValid
+                          ? undefined
+                          : "Disponible cuando la nueva contraseña tenga al menos 8 caracteres"
+                      }
                       endAdornment={
                         <PasswordVisibilityToggle
                           visible={showConfirm}
                           onToggle={() => setShowConfirm((v) => !v)}
+                          disabled={!isNewPasswordValid}
                         />
                       }
                     />
