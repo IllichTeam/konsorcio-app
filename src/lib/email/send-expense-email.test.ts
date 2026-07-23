@@ -42,6 +42,7 @@ describe("sendExpenseEmail", () => {
     const result = await sendExpenseEmail({
       to: "a@example.com",
       consortium: "Torre",
+      periodo: "Julio de 2026",
       message: "Mensaje",
       attachments: [],
     });
@@ -54,6 +55,7 @@ describe("sendExpenseEmail", () => {
     const result = await sendExpenseEmail({
       to: "a@example.com",
       consortium: "Torre",
+      periodo: "Julio de 2026",
       message: "Mensaje",
       linkUrl: "https://drive.example/x",
       paymentAlias: "ALIAS.COBRO",
@@ -62,6 +64,13 @@ describe("sendExpenseEmail", () => {
     });
 
     expect(result).toEqual({ ok: true, resendId: "re_123" });
+    expect(renderMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        consorcio: "Torre",
+        periodo: "Julio de 2026",
+        mensaje: "Mensaje",
+      }),
+    );
     expect(sendMock).toHaveBeenCalledTimes(1);
     expect(sendMock.mock.calls[0][0]).toMatchObject({
       from: mockEnv.EMAIL_FROM,
@@ -80,6 +89,7 @@ describe("sendExpenseEmail", () => {
     await sendExpenseEmail({
       to: "tenant@example.com",
       consortium: "Torre",
+      periodo: "Julio de 2026",
       message: "Mensaje",
       attachments: [{ path: "https://signed.example/a.pdf", filename: "a.pdf" }],
       billingEmail: "   ",
@@ -114,6 +124,7 @@ describe("sendExpenseEmail", () => {
     const result = await sendExpenseEmail({
       to: "a@example.com",
       consortium: "Torre",
+      periodo: "Julio de 2026",
       message: "Mensaje",
       attachments: [{ path: "https://signed.example/a.pdf", filename: "a.pdf" }],
     });

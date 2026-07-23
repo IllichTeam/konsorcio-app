@@ -21,6 +21,8 @@ import {
  */
 export type ExpensaMensualProps = {
   consorcio?: string;
+  /** Dedicated period line under “del período:” (e.g. from `formatExpensePeriod`). */
+  periodo: string;
   /** Body copy (e.g. from `buildMonthlyExpenseMessage`). */
   mensaje: string;
   /** Consortium drive / payment link; omitted or empty hides the link row. */
@@ -53,6 +55,7 @@ const EMPTY_ATTACHMENT_NAMES: string[] = [];
 
 export function ExpensaMensual({
   consorcio,
+  periodo,
   mensaje,
   linkUrl,
   paymentAlias,
@@ -100,91 +103,115 @@ export function ExpensaMensual({
                     </tbody>
                   </table>
                 </td>
-                <td style={card} aria-label="Expensa mensual de su consorcio">
-                  <Section style={cardBody}>
-                    <Text style={brandMark}>Konsorcio</Text>
+                <td style={cardShell} aria-label="Expensa mensual de su consorcio">
+                  <table
+                    role="presentation"
+                    cellPadding={0}
+                    cellSpacing={0}
+                    width="100%"
+                    style={card}
+                  >
+                    <tbody>
+                      <tr>
+                        <td>
+                          <Section style={cardBody}>
+                            <Text style={brandMark}>Konsorcio</Text>
 
-                    <Section style={logoSection}>
-                      {logoUrl ? (
-                        <Img src={logoUrl} width={56} height={56} alt="Konsorcio" style={logo} />
-                      ) : (
-                        <table
-                          role="presentation"
-                          cellPadding={0}
-                          cellSpacing={0}
-                          style={logoTable}
-                        >
-                          <tbody>
-                            <tr>
-                              <td align="center" style={logoBadge}>
-                                K
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      )}
-                    </Section>
+                            <Section style={logoSection}>
+                              {logoUrl ? (
+                                <Img
+                                  src={logoUrl}
+                                  width={56}
+                                  height={56}
+                                  alt="Konsorcio"
+                                  style={logo}
+                                />
+                              ) : (
+                                <table
+                                  role="presentation"
+                                  cellPadding={0}
+                                  cellSpacing={0}
+                                  style={logoTable}
+                                >
+                                  <tbody>
+                                    <tr>
+                                      <td align="center" style={logoBadge}>
+                                        K
+                                      </td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              )}
+                            </Section>
 
-                    <Heading style={title}>Expensa mensual</Heading>
+                            <Heading style={title}>Expensa mensual</Heading>
 
-                    <Text style={paragraph}>Hola Vecino/a,</Text>
+                            <Text style={paragraph}>Hola Vecino/a,</Text>
 
-                    <Text style={paragraph}>
-                      {consorcio ? (
-                        <>
-                          Nos comunicamos desde la administración de{" "}
-                          <strong style={strongText}>{consorcio}</strong> para enviarle las expensas
-                          del período:
-                        </>
-                      ) : (
-                        <>
-                          Nos comunicamos desde la administración para enviarle las expensas del
-                          período:
-                        </>
-                      )}
-                    </Text>
+                            <Text style={paragraph}>
+                              {consorcio ? (
+                                <>
+                                  Nos comunicamos desde la administración de{" "}
+                                  <strong style={strongText}>{consorcio}</strong> para enviarle las
+                                  expensas del período:
+                                </>
+                              ) : (
+                                <>
+                                  Nos comunicamos desde la administración para enviarle las expensas
+                                  del período:
+                                </>
+                              )}
+                            </Text>
 
-                    <Section style={messageBox}>
-                      <Text style={messageText}>{mensaje}</Text>
-                    </Section>
+                            <Text style={periodText}>{periodo}</Text>
 
-                    {hasInfoBlock ? (
-                      <Section style={infoSection}>
-                        <Text style={infoIntro}>A continuación dejamos información relevante:</Text>
-                        {alias ? (
-                          <Text style={infoRow}>
-                            <span style={infoLabel}>Alias de cobro: </span>
-                            <strong style={strongText}>{alias}</strong>
-                          </Text>
-                        ) : null}
-                        {resolvedLink ? (
-                          <Text style={infoRow}>
-                            <span style={infoLabel}>Link de drive: </span>
-                            <Link href={resolvedLink} style={infoLink}>
-                              {resolvedLink}
-                            </Link>
-                          </Text>
-                        ) : null}
-                      </Section>
-                    ) : null}
+                            <Section style={messageBox}>
+                              <Text style={messageText}>{mensaje}</Text>
+                            </Section>
 
-                    {hasAttachments ? (
-                      <Section style={attachmentsSection}>
-                        <Text style={attachmentsHeading}>Adjuntos</Text>
-                        {attachmentNames.map((name) => (
-                          <Text key={name} style={attachmentItem}>
-                            • {name}
-                          </Text>
-                        ))}
-                      </Section>
-                    ) : null}
+                            {hasInfoBlock ? (
+                              <Section style={infoSection}>
+                                <Text style={infoIntro}>
+                                  A continuación dejamos información relevante:
+                                </Text>
+                                {alias ? (
+                                  <Text style={infoRow}>
+                                    <span style={infoLabel}>Alias de cobro: </span>
+                                    <strong style={strongText}>{alias}</strong>
+                                  </Text>
+                                ) : null}
+                                {resolvedLink ? (
+                                  <Text style={infoRow}>
+                                    <span style={infoLabel}>Link de drive: </span>
+                                    <Link href={resolvedLink} style={infoLink}>
+                                      {resolvedLink}
+                                    </Link>
+                                  </Text>
+                                ) : null}
+                              </Section>
+                            ) : null}
 
-                    <Text style={paragraph}>
-                      Si tiene cualquier duda, no dude en responder a este correo.
-                    </Text>
+                            {hasAttachments ? (
+                              <Section style={attachmentsSection}>
+                                <Text style={attachmentsHeading}>Adjuntos</Text>
+                                {attachmentNames.map((name) => (
+                                  <Text key={name} style={attachmentItem}>
+                                    • {name}
+                                  </Text>
+                                ))}
+                              </Section>
+                            ) : null}
 
-                    <Text style={farewell}>{`Un cordial saludo, ${remitente}`}</Text>
-                  </Section>
+                            <Text style={paragraph}>
+                              Si tiene cualquier duda, no dude en responder a este correo.
+                            </Text>
+
+                            <Text style={farewell}>{`Un cordial saludo, ${remitente}`}</Text>
+                          </Section>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </td>
                 <td width={16} style={sideCell} aria-hidden="true">
                   <table role="presentation" cellPadding={0} cellSpacing={0} width={16}>
@@ -231,8 +258,8 @@ export default ExpensaMensual;
 
 ExpensaMensual.PreviewProps = {
   consorcio: "Edificio Rivadavia 1234",
-  mensaje:
-    "Nos complace acercarle las expensas mensuales del consorcio Edificio Rivadavia 1234 correspondientes a Julio de 2026.",
+  periodo: "Julio de 2026",
+  mensaje: "Nos complace acercarle las expensas mensuales del consorcio Edificio Rivadavia 1234.",
   linkUrl: "https://drive.google.com/drive/folders/ejemplo",
   paymentAlias: "rivadavia.expensas",
   attachmentNames: ["expensa-julio-2026.pdf", "detalle-gastos.pdf"],
@@ -285,11 +312,18 @@ const blueSideStub: React.CSSProperties = {
   width: "16px",
 };
 
+/** Blue behind the top of the white card so rounded corners reveal blue, not page gray. */
+const cardShell: React.CSSProperties = {
+  backgroundColor: colors.pageBackground,
+  backgroundImage: `linear-gradient(to bottom, ${colors.primaryDark} 0, ${colors.primaryDark} 104px, ${colors.pageBackground} 104px)`,
+  verticalAlign: "top",
+};
+
 const card: React.CSSProperties = {
   backgroundColor: colors.cardBackground,
   border: `1px solid ${colors.infoBorder}`,
   borderRadius: "16px",
-  verticalAlign: "top",
+  width: "100%",
 };
 
 const cardBody: React.CSSProperties = {
@@ -354,6 +388,14 @@ const paragraph: React.CSSProperties = {
 const strongText: React.CSSProperties = {
   color: colors.text,
   fontWeight: 700,
+};
+
+const periodText: React.CSSProperties = {
+  color: colors.primary,
+  fontSize: "20px",
+  fontWeight: 700,
+  lineHeight: "28px",
+  margin: "0 0 16px",
 };
 
 const messageBox: React.CSSProperties = {
