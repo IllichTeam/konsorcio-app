@@ -82,7 +82,7 @@ export function ConsortiumDetail({ consortiumId }: ConsortiumDetailProps) {
                 <Button
                   variant="outline"
                   className="w-fit"
-                  render={<Link href={`/consorcios/${consortiumId}/emails-inquilinos`} />}
+                  render={<Link href={`/resumen/${consortiumId}/emails-inquilinos`} />}
                 >
                   <Mail className="size-4" aria-hidden="true" />
                   Emails de inquilinos

@@ -55,7 +55,7 @@ export function ConsortiumCard({
       )}
     >
       <Link
-        href={`/consorcios/${consortium.id}`}
+        href={`/resumen/${consortium.id}`}
         className="absolute inset-0 z-0 rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
         aria-label={`Abrir ${consortium.name}`}
       />

@@ -13,13 +13,16 @@ function getLegacyDashboardRedirect(pathname: string): string | null {
     return "/perfil-de-usuario";
   }
 
-  if (pathname === "/dashboard/consorcios") {
-    return "/consorcios";
+  if (pathname === "/dashboard/consorcios" || pathname === "/consorcios") {
+    return "/resumen";
   }
 
-  const consortiumDetailMatch = pathname.match(/^\/dashboard\/consorcios\/([^/]+)$/);
-  if (consortiumDetailMatch) {
-    return `/consorcios/${consortiumDetailMatch[1]}`;
+  const legacyConsortiumDetailMatch = pathname.match(
+    /^\/(?:dashboard\/)?consorcios\/([^/]+)(\/.*)?$/,
+  );
+  if (legacyConsortiumDetailMatch) {
+    const [, id, rest = ""] = legacyConsortiumDetailMatch;
+    return `/resumen/${id}${rest}`;
   }
 
   return null;
@@ -61,9 +64,12 @@ export const config = {
     "/",
     "/recuperar-contrasena",
     "/dashboard/:path*",
+    "/consorcios",
     "/consorcios/:path*",
     "/resumen",
+    "/resumen/:path*",
     "/reportes",
+    "/notificaciones",
     "/perfil-de-usuario",
     "/preferencias",
     "/seguridad",

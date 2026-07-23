@@ -22,7 +22,7 @@ const SESSION_COOKIE_BASE_NAMES = [
  * Expires better-auth session cookies so the proxy's optimistic
  * `getSessionCookie` check no longer treats the request as authenticated.
  * Needed when `getSession()` returns null but a stale cookie remains —
- * otherwise `/` ↔ `/consorcios` redirect-loops.
+ * otherwise `/` ↔ `/resumen` redirect-loops.
  */
 export async function clearSessionCookies() {
   const cookieStore = await cookies();
