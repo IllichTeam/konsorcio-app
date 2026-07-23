@@ -126,8 +126,9 @@ export function TenantEmailsScreen({ consortiumId }: TenantEmailsScreenProps) {
         <Button
           variant="ghost"
           size="sm"
-          render={<Link href={`/resumen/${consortiumId}`} />}
-          className="-ml-2"
+          nativeButton={false}
+          render={<Link href={`/consorcios/${consortiumId}`} />}
+          className="-ml-2 w-fit bg-background text-muted-foreground"
         >
           <ArrowLeft className="size-4" aria-hidden="true" />
           Volver al consorcio
@@ -142,8 +143,9 @@ export function TenantEmailsScreen({ consortiumId }: TenantEmailsScreenProps) {
       <Button
         variant="ghost"
         size="sm"
-        render={<Link href={`/resumen/${consortiumId}`} />}
-        className="-ml-2 w-fit text-muted-foreground"
+        nativeButton={false}
+        render={<Link href={`/consorcios/${consortiumId}`} />}
+        className="-ml-2 w-fit bg-background text-muted-foreground"
       >
         <ArrowLeft className="size-4" aria-hidden="true" />
         Volver al consorcio

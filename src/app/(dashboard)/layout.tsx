@@ -1,12 +1,7 @@
-import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { getSession } from "@/lib/auth/session";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
-
-export const metadata: Metadata = {
-  title: "Panel — Konsorcio",
-};
 
 /** Prefer São Paulo (near Supabase). Project default also set in vercel.json. */
 export const preferredRegion = "gru1";

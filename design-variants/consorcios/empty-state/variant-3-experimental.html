@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Variante 3 — Experimental · Empty state consorcios</title>
+    <link rel="preconnect" href="https://fonts.bunny.net" />
+    <link
+      href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700,800|ibm-plex-mono:400,500"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+      @theme {
+        --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+        --color-background: oklch(0.955 0.008 250);
+        --color-foreground: oklch(0.2 0.03 250);
+        --color-card: oklch(0.99 0.004 250);
+        --color-primary: oklch(0.48 0.14 242);
+        --color-primary-foreground: oklch(0.99 0.01 247);
+        --color-muted: oklch(0.48 0.02 250);
+        --color-muted-soft: oklch(0.62 0.015 250);
+        --color-border: oklch(0.88 0.012 250);
+        --color-ink-soft: oklch(0.36 0.025 250);
+        --color-sidebar: oklch(0.94 0.01 250);
+        --color-glow: oklch(0.88 0.05 242);
+        --radius-lg: 0.75rem;
+      }
+    </style>
+    <style>
+      :root {
+        font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+      }
+      .ambient {
+        background:
+          radial-gradient(
+            60% 50% at 50% 28%,
+            oklch(0.88 0.05 242 / 0.45),
+            transparent 70%
+          ),
+          oklch(0.955 0.008 250);
+      }
+      .panel {
+        box-shadow:
+          0 0 0 1px oklch(0.88 0.012 250),
+          0 18px 40px -24px oklch(0.35 0.06 242 / 0.35);
+      }
+      :focus-visible {
+        outline: 2px solid oklch(0.48 0.14 242);
+        outline-offset: 2px;
+      }
+      .ease-v {
+        transition-property: background-color, color, box-shadow, transform,
+          opacity;
+        transition-duration: 220ms;
+        transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+      }
+      @keyframes rise-in {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .enter {
+        opacity: 0;
+        animation: rise-in 0.55s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+        .enter {
+          opacity: 1;
+          animation: none;
+          transform: none;
+        }
+      }
+    </style>
+  </head>
+  <body class="min-h-dvh ambient text-foreground antialiased">
+    <a
+      class="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-foreground focus:px-3 focus:py-2 focus:text-sm focus:text-card"
+      href="#contenido"
+      >Saltar al contenido</a
+    >
+
+    <div class="flex min-h-dvh">
+      <aside
+        class="sticky top-0 hidden h-dvh w-[220px] shrink-0 flex-col border-r border-border bg-sidebar/80 backdrop-blur-sm md:flex"
+        aria-label="Navegación principal"
+      >
+        <div class="flex h-14 items-center gap-2.5 px-4">
+          <span
+            class="flex size-6 items-center justify-center rounded-[5px] bg-primary text-[11px] font-bold text-primary-foreground"
+            aria-hidden="true"
+            >K</span
+          >
+          <p class="truncate text-[13px] font-semibold tracking-tight">
+            Konsorcio
+          </p>
+        </div>
+        <nav class="px-3 pt-2">
+          <a
+            href="#"
+            class="flex items-center gap-2.5 rounded-md bg-foreground/[0.06] px-2.5 py-1.5 text-[13px] font-medium"
+            aria-current="page"
+            >Consorcios</a
+          >
+        </nav>
+      </aside>
+
+      <main class="relative min-w-0 flex-1 overflow-x-clip">
+        <div
+          id="contenido"
+          class="relative mx-auto flex min-h-dvh w-full max-w-[880px] flex-col justify-center px-4 py-16 sm:px-6"
+        >
+          <!-- Hero compacto: sin KPIs en cero (ruido en first-run) -->
+          <p
+            class="enter font-mono text-[11px] uppercase tracking-[0.1em] text-muted-soft"
+          >
+            Primer paso
+          </p>
+          <h1
+            class="enter mt-3 max-w-[18ch] text-balance text-[2.25rem] font-extrabold leading-[1.08] tracking-[-0.045em] sm:text-[2.75rem]"
+            style="animation-delay: 0.05s"
+          >
+            Creá tu primer consorcio
+          </h1>
+          <p
+            class="enter mt-4 max-w-md text-pretty text-[16px] leading-relaxed text-ink-soft"
+            style="animation-delay: 0.1s"
+          >
+            Hola Mariana. Sin un consorcio no hay unidades ni envíos. Arrancá
+            acá; el resto del panel se enciende después.
+          </p>
+
+          <div
+            class="enter panel mt-10 rounded-lg border border-border bg-card p-6 sm:p-8"
+            style="animation-delay: 0.16s"
+            role="region"
+            aria-label="Empezar"
+          >
+            <button
+              type="button"
+              class="ease-v group flex w-full items-center justify-center gap-2.5 rounded-lg bg-primary px-6 py-4 text-[15px] font-semibold text-primary-foreground hover:brightness-[1.06] active:scale-[0.99] sm:py-[1.125rem] sm:text-[16px]"
+            >
+              <svg
+                class="size-5 transition-transform duration-200 group-hover:rotate-90"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.25"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path d="M5 12h14" />
+                <path d="M12 5v14" />
+              </svg>
+              Agregar nuevo consorcio
+            </button>
+
+            <ol class="mt-8 grid gap-4 sm:grid-cols-3 sm:gap-5">
+              <li class="min-w-0">
+                <p
+                  class="font-mono text-[10.5px] tabular-nums text-muted-soft"
+                >
+                  01
+                </p>
+                <p class="mt-1.5 text-[14px] font-semibold tracking-tight">
+                  Datos del edificio
+                </p>
+                <p class="mt-1 text-[13px] leading-snug text-muted">
+                  Nombre y ubicación. Dos campos y listo.
+                </p>
+              </li>
+              <li class="min-w-0">
+                <p
+                  class="font-mono text-[10.5px] tabular-nums text-muted-soft"
+                >
+                  02
+                </p>
+                <p class="mt-1.5 text-[14px] font-semibold tracking-tight">
+                  Unidades y emails
+                </p>
+                <p class="mt-1 text-[13px] leading-snug text-muted">
+                  Cargá inquilinos cuando quieras, no es bloqueante.
+                </p>
+              </li>
+              <li class="min-w-0">
+                <p
+                  class="font-mono text-[10.5px] tabular-nums text-muted-soft"
+                >
+                  03
+                </p>
+                <p class="mt-1.5 text-[14px] font-semibold tracking-tight">
+                  Enviar expensas
+                </p>
+                <p class="mt-1 text-[13px] leading-snug text-muted">
+                  El flujo mensual aparece apenas tengas el consorcio.
+                </p>
+              </li>
+            </ol>
+          </div>
+
+          <p
+            class="enter mt-6 text-center text-[12px] text-muted-soft"
+            style="animation-delay: 0.22s"
+          >
+            Podés agregar más consorcios después desde esta misma pantalla.
+          </p>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

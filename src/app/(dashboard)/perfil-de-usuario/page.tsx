@@ -5,7 +5,7 @@ import { getSession } from "@/lib/auth/session";
 import { ProfileForm } from "@/components/profile/profile-form";
 
 export const metadata: Metadata = {
-  title: "Perfil — Konsorcio",
+  title: "Perfil de usuario",
 };
 
 export default async function PerfilDeUsuarioPage() {

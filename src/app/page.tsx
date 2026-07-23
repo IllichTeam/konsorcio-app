@@ -5,7 +5,7 @@ import { RotatingCube } from "@/components/decorative/rotating-cube";
 import { Card, CardContent } from "@/components/ui/card";
 
 export const metadata: Metadata = {
-  title: "Iniciar sesión — Konsorcio",
+  title: "Iniciar sesión",
 };
 
 export default function LoginPage() {
@@ -13,7 +13,7 @@ export default function LoginPage() {
     <main className="grid min-h-svh flex-1 lg:grid-cols-[3fr_2fr] lg:bg-primary">
       <section className="flex items-center justify-center bg-background p-6 lg:rounded-r-4xl">
         <div className="w-full max-w-sm">
-          <p className="font-heading text-lg font-semibold text-primary">Konsorcio</p>
+          <p className="font-heading text-lg font-semibold text-primary">ExpensasYa</p>
           <h1 className="mt-6 font-heading text-3xl font-semibold tracking-tight">
             Bienvenido de nuevo
           </h1>

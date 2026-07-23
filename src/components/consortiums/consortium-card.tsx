@@ -55,7 +55,7 @@ export function ConsortiumCard({
       )}
     >
       <Link
-        href={`/resumen/${consortium.id}`}
+        href={`/consorcios/${consortium.id}`}
         className="absolute inset-0 z-0 rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
         aria-label={`Abrir ${consortium.name}`}
       />
@@ -95,13 +95,13 @@ export function ConsortiumCard({
         <div className="flex min-w-0 items-center gap-3 pr-10">
           <span
             className={cn(
-              "flex size-12 shrink-0 items-center justify-center rounded-lg",
+              "flex size-16 shrink-0 items-center justify-center rounded-lg",
               tile.bg,
               tile.fg,
             )}
             aria-hidden="true"
           >
-            <Building2 className="size-6" strokeWidth={1.75} />
+            <Building2 className="size-8" strokeWidth={1.75} />
           </span>
           <div className="min-w-0">
             <h3 className="truncate text-[15px] font-semibold tracking-tight text-foreground">

@@ -73,5 +73,10 @@ export function isNavPathActive(pathname: string, href: string): boolean {
 }
 
 export function isProtectedDashboardPath(pathname: string): boolean {
+  // Consortium hub + nested routes (emails, envíos) are not sidebar entries.
+  if (pathname === "/consorcios" || pathname.startsWith("/consorcios/")) {
+    return true;
+  }
+
   return dashboardNavHrefs.some((href) => isNavPathActive(pathname, href));
 }

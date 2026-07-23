@@ -76,6 +76,8 @@ Prefer reuse over new micro-components. Before painting UI, check whether someth
 
 **Tables:** always use `DataTable` / `DataTableSkeleton` from `src/components/ui/data-table.tsx` (TanStack Table: server offset pagination + local sort, `ColumnDef` for custom cells). Do not assemble raw `Table` primitives for data lists with pagination/sorting. If `DataTable` is missing a capability, extend that component rather than forking a parallel table in the screen.
 
+**Button + Link (Base UI):** When `Button` from `src/components/ui/button` uses `render` with Next.js `Link`, `<a>`, or any non-`<button>` element, always set `nativeButton={false}`. Base UI defaults `nativeButton={true}` and assumes a native `<button>`; omitting it triggers a console warning and can break button/a11y semantics.
+
 # Data fetching
 
 Client data loading goes through TanStack Query hooks in `src/hooks/`. Domain APIs live as tRPC procedures under `src/server/trpc/`; the client uses `@trpc/tanstack-react-query` (`queryOptions`, `mutationOptions`, `queryFilter`) so query keys stay inferred. Do **not** re-declare those keys in `src/lib/api/query-keys.ts`. Keep manual `query-keys.ts` entries only for modules still on the mock/`lib/api` layer. Never load remote data with `useEffect` + `useState`. Shared request/response Zod contracts belong in `src/lib/schemas/` and may be reused by forms when the UI shape matches the API; keep form-only schemas in the screen when the UI needs transformations (e.g. string amount → number).

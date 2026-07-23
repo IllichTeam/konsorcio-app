@@ -7,7 +7,7 @@ import { defaultAuthenticatedPath } from "@/lib/navigation/dashboard-nav";
 import { NotificacionesScreen } from "@/components/notificaciones/notificaciones-screen";
 
 export const metadata: Metadata = {
-  title: "Notificaciones — Konsorcio",
+  title: "Notificaciones",
 };
 
 export default async function NotificacionesPage() {

@@ -5,7 +5,7 @@ import { ConsortiumsScreen } from "@/components/consortiums/consortiums-screen";
 import { getQueryClient, trpc } from "@/server/trpc/server-caller";
 
 export const metadata: Metadata = {
-  title: "Resumen — Konsorcio",
+  title: "Resumen",
 };
 
 export default async function ConsortiumsPage() {
