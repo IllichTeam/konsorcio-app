@@ -23,6 +23,18 @@ vi.mock("@/server/trpc/lib/consortium-access", () => ({
 const selectMock = vi.fn();
 const insertValuesMock = vi.fn().mockResolvedValue(undefined);
 const insertMock = vi.fn(() => ({ values: insertValuesMock }));
+const updateSetMock = vi.fn();
+const updateReturningMock = vi.fn();
+const updateMock = vi.fn(() => ({
+  set: (values: unknown) => {
+    updateSetMock(values);
+    return {
+      where: () => ({
+        returning: updateReturningMock,
+      }),
+    };
+  },
+}));
 
 function makeTx(maxSendNumber: number | null = null) {
   return {
@@ -43,6 +55,7 @@ vi.mock("@/db", () => ({
   db: {
     select: selectMock,
     insert: insertMock,
+    update: updateMock,
     transaction: transactionMock,
   },
 }));
@@ -113,6 +126,7 @@ describe("expenseEmails tRPC router", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     insertValuesMock.mockResolvedValue(undefined);
+    updateReturningMock.mockResolvedValue([]);
     transactionMock.mockImplementation(async (fn) => {
       await fn(makeTx(null));
     });
@@ -252,5 +266,115 @@ describe("expenseEmails tRPC router", () => {
         attachmentNames: ["a.pdf"],
       }),
     ).resolves.toEqual({ html: "<html>preview</html>" });
+  });
+
+  describe("retryPending", () => {
+    function failedRecipient() {
+      return {
+        id: "recipient-1",
+        sendId,
+        email: "a@example.com",
+        status: "failed" as const,
+        lastAttemptAt: null,
+      };
+    }
+
+    it.each(["failed", "partial"] as const)(
+      "requeues a %s send with retryable recipients and schedules fan-out",
+      async (status) => {
+        mockSelectSequence([
+          () => [
+            {
+              id: sendId,
+              consortiumId,
+              status,
+              claimExpiresAt: null,
+              createdAt: new Date("2026-01-01T00:00:00.000Z"),
+            },
+          ],
+          () => [failedRecipient()],
+        ]);
+        updateReturningMock.mockResolvedValueOnce([
+          {
+            id: sendId,
+            consortiumId,
+            status: "queued",
+          },
+        ]);
+
+        const api = await caller();
+        await expect(api.expenseEmails.retryPending({ consortiumId, sendId })).resolves.toEqual({
+          sendId,
+        });
+
+        expect(updateMock).toHaveBeenCalled();
+        expect(updateSetMock).toHaveBeenCalledWith({
+          status: "queued",
+          finishedAt: null,
+          claimToken: null,
+          claimExpiresAt: null,
+        });
+        expect(scheduleExpenseEmailSend).toHaveBeenCalledWith(sendId);
+      },
+    );
+
+    it("rejects with CONFLICT when the send is still freshly sending", async () => {
+      mockSelectSequence([
+        () => [
+          {
+            id: sendId,
+            consortiumId,
+            status: "sending",
+            claimExpiresAt: new Date(Date.now() + 60_000),
+            createdAt: new Date(),
+          },
+        ],
+        () => [failedRecipient()],
+      ]);
+
+      const api = await caller();
+      await expect(api.expenseEmails.retryPending({ consortiumId, sendId })).rejects.toMatchObject({
+        code: "CONFLICT",
+        message: "El envío todavía está en curso. Probá de nuevo en unos minutos",
+      });
+
+      expect(updateMock).not.toHaveBeenCalled();
+      expect(scheduleExpenseEmailSend).not.toHaveBeenCalled();
+    });
+
+    it("rejects with CONFLICT when CAS loses to a fresh sending lease", async () => {
+      const freshClaimExpiresAt = new Date(Date.now() + 60_000);
+      mockSelectSequence([
+        () => [
+          {
+            id: sendId,
+            consortiumId,
+            status: "failed",
+            claimExpiresAt: null,
+            createdAt: new Date("2026-01-01T00:00:00.000Z"),
+          },
+        ],
+        () => [failedRecipient()],
+        () => [
+          {
+            id: sendId,
+            consortiumId,
+            status: "sending",
+            claimExpiresAt: freshClaimExpiresAt,
+            createdAt: new Date("2026-01-01T00:00:00.000Z"),
+          },
+        ],
+      ]);
+      updateReturningMock.mockResolvedValueOnce([]);
+
+      const api = await caller();
+      await expect(api.expenseEmails.retryPending({ consortiumId, sendId })).rejects.toMatchObject({
+        code: "CONFLICT",
+        message: "El envío todavía está en curso. Probá de nuevo en unos minutos",
+      });
+
+      expect(updateMock).toHaveBeenCalled();
+      expect(scheduleExpenseEmailSend).not.toHaveBeenCalled();
+    });
   });
 });

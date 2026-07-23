@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, max } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, lte, max, or, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
 import { db } from "@/db";
@@ -426,6 +426,63 @@ export const expenseEmailsRouter = createTRPCRouter({
         throw new TRPCError({
           code: "CONFLICT",
           message: "El envío todavía está en curso. Probá de nuevo en unos minutos",
+        });
+      }
+
+      // Durable requeue so the client poll path (`queued`|`sending`) resumes.
+      // Claim predicate mirrors `tryClaimExpenseEmailSend` — never steal a fresh lease.
+      const [requeued] = await db
+        .update(expenseEmailSends)
+        .set({
+          status: "queued",
+          finishedAt: null,
+          claimToken: null,
+          claimExpiresAt: null,
+        })
+        .where(
+          and(
+            eq(expenseEmailSends.id, send.id),
+            eq(expenseEmailSends.consortiumId, input.consortiumId),
+            or(
+              inArray(expenseEmailSends.status, ["queued", "partial", "failed"]),
+              and(
+                eq(expenseEmailSends.status, "sending"),
+                or(
+                  isNull(expenseEmailSends.claimExpiresAt),
+                  lte(expenseEmailSends.claimExpiresAt, sql<Date>`now()`),
+                ),
+              ),
+            ),
+          ),
+        )
+        .returning();
+
+      if (!requeued) {
+        const [current] = await db
+          .select()
+          .from(expenseEmailSends)
+          .where(
+            and(
+              eq(expenseEmailSends.id, send.id),
+              eq(expenseEmailSends.consortiumId, input.consortiumId),
+            ),
+          )
+          .limit(1);
+
+        if (
+          current &&
+          current.status === "sending" &&
+          !isExpenseEmailSendStale(current, recipients)
+        ) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "El envío todavía está en curso. Probá de nuevo en unos minutos",
+          });
+        }
+
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "No se pudo reencolar el envío",
         });
       }
 
