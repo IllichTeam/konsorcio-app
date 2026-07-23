@@ -212,8 +212,9 @@ export function ConsortiumsScreen() {
       toast.success("Comentario enviado");
       resetCommentDialog();
       setOpenConsortium(null);
-    } catch {
-      toast.error("No se pudo enviar el comentario");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : undefined;
+      toast.error(message || "No se pudo enviar el comentario");
     }
   }
 

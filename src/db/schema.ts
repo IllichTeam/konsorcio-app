@@ -7,10 +7,16 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 
 import type { Recipient } from "@/lib/schemas/email";
+import type {
+  ExpenseEmailAttachmentRef,
+  ExpenseEmailRecipientStatus,
+  ExpenseEmailSendStatus,
+} from "@/lib/schemas/expense-email";
 
 import { user } from "./auth-schema";
 
@@ -126,3 +132,88 @@ export const emailLog = pgTable(
 
 export type EmailLog = typeof emailLog.$inferSelect;
 export type NewEmailLog = typeof emailLog.$inferInsert;
+
+/**
+ * Expense email send — one monthly-expense fan-out job for a consortium.
+ * Attachment binaries live in Supabase Storage; only path/metadata refs here.
+ * Independent from `email_log` (notifications / comments).
+ */
+export const expenseEmailSends = pgTable(
+  "expense_email_sends",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    consortiumId: uuid("consortium_id")
+      .notNull()
+      .references(() => consortiums.id),
+    /**
+     * Per-consortium sequential display id (starts at 1). Assigned only on the
+     * first successful create insert — not on upload or retryPending.
+     */
+    sendNumber: integer("send_number").notNull(),
+    subject: text("subject").notNull(),
+    body: text("body").notNull(),
+    linkUrl: text("link_url"),
+    /** Job lifecycle: queued → sending → sent | partial | failed. */
+    status: text("status").notNull().$type<ExpenseEmailSendStatus>().default("queued"),
+    /** PDF refs in Storage: `[{ storagePath, filename, sizeBytes }]`.
+     * `storagePath` = `expense-emails/{consortiumId}/{sendId}/{file}` (logical);
+     * object key in bucket omits the bucket-name prefix. */
+    attachmentRefs: jsonb("attachment_refs").notNull().$type<ExpenseEmailAttachmentRef[]>(),
+    sentByUserId: text("sent_by_user_id").references(() => user.id),
+    /** Opaque runner lease token; only the current token may persist outcomes. */
+    claimToken: uuid("claim_token"),
+    /** Lease expiry used to reclaim a runner interrupted by a timeout or crash. */
+    claimExpiresAt: timestamp("claim_expires_at", { withTimezone: true }),
+    recipientCount: integer("recipient_count").notNull().default(0),
+    sentCount: integer("sent_count").notNull().default(0),
+    failedCount: integer("failed_count").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    finishedAt: timestamp("finished_at", { withTimezone: true }),
+  },
+  (table) => [
+    index("expense_email_sends_consortium_id_created_at_idx").on(
+      table.consortiumId,
+      table.createdAt,
+    ),
+    uniqueIndex("expense_email_sends_consortium_id_send_number_unique").on(
+      table.consortiumId,
+      table.sendNumber,
+    ),
+  ],
+);
+
+export type ExpenseEmailSendRow = typeof expenseEmailSends.$inferSelect;
+export type NewExpenseEmailSend = typeof expenseEmailSends.$inferInsert;
+
+/**
+ * Expense email recipient — one row per address in an expense send job.
+ * No display name column: the email template uses a fixed greeting.
+ */
+export const expenseEmailRecipients = pgTable(
+  "expense_email_recipients",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    sendId: uuid("send_id")
+      .notNull()
+      .references(() => expenseEmailSends.id),
+    email: text("email").notNull(),
+    /** Per-recipient outcome: pending | sent | failed. */
+    status: text("status").notNull().$type<ExpenseEmailRecipientStatus>().default("pending"),
+    /** Resend message id when the provider accepted the send. */
+    resendId: text("resend_id"),
+    error: text("error"),
+    attempts: integer("attempts").notNull().default(0),
+    lastAttemptAt: timestamp("last_attempt_at", { withTimezone: true }),
+  },
+  (table) => [
+    index("expense_email_recipients_send_id_idx").on(table.sendId),
+    index("expense_email_recipients_send_id_status_idx").on(table.sendId, table.status),
+  ],
+);
+
+export type ExpenseEmailRecipientRow = typeof expenseEmailRecipients.$inferSelect;
+export type NewExpenseEmailRecipient = typeof expenseEmailRecipients.$inferInsert;

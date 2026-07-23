@@ -244,6 +244,13 @@ export const consortiumsRouter = createTRPCRouter({
         ctx.session.user.role,
       );
 
+      if (!consortium.billingEmail?.trim()) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Debés configurar primero el correo del consorcio",
+        });
+      }
+
       const recipients = input.recipients;
       const subject = `Comentario — ${consortium.name}`;
 
@@ -253,6 +260,7 @@ export const consortiumsRouter = createTRPCRouter({
         recipients,
         consortium: consortium.name,
         sender: COMMENT_SENDER,
+        replyTo: consortium.billingEmail,
       });
 
       try {

@@ -4,6 +4,9 @@ import type { Session } from "@/lib/auth/session";
 import type { SendEmailResult } from "@/lib/email/types";
 import type { EmailRecipient } from "@/lib/email/recipients";
 
+// appRouter includes expenseEmails (and emails) paths that import `server-only`.
+vi.mock("server-only", () => ({}));
+
 vi.mock("@/lib/auth/session", () => ({
   getSession: vi.fn(),
 }));

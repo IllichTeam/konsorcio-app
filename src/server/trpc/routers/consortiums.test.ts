@@ -6,11 +6,13 @@ import { createTestDb, type TestDbHandle } from "@/db/testing";
 import type { Session } from "@/lib/auth/session";
 import { ROLES } from "@/lib/auth/roles";
 
+// appRouter pulls emails + expenseEmails routers that import `server-only` modules.
+vi.mock("server-only", () => ({}));
+
 vi.mock("@/lib/auth/session", () => ({
   getSession: vi.fn(),
 }));
 
-// appRouter pulls emails + consortiums routers that import `server-only` modules.
 vi.mock("@/lib/email/send", () => ({
   sendEmail: vi.fn(),
 }));
@@ -97,6 +99,7 @@ describe("consortiums tRPC router", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     await testDb.delete(schema.tenantEmails);
+    await testDb.delete(schema.emailLog);
     await testDb.delete(schema.consortiums);
     await testDb.delete(schema.user);
   });
@@ -380,6 +383,30 @@ describe("consortiums tRPC router", () => {
       ],
       consortium: created.name,
       sender: "Administración",
+      replyTo: sampleInput.billingEmail,
     });
+  });
+
+  it("sendComment rejects when billingEmail is missing", async () => {
+    await insertUser("user-admin", ROLES.admin);
+    const ownerCaller = await callerFor("admin", "user-admin");
+    const created = await ownerCaller.consortiums.create({
+      ...sampleInput,
+      billingEmail: null,
+    });
+
+    const commentCaller = await callerFor("admin", "user-admin");
+    await expect(
+      commentCaller.consortiums.sendComment({
+        id: created.id,
+        message: "Hola vecinos",
+        recipients: [{ email: "juan.perez@example.com", name: "1° - A" }],
+      }),
+    ).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+      message: "Debés configurar primero el correo del consorcio",
+    });
+
+    expect(sendEmail).not.toHaveBeenCalled();
   });
 });

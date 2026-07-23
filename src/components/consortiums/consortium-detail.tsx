@@ -7,13 +7,19 @@ import { ArrowLeft, FileText, Mail, Pencil } from "lucide-react";
 import { defaultAuthenticatedPath } from "@/lib/navigation/dashboard-nav";
 
 import { useConsortium, useConsortiumHistory } from "@/hooks/use-consortiums";
+import { useRecentExpenseEmailSends } from "@/hooks/use-expense-emails";
 import { ConsortiumFormDialog } from "@/components/consortiums/consortium-form-dialog";
 import { consortiumHistoryColumns } from "@/components/consortiums/consortium-history-columns";
+import { createExpenseEmailSendHistoryColumns } from "@/components/expense-emails/expense-email-send-history-columns";
+import { SendMonthlyExpenseDialog } from "@/components/expense-emails/send-monthly-expense-dialog";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const HISTORY_PAGE_SIZE = 10;
+const EXPENSE_HISTORY_PAGE_SIZE = 5;
+const EXPENSE_HISTORY_LIMIT = 20;
+const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
 
 type ConsortiumDetailProps = {
   consortiumId: string;
@@ -22,6 +28,7 @@ type ConsortiumDetailProps = {
 export function ConsortiumDetail({ consortiumId }: ConsortiumDetailProps) {
   const { data: consortium, isLoading, isError } = useConsortium(consortiumId);
   const [historyPage, setHistoryPage] = useState(1);
+  const [expenseHistoryPage, setExpenseHistoryPage] = useState(0);
   const {
     data: historyPageData,
     isLoading: isHistoryLoading,
@@ -30,7 +37,17 @@ export function ConsortiumDetail({ consortiumId }: ConsortiumDetailProps) {
     page: historyPage,
     pageSize: HISTORY_PAGE_SIZE,
   });
+  const {
+    data: expenseSends = [],
+    isLoading: isExpenseHistoryLoading,
+    isFetching: isExpenseHistoryFetching,
+  } = useRecentExpenseEmailSends(consortiumId, {
+    limit: EXPENSE_HISTORY_LIMIT,
+    enabled: !isDemoMode,
+  });
+  const expenseHistoryColumns = createExpenseEmailSendHistoryColumns(consortiumId);
   const [formDialogOpen, setFormDialogOpen] = useState(false);
+  const [expenseDialogOpen, setExpenseDialogOpen] = useState(false);
 
   if (isLoading) {
     return <ConsortiumDetailSkeleton />;
@@ -73,9 +90,9 @@ export function ConsortiumDetail({ consortiumId }: ConsortiumDetailProps) {
         <div className="mt-6">
           <p className="text-base font-medium text-muted-foreground">Acciones</p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            {process.env.NEXT_PUBLIC_DEMO_MODE !== "true" ? (
+            {!isDemoMode ? (
               <>
-                <Button className="w-fit">
+                <Button className="w-fit" onClick={() => setExpenseDialogOpen(true)}>
                   <FileText className="size-4" aria-hidden="true" />
                   Enviar expensa mensual
                 </Button>
@@ -125,6 +142,30 @@ export function ConsortiumDetail({ consortiumId }: ConsortiumDetailProps) {
         </div>
       </dl>
 
+      {!isDemoMode ? (
+        <div className="mt-8 flex min-h-0 flex-col overflow-x-clip">
+          <h2 className="mb-3 text-sm font-semibold text-foreground">Envíos de expensa reciente</h2>
+          {isExpenseHistoryLoading && expenseSends.length === 0 ? (
+            <DataTableSkeleton columnCount={4} rowCount={EXPENSE_HISTORY_PAGE_SIZE} />
+          ) : (
+            <DataTable
+              columns={expenseHistoryColumns}
+              data={expenseSends.slice(
+                expenseHistoryPage * EXPENSE_HISTORY_PAGE_SIZE,
+                expenseHistoryPage * EXPENSE_HISTORY_PAGE_SIZE + EXPENSE_HISTORY_PAGE_SIZE,
+              )}
+              pageIndex={expenseHistoryPage}
+              pageSize={EXPENSE_HISTORY_PAGE_SIZE}
+              totalCount={expenseSends.length}
+              onPageChange={setExpenseHistoryPage}
+              getRowId={(row) => row.id}
+              emptyMessage="Todavía no hay envíos de expensa"
+              className={isExpenseHistoryFetching ? "opacity-70 transition-opacity" : undefined}
+            />
+          )}
+        </div>
+      ) : null}
+
       <div className="mt-8 flex min-h-0 flex-1 flex-col">
         <h2 className="mb-3 text-sm font-semibold text-foreground">Historial de acciones</h2>
         {isHistoryLoading && !historyPageData ? (
@@ -149,6 +190,13 @@ export function ConsortiumDetail({ consortiumId }: ConsortiumDetailProps) {
         onOpenChange={setFormDialogOpen}
         consortiumId={consortiumId}
         initialConsortium={consortium}
+      />
+      <SendMonthlyExpenseDialog
+        open={expenseDialogOpen}
+        onOpenChange={setExpenseDialogOpen}
+        consortiumId={consortiumId}
+        consortiumName={consortium.name}
+        defaultDriveLink={consortium.driveLink}
       />
     </div>
   );

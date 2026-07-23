@@ -71,6 +71,20 @@
       "when": 1784577973629,
       "tag": "0009_gray_gateway",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1784686756421,
+      "tag": "0010_cuddly_silverclaw",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1784737424185,
+      "tag": "0011_redundant_slyde",
+      "breakpoints": true
     }
   ]
 }

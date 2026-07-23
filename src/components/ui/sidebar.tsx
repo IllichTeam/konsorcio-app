@@ -191,8 +191,10 @@ function Sidebar({
         data-slot="sidebar"
         className={cn(
           // hidden below md avoids a hydration flash of the desktop sidebar on mobile
-          // before useIsMobile resolves to true
-          "hidden h-svh w-(--sidebar-width) flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex",
+          // before useIsMobile resolves to true.
+          // sticky: collapsible=none is in-flow (not fixed like offcanvas/icon); pin to
+          // viewport while SidebarInset grows past svh and the document scrolls.
+          "hidden sticky top-0 h-svh w-(--sidebar-width) shrink-0 self-start flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex",
           className,
         )}
         {...props}

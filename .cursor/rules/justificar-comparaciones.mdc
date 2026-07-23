@@ -1,0 +1,37 @@
+---
+description: Tablas de comparación, adversarial review y decisiones deben incluir justificación / tradeoff
+alwaysApply: true
+---
+
+# Justificar comparaciones y decisiones
+
+Cuando presentes **opciones**, **adversarial reviews**, **feasibility**, o **recomendaciones de diseño/producto**, el usuario necesita entender el tradeoff — no solo el veredicto.
+
+## Tablas de comparación
+
+Toda tabla que compare opciones, libs, enfoques o verdicto vs alternativa **debe** incluir una columna de justificación (nombre libre: `Por qué` / `Tradeoff` / `Justificación`).
+
+```markdown
+| Opción | Señal | Cuándo | Por qué |
+| --- | --- | --- | --- |
+| A | … | … | … |
+```
+
+❌ BAD: columnas solo de hecho (`downloads`, `effort`) sin decir qué implica elegirla.
+✅ GOOD: cada fila explica el tradeoff o el criterio que la hace ganar/perder.
+
+## Adversarial review
+
+Para cada hallazgo serio / mandatory change, no listes solo el título: **una frase de por qué importa** (riesgo, ROI, blast radius, falsedad del supuesto).
+
+## Decisiones y veredictos
+
+Al cerrar una decisión (APPROVE / REJECT / ship / defer / opción elegida):
+
+1. Veredicto en una línea.
+2. **Resumen de justificación** (2–4 bullets o un párrafo corto): qué se evaluó, por qué gana, qué se sacrifica.
+3. Si hay “no hacer X”, una línea de por qué no.
+
+## Subagentes
+
+Si lanzás subagentes de research / adversarial / architecture, **incluí esta regla en el prompt** para que su deliverable traiga la columna `Por qué` y el resumen final de justificación.
