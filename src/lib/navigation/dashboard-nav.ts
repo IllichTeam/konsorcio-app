@@ -16,17 +16,15 @@ function slugify(label: string): string {
     .replace(/\s+/g, "-");
 }
 
-/** Full nav — used for auth path protection even when demo mode hides items. */
+/** Full nav — used for auth path protection even when items are hidden from the sidebar. */
 const allDashboardNavGroups: DashboardNavGroup[] = [
   {
     label: "Dashboard",
     children: [
-      { label: "Resumen", href: `/${slugify("Resumen")}` },
-      { label: "Consorcios", href: "/consorcios" },
+      { label: "Resumen", href: "/resumen" },
+      // Hidden from sidebar for now; placeholder route still protected.
       { label: "Reportes", href: `/${slugify("Reportes")}` },
-      // TODO: DashboardNavChild has no role field yet — this item should only
-      // be shown to admins once nav items support role gating. The route
-      // itself already redirects non-admins (see notificaciones/page.tsx).
+      // Hidden from sidebar for now; route still exists (admin-gated in page).
       { label: "Notificaciones", href: `/${slugify("Notificaciones")}` },
     ],
   },
@@ -34,29 +32,41 @@ const allDashboardNavGroups: DashboardNavGroup[] = [
     label: "Configuración",
     children: [
       { label: "Perfil de usuario", href: `/${slugify("Perfil de usuario")}` },
+      // Hidden from sidebar for now; placeholder routes still protected.
       { label: "Preferencias", href: `/${slugify("Preferencias")}` },
       { label: "Seguridad", href: `/${slugify("Seguridad")}` },
     ],
   },
 ];
 
+const visibleDashboardNavGroups: DashboardNavGroup[] = [
+  {
+    label: "Dashboard",
+    children: [{ label: "Resumen", href: "/resumen" }],
+  },
+  {
+    label: "Configuración",
+    children: [{ label: "Perfil de usuario", href: `/${slugify("Perfil de usuario")}` }],
+  },
+];
+
 const demoDashboardNavGroups: DashboardNavGroup[] = [
   {
     label: "Dashboard",
-    children: [{ label: "Consorcios", href: "/consorcios" }],
+    children: [{ label: "Resumen", href: "/resumen" }],
   },
 ];
 
 /** Visible sidebar groups — filtered when `NEXT_PUBLIC_DEMO_MODE=true`. */
 export const dashboardNavGroups: DashboardNavGroup[] =
-  process.env.NEXT_PUBLIC_DEMO_MODE === "true" ? demoDashboardNavGroups : allDashboardNavGroups;
+  process.env.NEXT_PUBLIC_DEMO_MODE === "true" ? demoDashboardNavGroups : visibleDashboardNavGroups;
 
 /** All dashboard hrefs (never filtered) — proxy auth must protect every route. */
 export const dashboardNavHrefs = allDashboardNavGroups.flatMap((group) =>
   group.children.map((child) => child.href),
 );
 
-export const defaultAuthenticatedPath = "/consorcios";
+export const defaultAuthenticatedPath = "/resumen";
 
 export function isNavPathActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
