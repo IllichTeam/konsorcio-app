@@ -104,6 +104,9 @@ describe("consortiums tRPC router", () => {
     vi.clearAllMocks();
     await testDb.delete(schema.tenantEmails);
     await testDb.delete(schema.emailLog);
+    await testDb.delete(schema.expenseEmailRecipients);
+    await testDb.delete(schema.expenseEmailSends);
+    await testDb.delete(schema.consortiumActivities);
     await testDb.delete(schema.consortiums);
     await testDb.delete(schema.user);
   });
@@ -311,31 +314,83 @@ describe("consortiums tRPC router", () => {
     });
   });
 
-  it("returns paginated mock history for an owned consortium", async () => {
+  it("returns empty history for a new consortium and paginates recorded activities", async () => {
     await insertUser("user-admin", ROLES.admin);
     const ownerCaller = await callerFor("admin", "user-admin");
     const created = await ownerCaller.consortiums.create(sampleInput);
+
+    const emptyCaller = await callerFor("admin", "user-admin");
+    const empty = await emptyCaller.consortiums.history({
+      id: created.id,
+      page: 1,
+      pageSize: 10,
+    });
+    expect(empty).toEqual({ items: [], total: 0 });
+
+    const driveCaller = await callerFor("admin", "user-admin");
+    await driveCaller.consortiums.update({
+      ...sampleInput,
+      id: created.id,
+      driveLink: "https://drive.google.com/updated",
+    });
+
+    const amountCaller = await callerFor("admin", "user-admin");
+    await amountCaller.consortiums.updateAmount({
+      id: created.id,
+      amount: 150_000,
+    });
+
+    const multiCaller = await callerFor("admin", "user-admin");
+    await multiCaller.consortiums.update({
+      ...sampleInput,
+      id: created.id,
+      name: "Torre Sur",
+      driveLink: "https://drive.google.com/updated",
+      location: "Palermo",
+    });
 
     const page1Caller = await callerFor("admin", "user-admin");
     const page1 = await page1Caller.consortiums.history({
       id: created.id,
       page: 1,
-      pageSize: 10,
+      pageSize: 2,
     });
 
-    expect(page1.total).toBe(15);
-    expect(page1.items).toHaveLength(10);
-    expect(page1.items[0]?.id).toBe(1);
+    expect(page1.total).toBe(3);
+    expect(page1.items).toHaveLength(2);
+    expect(page1.items[0]).toMatchObject({
+      type: "consortium_updated",
+      summary: "Se editaron los datos del consorcio",
+      payload: {
+        fieldsChanged: expect.arrayContaining(["name", "location"]),
+      },
+    });
+    expect(page1.items[1]).toMatchObject({
+      type: "amount_updated",
+      summary: "Se actualizó el monto de caja",
+      payload: { previousAmount: 0, newAmount: 150_000 },
+    });
+    expect(page1.items[0]?.id).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+    );
+    expect(Number.isNaN(Date.parse(page1.items[0]!.timestamp))).toBe(false);
 
     const page2Caller = await callerFor("admin", "user-admin");
     const page2 = await page2Caller.consortiums.history({
       id: created.id,
       page: 2,
-      pageSize: 10,
+      pageSize: 2,
     });
 
-    expect(page2.items).toHaveLength(5);
-    expect(page2.items[0]?.id).toBe(11);
+    expect(page2.items).toHaveLength(1);
+    expect(page2.items[0]).toMatchObject({
+      type: "drive_link_updated",
+      summary: "Se actualizó el link del drive",
+      payload: {
+        previousDriveLink: sampleInput.driveLink,
+        newDriveLink: "https://drive.google.com/updated",
+      },
+    });
   });
 
   it("rejects history for a consortium the admin cannot access", async () => {
@@ -352,6 +407,89 @@ describe("consortiums tRPC router", () => {
     await expect(
       caller.consortiums.history({ id: row.id, page: 1, pageSize: 10 }),
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+
+  it("enriches expense_sent history rows with live sendStatus", async () => {
+    await insertUser("user-admin", ROLES.admin);
+    const ownerCaller = await callerFor("admin", "user-admin");
+    const created = await ownerCaller.consortiums.create(sampleInput);
+
+    const sendId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    const missingSendId = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+
+    await testDb.insert(schema.expenseEmailSends).values({
+      id: sendId,
+      consortiumId: created.id,
+      sendNumber: 3,
+      subject: "Expensa Mensual",
+      body: "Mensaje",
+      status: "partial",
+      attachmentRefs: [],
+      sentByUserId: "user-admin",
+      recipientCount: 2,
+      sentCount: 1,
+      failedCount: 1,
+    });
+
+    await testDb.insert(schema.consortiumActivities).values([
+      {
+        consortiumId: created.id,
+        actorUserId: "user-admin",
+        type: "expense_sent",
+        summary: "Se envió la expensa mensual de Julio de 2026",
+        payload: {
+          sendId,
+          sendNumber: 3,
+          recipientCount: 2,
+          subject: "Expensa Mensual",
+        },
+      },
+      {
+        consortiumId: created.id,
+        actorUserId: "user-admin",
+        type: "expense_sent",
+        summary: "Se envió la expensa mensual de Junio de 2026",
+        payload: {
+          sendId: missingSendId,
+          sendNumber: 2,
+          recipientCount: 1,
+          subject: "Expensa Mensual",
+        },
+      },
+      {
+        consortiumId: created.id,
+        actorUserId: "user-admin",
+        type: "notification_sent",
+        summary: "Se envió una notificación a los inquilinos",
+        payload: {
+          messagePreview: "Hola",
+          recipientCount: 1,
+        },
+      },
+    ]);
+
+    const historyCaller = await callerFor("admin", "user-admin");
+    const history = await historyCaller.consortiums.history({
+      id: created.id,
+      page: 1,
+      pageSize: 10,
+    });
+
+    expect(history.total).toBe(3);
+
+    const withLiveStatus = history.items.find((item) => item.payload.sendId === sendId);
+    const withMissingSend = history.items.find((item) => item.payload.sendId === missingSendId);
+    const notification = history.items.find((item) => item.type === "notification_sent");
+
+    expect(withLiveStatus).toMatchObject({
+      type: "expense_sent",
+      sendStatus: "partial",
+    });
+    expect(withMissingSend).toMatchObject({
+      type: "expense_sent",
+    });
+    expect(withMissingSend?.sendStatus).toBeUndefined();
+    expect(notification?.sendStatus).toBeUndefined();
   });
 
   it("sendComment emails via NotificacionConsorcio pipeline", async () => {
@@ -389,6 +527,22 @@ describe("consortiums tRPC router", () => {
       sender: "Administración",
       replyTo: sampleInput.billingEmail,
       footerContact: "Gurruchaga 2222 - CP: 1414 / Teléfono: 91123878467",
+    });
+
+    const historyCaller = await callerFor("admin", "user-admin");
+    const history = await historyCaller.consortiums.history({
+      id: created.id,
+      page: 1,
+      pageSize: 10,
+    });
+    expect(history.total).toBe(1);
+    expect(history.items[0]).toMatchObject({
+      type: "notification_sent",
+      summary: "Se envió una notificación a los inquilinos",
+      payload: {
+        messagePreview: "Hola vecinos",
+        recipientCount: 2,
+      },
     });
   });
 

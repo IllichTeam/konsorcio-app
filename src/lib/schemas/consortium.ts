@@ -1,4 +1,5 @@
 import { recipientSchema } from "@/lib/schemas/email";
+import { expenseEmailSendStatusSchema } from "@/lib/schemas/expense-email";
 import { z } from "@/lib/zod";
 
 /** Fields shared by create/update forms and API payloads. */
@@ -55,11 +56,43 @@ export const consortiumDetailSchema = consortiumBaseSchema.extend({
   amount: z.number().int(),
 });
 
-/** Action-history row — mock until history is modeled in the DB. */
+/** Curated action-history event types (v1). */
+export const consortiumActivityTypeSchema = z.enum([
+  "expense_sent",
+  "notification_sent",
+  "drive_link_updated",
+  "consortium_updated",
+  "amount_updated",
+]);
+
+/** Optional metadata stored with a history row; fields depend on `type`. */
+export const consortiumActivityPayloadSchema = z.object({
+  sendId: z.string().uuid().optional(),
+  sendNumber: z.number().int().optional(),
+  recipientCount: z.number().int().optional(),
+  subject: z.string().optional(),
+  messagePreview: z.string().optional(),
+  previousDriveLink: z.string().nullable().optional(),
+  newDriveLink: z.string().nullable().optional(),
+  fieldsChanged: z.array(z.string()).optional(),
+  previousAmount: z.number().int().optional(),
+  newAmount: z.number().int().optional(),
+});
+
+/** Action-history row from `consortium_activities`. */
 export const consortiumHistoryEntrySchema = z.object({
-  id: z.number().int(),
+  id: z.string().uuid(),
+  type: consortiumActivityTypeSchema,
+  /** Spanish summary stored at write time. */
+  summary: z.string(),
+  /** ISO-8601 timestamp. */
   timestamp: z.string(),
-  description: z.string(),
+  payload: consortiumActivityPayloadSchema,
+  /**
+   * Live expense-send status when `type === "expense_sent"` and the send still
+   * exists. Omitted / undefined when unknown (non-expense rows or missing send).
+   */
+  sendStatus: expenseEmailSendStatusSchema.optional(),
 });
 
 export const consortiumHistoryInputSchema = consortiumIdInputSchema.extend({
@@ -71,6 +104,9 @@ export const consortiumHistoryPageSchema = z.object({
   items: z.array(consortiumHistoryEntrySchema),
   total: z.number().int().nonnegative(),
 });
+
+export type ConsortiumActivityType = z.infer<typeof consortiumActivityTypeSchema>;
+export type ConsortiumActivityPayload = z.infer<typeof consortiumActivityPayloadSchema>;
 
 export type CreateConsortiumInput = z.infer<typeof createConsortiumInputSchema>;
 export type UpdateConsortiumInput = z.infer<typeof updateConsortiumInputSchema>;

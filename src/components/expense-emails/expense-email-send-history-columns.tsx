@@ -6,6 +6,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { expenseEmailSendStatusLabel } from "@/hooks/use-expense-emails";
+import { formatDate } from "@/lib/format-date";
 import type { ExpenseEmailSendDto, ExpenseEmailSendStatus } from "@/lib/schemas/expense-email";
 
 const statusVariant: Record<
@@ -18,18 +19,6 @@ const statusVariant: Record<
   partial: "warning",
   failed: "destructive",
 };
-
-function formatCreatedAt(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return "—";
-  }
-
-  return date.toLocaleString("es-AR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  });
-}
 
 export function createExpenseEmailSendHistoryColumns(
   consortiumId: string,
@@ -47,7 +36,7 @@ export function createExpenseEmailSendHistoryColumns(
       header: "Fecha",
       cell: ({ getValue }) => (
         <span className="whitespace-nowrap tabular-nums text-foreground">
-          {formatCreatedAt(getValue<string>())}
+          {formatDate(getValue<string>())}
         </span>
       ),
     },

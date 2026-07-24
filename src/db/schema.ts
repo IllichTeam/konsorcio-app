@@ -217,3 +217,63 @@ export const expenseEmailRecipients = pgTable(
 
 export type ExpenseEmailRecipientRow = typeof expenseEmailRecipients.$inferSelect;
 export type NewExpenseEmailRecipient = typeof expenseEmailRecipients.$inferInsert;
+
+/** Curated consortium action-history event types (v1 taxonomy). */
+export type ConsortiumActivityType =
+  | "expense_sent"
+  | "notification_sent"
+  | "drive_link_updated"
+  | "consortium_updated"
+  | "amount_updated";
+
+/**
+ * Optional metadata for a history row. Shape varies by `type`; only the
+ * fields relevant to that event are populated.
+ */
+export interface ConsortiumActivityPayload {
+  sendId?: string;
+  sendNumber?: number;
+  recipientCount?: number;
+  subject?: string;
+  messagePreview?: string;
+  previousDriveLink?: string | null;
+  newDriveLink?: string | null;
+  fieldsChanged?: string[];
+  previousAmount?: number;
+  newAmount?: number;
+}
+
+/**
+ * Consortium activities — curated action history for the consortium detail feed.
+ * One row per user-visible action (anti-saturation: one save → one event).
+ */
+export const consortiumActivities = pgTable(
+  "consortium_activities",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    consortiumId: uuid("consortium_id")
+      .notNull()
+      .references(() => consortiums.id),
+    actorUserId: text("actor_user_id").references(() => user.id),
+    /** Event taxonomy, e.g. "expense_sent" or "drive_link_updated". */
+    type: text("type").notNull().$type<ConsortiumActivityType>(),
+    /** Spanish user-facing summary stored at write time. */
+    summary: text("summary").notNull(),
+    payload: jsonb("payload")
+      .notNull()
+      .$type<ConsortiumActivityPayload>()
+      .default(sql`'{}'::jsonb`),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("consortium_activities_consortium_id_created_at_idx").on(
+      table.consortiumId,
+      table.createdAt,
+    ),
+  ],
+);
+
+export type ConsortiumActivityRow = typeof consortiumActivities.$inferSelect;
+export type NewConsortiumActivity = typeof consortiumActivities.$inferInsert;

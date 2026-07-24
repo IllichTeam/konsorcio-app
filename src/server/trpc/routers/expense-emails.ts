@@ -27,6 +27,7 @@ import {
 } from "@/server/expense-emails/map-expense-email-dto";
 import { isExpenseEmailSendStale } from "@/server/expense-emails/run-expense-email-send";
 import { scheduleExpenseEmailSend } from "@/server/expense-emails/schedule-expense-email-send";
+import { recordConsortiumActivity } from "@/server/consortiums/record-consortium-activity";
 import { createTRPCRouter, protectedProcedure } from "@/server/trpc/init";
 import { findAccessibleConsortium } from "@/server/trpc/lib/consortium-access";
 
@@ -73,7 +74,7 @@ async function insertQueuedExpenseEmailSend(
     sentByUserId: string;
     recipientEmails: string[];
   },
-): Promise<void> {
+): Promise<number> {
   const sendNumber = await nextSendNumber(tx, input.consortiumId);
 
   await tx.insert(expenseEmailSends).values({
@@ -98,6 +99,29 @@ async function insertQueuedExpenseEmailSend(
       status: "pending" as const,
     })),
   );
+
+  return sendNumber;
+}
+
+async function recordExpenseSentActivity(input: {
+  consortiumId: string;
+  actorUserId: string;
+  sendId: string;
+  sendNumber: number;
+  recipientCount: number;
+}): Promise<void> {
+  await recordConsortiumActivity({
+    consortiumId: input.consortiumId,
+    actorUserId: input.actorUserId,
+    type: "expense_sent",
+    summary: `Se envió la expensa mensual de ${formatExpensePeriod()}`,
+    payload: {
+      sendId: input.sendId,
+      sendNumber: input.sendNumber,
+      recipientCount: input.recipientCount,
+      subject: EXPENSE_EMAIL_SUBJECT,
+    },
+  });
 }
 
 function uniqueNormalizedEmails(emails: string[]): string[] {
@@ -251,9 +275,10 @@ export const expenseEmailsRouter = createTRPCRouter({
         recipientEmails: activeEmails,
       };
 
+      let createdSendNumber: number;
       try {
-        await db.transaction(async (tx) => {
-          await insertQueuedExpenseEmailSend(tx, insertPayload);
+        createdSendNumber = await db.transaction(async (tx) => {
+          return insertQueuedExpenseEmailSend(tx, insertPayload);
         });
       } catch (error) {
         // Concurrent create with the same PK — treat as idempotent success.
@@ -271,8 +296,8 @@ export const expenseEmailsRouter = createTRPCRouter({
         // Concurrent creates racing on (consortium_id, send_number) — retry once.
         if (isPgUniqueViolation(error)) {
           try {
-            await db.transaction(async (tx) => {
-              await insertQueuedExpenseEmailSend(tx, insertPayload);
+            createdSendNumber = await db.transaction(async (tx) => {
+              return insertQueuedExpenseEmailSend(tx, insertPayload);
             });
           } catch (retryError) {
             const [retryRace] = await db
@@ -296,6 +321,13 @@ export const expenseEmailsRouter = createTRPCRouter({
             });
           }
 
+          await recordExpenseSentActivity({
+            consortiumId: input.consortiumId,
+            actorUserId: ctx.session.user.id,
+            sendId: input.sendId,
+            sendNumber: createdSendNumber,
+            recipientCount: activeEmails.length,
+          });
           scheduleExpenseEmailSend(input.sendId);
           return { sendId: input.sendId };
         }
@@ -310,6 +342,13 @@ export const expenseEmailsRouter = createTRPCRouter({
         });
       }
 
+      await recordExpenseSentActivity({
+        consortiumId: input.consortiumId,
+        actorUserId: ctx.session.user.id,
+        sendId: input.sendId,
+        sendNumber: createdSendNumber,
+        recipientCount: activeEmails.length,
+      });
       scheduleExpenseEmailSend(input.sendId);
       return { sendId: input.sendId };
     }),
