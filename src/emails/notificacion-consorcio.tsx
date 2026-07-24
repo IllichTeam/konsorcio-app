@@ -16,10 +16,6 @@ export type NotificacionConsorcioProps = {
   nombre?: string;
   consorcio?: string;
   mensaje: string;
-  /** Consortium drive / payment link; omitted or empty hides the link row. */
-  linkUrl?: string | null;
-  /** Payment alias from the consortium; omitted or empty hides the alias row. */
-  paymentAlias?: string | null;
   remitente?: string;
   logoUrl?: string;
   unsubscribeUrl?: string;
@@ -44,8 +40,6 @@ export function NotificacionConsorcio({
   nombre = "Vecino",
   consorcio,
   mensaje,
-  linkUrl,
-  paymentAlias,
   remitente = "Administración",
   logoUrl,
   unsubscribeUrl,
@@ -54,10 +48,6 @@ export function NotificacionConsorcio({
   const preview = consorcio
     ? `Nueva notificación de la administración de ${consorcio}`
     : "Nueva notificación de la administración";
-  const alias = paymentAlias?.trim() || null;
-  const trimmedLink = linkUrl?.trim() || "";
-  const resolvedLink = trimmedLink !== "" && URL.canParse(trimmedLink) ? trimmedLink : null;
-  const hasInfoBlock = Boolean(alias || resolvedLink);
   const resolvedFooterContact = footerContact?.trim() || null;
 
   return (
@@ -68,8 +58,8 @@ export function NotificacionConsorcio({
         <Container style={outerContainer}>
           {/*
             Table frame: full-width blue top + short blue stubs on BOTH sides.
-            Side cells use a nested table of fixed height so blue does not run
-            the full card height (email-safe; avoids width:100% + margin clipping).
+            cardShell paints blue behind the white card so rounded corners reveal
+            blue (not page gray), matching ExpensaMensual.
           */}
           <table
             role="presentation"
@@ -94,80 +84,80 @@ export function NotificacionConsorcio({
                     </tbody>
                   </table>
                 </td>
-                <td style={card} aria-label="Notificación de su consorcio">
-                  <Section style={cardBody}>
-                    <Text style={brandMark}>Konsorcio</Text>
+                <td style={cardShell} aria-label="Notificación de su consorcio">
+                  <table
+                    role="presentation"
+                    cellPadding={0}
+                    cellSpacing={0}
+                    width="100%"
+                    style={card}
+                  >
+                    <tbody>
+                      <tr>
+                        <td aria-label="Contenido de la notificación">
+                          <Section style={cardBody}>
+                            <Text style={brandMark}>ExpensasYa</Text>
 
-                    <Section style={logoSection}>
-                      {logoUrl ? (
-                        <Img src={logoUrl} width={56} height={56} alt="Konsorcio" style={logo} />
-                      ) : (
-                        <table
-                          role="presentation"
-                          cellPadding={0}
-                          cellSpacing={0}
-                          style={logoTable}
-                        >
-                          <tbody>
-                            <tr>
-                              <td align="center" style={logoBadge}>
-                                K
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      )}
-                    </Section>
+                            <Section style={logoSection}>
+                              {logoUrl ? (
+                                <Img
+                                  src={logoUrl}
+                                  width={56}
+                                  height={56}
+                                  alt="ExpensasYa"
+                                  style={logo}
+                                />
+                              ) : (
+                                <table
+                                  role="presentation"
+                                  cellPadding={0}
+                                  cellSpacing={0}
+                                  style={logoTable}
+                                >
+                                  <tbody>
+                                    <tr>
+                                      <td align="center" style={logoBadge}>
+                                        E
+                                      </td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              )}
+                            </Section>
 
-                    <Heading style={title}>Notificación de su consorcio</Heading>
+                            <Heading style={title}>Notificación de su consorcio</Heading>
 
-                    <Text style={paragraph}>{`Hola ${nombre},`}</Text>
+                            <Text style={paragraph}>{`Hola ${nombre},`}</Text>
 
-                    <Text style={paragraph}>
-                      {consorcio ? (
-                        <>
-                          Nos comunicamos desde la administración de{" "}
-                          <strong style={strongText}>{consorcio}</strong> para compartir la
-                          siguiente información:
-                        </>
-                      ) : (
-                        <>
-                          Nos comunicamos desde la administración para compartir la siguiente
-                          información:
-                        </>
-                      )}
-                    </Text>
+                            <Text style={paragraph}>
+                              {consorcio ? (
+                                <>
+                                  Nos comunicamos desde la administración de{" "}
+                                  <strong style={strongText}>{consorcio}</strong> para compartir la
+                                  siguiente información:
+                                </>
+                              ) : (
+                                <>
+                                  Nos comunicamos desde la administración para compartir la
+                                  siguiente información:
+                                </>
+                              )}
+                            </Text>
 
-                    <Section style={messageBox}>
-                      <Text style={messageText}>{mensaje}</Text>
-                    </Section>
+                            <Section style={messageBox}>
+                              <Text style={messageText}>{mensaje}</Text>
+                            </Section>
 
-                    {hasInfoBlock ? (
-                      <Section style={infoSection}>
-                        <Text style={infoIntro}>A continuación dejamos información relevante:</Text>
-                        {alias ? (
-                          <Text style={infoRow}>
-                            <span style={infoLabel}>Alias de cobro: </span>
-                            <strong style={strongText}>{alias}</strong>
-                          </Text>
-                        ) : null}
-                        {resolvedLink ? (
-                          <Text style={infoRow}>
-                            <span style={infoLabel}>Link de drive: </span>
-                            <Link href={resolvedLink} style={infoLink}>
-                              {resolvedLink}
-                            </Link>
-                          </Text>
-                        ) : null}
-                      </Section>
-                    ) : null}
+                            <Text style={paragraph}>
+                              Si tiene cualquier duda, no dude en responder a este correo.
+                            </Text>
 
-                    <Text style={paragraph}>
-                      Si tiene cualquier duda, no dude en responder a este correo.
-                    </Text>
-
-                    <Text style={farewell}>{`Un cordial saludo, ${remitente}`}</Text>
-                  </Section>
+                            <Text style={farewell}>{`Un cordial saludo, ${remitente}`}</Text>
+                          </Section>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </td>
                 <td width={16} style={sideCell} aria-hidden="true">
                   <table role="presentation" cellPadding={0} cellSpacing={0} width={16}>
@@ -217,8 +207,6 @@ NotificacionConsorcio.PreviewProps = {
   consorcio: "Edificio Rivadavia 1234",
   mensaje:
     "Le informamos que el ascensor principal estará fuera de servicio el sábado 20 de 9:00 a 14:00 por mantenimiento programado.",
-  linkUrl: "https://drive.google.com/drive/folders/ejemplo",
-  paymentAlias: "rivadavia.expensas",
   remitente: "Administración Edificio Rivadavia",
   footerContact: "Av. Corrientes 1847, Piso 5 Of. B, CABA - CP: 1043 / Teléfono: +54911-12345678",
 } satisfies NotificacionConsorcioProps;
@@ -269,11 +257,18 @@ const blueSideStub: React.CSSProperties = {
   width: "16px",
 };
 
+/** Blue behind the top of the white card so rounded corners reveal blue, not page gray. */
+const cardShell: React.CSSProperties = {
+  backgroundColor: colors.pageBackground,
+  backgroundImage: `linear-gradient(to bottom, ${colors.primaryDark} 0, ${colors.primaryDark} 104px, ${colors.pageBackground} 104px)`,
+  verticalAlign: "top",
+};
+
 const card: React.CSSProperties = {
   backgroundColor: colors.cardBackground,
   border: `1px solid ${colors.infoBorder}`,
   borderRadius: "16px",
-  verticalAlign: "top",
+  width: "100%",
 };
 
 const cardBody: React.CSSProperties = {
@@ -304,7 +299,7 @@ const logoTable: React.CSSProperties = {
   margin: "0 auto",
 };
 
-/** Inline brand mark — rounded square with a bold K (no image dependency). */
+/** Inline brand mark — rounded square with a bold E (no image dependency). */
 const logoBadge: React.CSSProperties = {
   backgroundColor: colors.primary,
   borderRadius: "14px",
@@ -356,36 +351,6 @@ const messageText: React.CSSProperties = {
   lineHeight: "24px",
   margin: 0,
   whiteSpace: "pre-line",
-};
-
-const infoSection: React.CSSProperties = {
-  margin: "0 0 20px",
-};
-
-const infoIntro: React.CSSProperties = {
-  color: colors.textMuted,
-  fontSize: "13px",
-  fontWeight: 600,
-  lineHeight: "20px",
-  margin: "0 0 8px",
-};
-
-const infoRow: React.CSSProperties = {
-  color: colors.text,
-  fontSize: "15px",
-  lineHeight: "24px",
-  margin: "0 0 6px",
-};
-
-const infoLabel: React.CSSProperties = {
-  color: colors.textMuted,
-};
-
-const infoLink: React.CSSProperties = {
-  color: colors.link,
-  fontWeight: 700,
-  textDecoration: "underline",
-  wordBreak: "break-all",
 };
 
 const farewell: React.CSSProperties = {

@@ -11,10 +11,6 @@ export type SendEmailParams = SendEmailInput & {
   replyTo?: string;
   /** Sender profile footer: address / phone / postal code. */
   footerContact?: string | null;
-  /** Consortium drive / payment link for the notification template. */
-  linkUrl?: string | null;
-  /** Payment alias for the notification template. */
-  paymentAlias?: string | null;
 };
 
 /** Outcome of a send attempt, aggregated across all recipients. */

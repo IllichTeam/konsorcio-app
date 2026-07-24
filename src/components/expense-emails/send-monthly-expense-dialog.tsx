@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type SyntheticEvent } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
@@ -227,7 +227,7 @@ export function SendMonthlyExpenseDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-h-[min(90dvh,44rem)] overflow-y-auto sm:max-w-[39.6rem]">
+      <DialogContent className="max-h-[min(92dvh,56rem)] overflow-y-auto sm:max-w-[48rem]">
         <DialogHeader>
           <DialogTitle>Enviar expensa mensual</DialogTitle>
           <DialogDescription className="sr-only">
@@ -289,7 +289,28 @@ type ExpenseEmailPreviewProps = {
   isError: boolean;
 };
 
+const PREVIEW_MIN_HEIGHT_PX = 192;
+
 function ExpenseEmailPreview({ html, isLoading, isError }: ExpenseEmailPreviewProps) {
+  const [iframeHeight, setIframeHeight] = useState<number | null>(null);
+
+  useEffect(() => {
+    setIframeHeight(null);
+  }, [html]);
+
+  function handleIframeLoad(event: SyntheticEvent<HTMLIFrameElement>) {
+    const doc = event.currentTarget.contentDocument;
+    if (!doc?.documentElement && !doc?.body) {
+      return;
+    }
+    const nextHeight = Math.max(
+      doc.documentElement?.scrollHeight ?? 0,
+      doc.body?.scrollHeight ?? 0,
+      PREVIEW_MIN_HEIGHT_PX,
+    );
+    setIframeHeight(nextHeight);
+  }
+
   return (
     <div className="grid gap-2">
       <p className="text-sm font-medium text-foreground">Vista previa del correo</p>
@@ -304,8 +325,13 @@ function ExpenseEmailPreview({ html, isLoading, isError }: ExpenseEmailPreviewPr
           <iframe
             title="Vista previa del correo de expensa mensual"
             srcDoc={html}
-            sandbox=""
-            className="h-[22rem] w-full border-0 bg-card"
+            sandbox="allow-same-origin"
+            onLoad={handleIframeLoad}
+            className="w-full border-0 bg-card"
+            style={{
+              height: iframeHeight ?? PREVIEW_MIN_HEIGHT_PX,
+              minHeight: PREVIEW_MIN_HEIGHT_PX,
+            }}
           />
         ) : (
           <p className="p-4 text-sm text-muted-foreground">

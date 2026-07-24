@@ -10,11 +10,9 @@ import {
   tenantEmails,
   type ConsortiumRow,
 } from "@/db/schema";
+import { loadEmailFooterContact } from "@/lib/email/load-sender-contact";
 import { sendEmail } from "@/lib/email/send";
-import {
-  normalizeExpenseEmailLinkUrl,
-  type ExpenseEmailSendStatus,
-} from "@/lib/schemas/expense-email";
+import { type ExpenseEmailSendStatus } from "@/lib/schemas/expense-email";
 import {
   consortiumDetailSchema,
   consortiumHistoryInputSchema,
@@ -393,9 +391,8 @@ export const consortiumsRouter = createTRPCRouter({
       }
 
       const recipients = input.recipients;
-      const subject = `Comentario — ${consortium.name}`;
-      const linkUrl = normalizeExpenseEmailLinkUrl(consortium.driveLink) || null;
-      const paymentAlias = consortium.paymentAlias?.trim() || null;
+      const subject = `Notificación - ${consortium.name}`;
+      const footerContact = await loadEmailFooterContact(ctx.session.user.id);
 
       const result = await sendEmail({
         subject,
@@ -404,8 +401,7 @@ export const consortiumsRouter = createTRPCRouter({
         consortium: consortium.name,
         sender: COMMENT_SENDER,
         replyTo: consortium.billingEmail,
-        linkUrl,
-        paymentAlias,
+        footerContact,
       });
 
       try {

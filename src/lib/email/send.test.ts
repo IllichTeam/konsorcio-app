@@ -149,13 +149,36 @@ describe("sendEmail", () => {
       mensaje: "Cuerpo del mensaje",
       consorcio: undefined,
       remitente: undefined,
+      footerContact: undefined,
     });
     expect(secondProps.props).toEqual({
       nombre: "User 1",
       mensaje: "Cuerpo del mensaje",
       consorcio: undefined,
       remitente: undefined,
+      footerContact: undefined,
     });
+  });
+
+  it("passes footerContact into the notification template", async () => {
+    sendMock.mockImplementation(async (batchEmails: unknown[]) => ({
+      data: { data: batchEmails.map((_, index) => ({ id: `id-${index}` })) },
+      error: null,
+    }));
+
+    await sendEmail({
+      subject: "Aviso",
+      body: "Mensaje",
+      recipients: makeRecipients(1),
+      footerContact: "Gurruchaga 2222 - CP: 1414 / Teléfono: 91123878467",
+    });
+
+    const props = (
+      renderMock.mock.calls[0][0] as {
+        props: { footerContact?: string | null };
+      }
+    ).props;
+    expect(props.footerContact).toBe("Gurruchaga 2222 - CP: 1414 / Teléfono: 91123878467");
   });
 
   it("redirects every `to` to EMAIL_OVERRIDE_TO and prefixes the subject", async () => {

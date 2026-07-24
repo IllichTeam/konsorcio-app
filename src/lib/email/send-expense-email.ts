@@ -27,11 +27,6 @@ export type SendExpenseEmailParams = {
   linkUrl?: string | null;
   /** Optional payment alias (readonly in maqueta UI). */
   paymentAlias?: string | null;
-  /**
-   * Filenames shown in the HTML body. Defaults to `attachments[].filename`
-   * when omitted.
-   */
-  attachmentNames?: string[];
   /** Resend attachments via remote `path` (signed Storage URL, etc.). */
   attachments: ExpenseEmailAttachment[];
   /**
@@ -84,16 +79,16 @@ export async function sendExpenseEmail(
     return { ok: false, error: "No se adjuntaron PDFs" };
   }
 
-  const attachmentNames =
-    input.attachmentNames ?? attachments.map((attachment) => attachment.filename);
-
   const html = await renderExpenseEmailHtml({
     consorcio: consortium,
     periodo,
     mensaje: message,
     linkUrl,
     paymentAlias,
-    attachmentNames,
+    attachments: attachments.map((attachment) => ({
+      filename: attachment.filename,
+      url: attachment.path,
+    })),
     remitente,
     unsubscribeUrl,
     footerContact,

@@ -12,12 +12,17 @@ describe("ExpensaMensual", () => {
         mensaje="Nos complace acercarle las expensas mensuales."
         linkUrl="https://drive.example/folder"
         paymentAlias="ALIAS.TORRE"
-        attachmentNames={["Liquidacion.pdf", "Anexo.pdf"]}
+        attachments={[
+          { filename: "Liquidacion.pdf", url: "https://signed.example/Liquidacion.pdf" },
+          { filename: "Anexo.pdf", url: "https://signed.example/Anexo.pdf" },
+        ]}
         remitente="Administración"
       />,
     );
 
     expect(html).toContain("Hola Vecino/a");
+    expect(html).toContain("ExpensasYa");
+    expect(html).toContain(">E</");
     expect(html).toContain("Torre Norte");
     expect(html).toContain("del período:");
     expect(html).toContain("Julio de 2026");
@@ -31,7 +36,22 @@ describe("ExpensaMensual", () => {
     expect(html).not.toContain("Un cordial saludo,<br");
     expect(html).toContain("Liquidacion.pdf");
     expect(html).toContain("Anexo.pdf");
+    expect(html).toContain('href="https://signed.example/Liquidacion.pdf"');
+    expect(html).toContain('href="https://signed.example/Anexo.pdf"');
     expect(html.match(/Hola Vecino\/a/g)?.length).toBe(1);
+  });
+
+  it("renders attachment filenames as plain text when url is missing", async () => {
+    const html = await render(
+      <ExpensaMensual
+        periodo="Julio de 2026"
+        mensaje="Preview sin firmas"
+        attachments={[{ filename: "SoloNombre.pdf" }]}
+      />,
+    );
+
+    expect(html).toContain("SoloNombre.pdf");
+    expect(html).not.toContain("href=");
   });
 
   it("hides alias and link rows when they are empty", async () => {

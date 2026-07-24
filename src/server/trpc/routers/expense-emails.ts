@@ -199,7 +199,7 @@ export const expenseEmailsRouter = createTRPCRouter({
         mensaje: input.message.trim(),
         linkUrl,
         paymentAlias: consortium.paymentAlias,
-        attachmentNames: input.attachmentNames,
+        attachments: input.attachmentNames.map((filename) => ({ filename })),
         footerContact: await loadEmailFooterContact(ctx.session.user.id),
       });
 

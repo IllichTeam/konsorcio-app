@@ -15,6 +15,10 @@ vi.mock("@/lib/email/send", () => ({
   sendEmail: vi.fn(),
 }));
 
+vi.mock("@/lib/email/load-sender-contact", () => ({
+  loadEmailFooterContact: vi.fn(async () => "Gurruchaga 2222 - CP: 1414 / Teléfono: 91123878467"),
+}));
+
 vi.mock("@/lib/email/recipients", () => ({
   listRecipients: vi.fn(),
 }));
@@ -218,7 +222,10 @@ describe("emails tRPC router", () => {
         sent: 1,
         failed: 0,
       });
-      expect(sendEmail).toHaveBeenCalledWith(validInput);
+      expect(sendEmail).toHaveBeenCalledWith({
+        ...validInput,
+        footerContact: "Gurruchaga 2222 - CP: 1414 / Teléfono: 91123878467",
+      });
       expect(insertMock).toHaveBeenCalled();
       expect(insertValuesMock).toHaveBeenCalledWith(
         expect.objectContaining({

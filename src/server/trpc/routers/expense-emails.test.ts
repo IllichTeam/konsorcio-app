@@ -298,6 +298,7 @@ describe("expenseEmails tRPC router", () => {
       expect.objectContaining({
         periodo: expect.stringMatching(/ de \d{4}$/),
         footerContact: "Gurruchaga 2222 - CP: 1414 / Teléfono: 91123878467",
+        attachments: [{ filename: "a.pdf" }],
       }),
     );
   });
