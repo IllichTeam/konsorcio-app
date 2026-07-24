@@ -69,6 +69,7 @@ describe("sendExpenseEmail", () => {
         consorcio: "Torre",
         periodo: "Julio de 2026",
         mensaje: "Mensaje",
+        attachments: [{ filename: "a.pdf", url: "https://signed.example/a.pdf" }],
       }),
     );
     expect(sendMock).toHaveBeenCalledTimes(1);

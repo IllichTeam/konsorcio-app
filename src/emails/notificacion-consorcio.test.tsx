@@ -10,8 +10,6 @@ describe("NotificacionConsorcio", () => {
         nombre="Ana"
         consorcio="Edificio Rivadavia 1234"
         mensaje={"Línea 1\nLínea 2"}
-        linkUrl="https://drive.example/folder"
-        paymentAlias="ALIAS.NOTIF"
         remitente="Administración"
       />,
     );
@@ -20,23 +18,14 @@ describe("NotificacionConsorcio", () => {
     expect(html).toContain("Edificio Rivadavia 1234");
     expect(html).toContain("Línea 1");
     expect(html).toContain("Línea 2");
-    expect(html).toContain("ALIAS.NOTIF");
-    expect(html).toContain("<strong");
-    expect(html).toContain('href="https://drive.example/folder"');
-    expect(html).toContain("Link de drive");
     expect(html).toContain("Un cordial saludo, Administración");
     expect(html).not.toContain("Un cordial saludo,<br");
-    expect(html).toContain(">K</");
-  });
-
-  it("hides alias and link rows when they are empty", async () => {
-    const html = await render(
-      <NotificacionConsorcio mensaje="Solo mensaje" linkUrl="" paymentAlias="  " />,
-    );
-
-    expect(html).toContain("Solo mensaje");
+    expect(html).toContain("ExpensasYa");
+    expect(html).toContain(">E</");
     expect(html).not.toContain("Alias de cobro");
     expect(html).not.toContain("Link de drive");
+    // cardShell paints blue behind rounded white corners (same as ExpensaMensual).
+    expect(html).toContain("linear-gradient(to bottom, #003d6b");
   });
 
   it("falls back to a generic greeting when no recipient name is given", async () => {

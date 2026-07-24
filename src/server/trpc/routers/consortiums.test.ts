@@ -17,6 +17,10 @@ vi.mock("@/lib/email/send", () => ({
   sendEmail: vi.fn(),
 }));
 
+vi.mock("@/lib/email/load-sender-contact", () => ({
+  loadEmailFooterContact: vi.fn(async () => "Gurruchaga 2222 - CP: 1414 / Teléfono: 91123878467"),
+}));
+
 vi.mock("@/lib/email/recipients", () => ({
   listRecipients: vi.fn(),
 }));
@@ -375,7 +379,7 @@ describe("consortiums tRPC router", () => {
     ).resolves.toBeUndefined();
 
     expect(sendEmail).toHaveBeenCalledWith({
-      subject: `Comentario — ${created.name}`,
+      subject: `Notificación - ${created.name}`,
       body: "Hola vecinos",
       recipients: [
         { email: "juan.perez@example.com", name: "1° - A" },
@@ -384,8 +388,7 @@ describe("consortiums tRPC router", () => {
       consortium: created.name,
       sender: "Administración",
       replyTo: sampleInput.billingEmail,
-      linkUrl: sampleInput.driveLink,
-      paymentAlias: sampleInput.paymentAlias,
+      footerContact: "Gurruchaga 2222 - CP: 1414 / Teléfono: 91123878467",
     });
   });
 

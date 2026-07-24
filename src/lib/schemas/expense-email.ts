@@ -24,10 +24,10 @@ export const EXPENSE_EMAIL_STORAGE_PATH_PREFIX = "expense-emails";
 export const EXPENSE_EMAIL_RETENTION_DAYS = 60;
 
 /**
- * Signed URL TTL for Resend fan-out + retry (private bucket).
- * Long enough for the full send run — not a short 60s window.
+ * Signed URL TTL for Resend fan-out + retry and in-body download links
+ * (private bucket). Seven days so inbox links stay usable after delivery.
  */
-export const EXPENSE_EMAIL_SIGNED_URL_TTL_SECONDS = 6 * 60 * 60;
+export const EXPENSE_EMAIL_SIGNED_URL_TTL_SECONDS = 7 * 24 * 60 * 60;
 
 /**
  * A send stuck in `sending` is reclaimable after this window (crash / timeout).

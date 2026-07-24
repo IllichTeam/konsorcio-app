@@ -17,8 +17,15 @@ import {
  * Fork of `NotificacionConsorcio` layout — do not change that template.
  *
  * Greeting is fixed (`Vecino/a`). Maqueta data: automatic message, optional
- * drive link, optional payment alias, and PDF filenames (binaries via Resend).
+ * drive link, optional payment alias, and PDF attachments (binaries via Resend;
+ * filenames in the body link to signed download URLs when provided).
  */
+export type ExpensaMensualAttachment = {
+  filename: string;
+  /** Signed/public download URL; omitted or invalid → plain filename text. */
+  url?: string | null;
+};
+
 export type ExpensaMensualProps = {
   consorcio?: string;
   /** Dedicated period line under “del período:” (e.g. from `formatExpensePeriod`). */
@@ -29,8 +36,8 @@ export type ExpensaMensualProps = {
   linkUrl?: string | null;
   /** Payment alias from the consortium; omitted or empty hides the alias row. */
   paymentAlias?: string | null;
-  /** PDF filenames listed in the body (attachments sent via Resend API). */
-  attachmentNames?: string[];
+  /** PDFs listed under Adjuntos (optional `url` makes the filename clickable). */
+  attachments?: ExpensaMensualAttachment[];
   remitente?: string;
   logoUrl?: string;
   unsubscribeUrl?: string;
@@ -51,7 +58,7 @@ const colors = {
   link: "#005696",
 } as const;
 
-const EMPTY_ATTACHMENT_NAMES: string[] = [];
+const EMPTY_ATTACHMENTS: ExpensaMensualAttachment[] = [];
 
 export function ExpensaMensual({
   consorcio,
@@ -59,7 +66,7 @@ export function ExpensaMensual({
   mensaje,
   linkUrl,
   paymentAlias,
-  attachmentNames = EMPTY_ATTACHMENT_NAMES,
+  attachments = EMPTY_ATTACHMENTS,
   remitente = "Administración",
   logoUrl,
   unsubscribeUrl,
@@ -71,7 +78,13 @@ export function ExpensaMensual({
   const trimmedLink = linkUrl?.trim() || "";
   const resolvedLink = trimmedLink !== "" && URL.canParse(trimmedLink) ? trimmedLink : null;
   const hasInfoBlock = Boolean(alias || resolvedLink);
-  const hasAttachments = attachmentNames.length > 0;
+  const resolvedAttachments = attachments.map((attachment) => {
+    const filename = attachment.filename.trim();
+    const trimmedUrl = attachment.url?.trim() || "";
+    const url = trimmedUrl !== "" && URL.canParse(trimmedUrl) ? trimmedUrl : null;
+    return { filename, url };
+  });
+  const hasAttachments = resolvedAttachments.some((attachment) => attachment.filename !== "");
   const resolvedFooterContact = footerContact?.trim() || null;
 
   return (
@@ -115,7 +128,7 @@ export function ExpensaMensual({
                       <tr>
                         <td>
                           <Section style={cardBody}>
-                            <Text style={brandMark}>Konsorcio</Text>
+                            <Text style={brandMark}>ExpensasYa</Text>
 
                             <Section style={logoSection}>
                               {logoUrl ? (
@@ -123,7 +136,7 @@ export function ExpensaMensual({
                                   src={logoUrl}
                                   width={56}
                                   height={56}
-                                  alt="Konsorcio"
+                                  alt="ExpensasYa"
                                   style={logo}
                                 />
                               ) : (
@@ -136,7 +149,7 @@ export function ExpensaMensual({
                                   <tbody>
                                     <tr>
                                       <td align="center" style={logoBadge}>
-                                        K
+                                        E
                                       </td>
                                     </tr>
                                   </tbody>
@@ -194,11 +207,20 @@ export function ExpensaMensual({
                             {hasAttachments ? (
                               <Section style={attachmentsSection}>
                                 <Text style={attachmentsHeading}>Adjuntos</Text>
-                                {attachmentNames.map((name) => (
-                                  <Text key={name} style={attachmentItem}>
-                                    • {name}
-                                  </Text>
-                                ))}
+                                {resolvedAttachments.map((attachment) =>
+                                  attachment.filename === "" ? null : (
+                                    <Text key={attachment.filename} style={attachmentItem}>
+                                      •{" "}
+                                      {attachment.url ? (
+                                        <Link href={attachment.url} style={infoLink}>
+                                          {attachment.filename}
+                                        </Link>
+                                      ) : (
+                                        attachment.filename
+                                      )}
+                                    </Text>
+                                  ),
+                                )}
                               </Section>
                             ) : null}
 
@@ -262,7 +284,16 @@ ExpensaMensual.PreviewProps = {
   mensaje: "Nos complace acercarle las expensas mensuales del consorcio Edificio Rivadavia 1234.",
   linkUrl: "https://drive.google.com/drive/folders/ejemplo",
   paymentAlias: "rivadavia.expensas",
-  attachmentNames: ["expensa-julio-2026.pdf", "detalle-gastos.pdf"],
+  attachments: [
+    {
+      filename: "expensa-julio-2026.pdf",
+      url: "https://signed.example/expensa-julio-2026.pdf",
+    },
+    {
+      filename: "detalle-gastos.pdf",
+      url: "https://signed.example/detalle-gastos.pdf",
+    },
+  ],
   remitente: "Administración Edificio Rivadavia",
   footerContact: "Av. Corrientes 1847, Piso 5 Of. B, CABA - CP: 1043 / Teléfono: +54911-12345678",
 } satisfies ExpensaMensualProps;
