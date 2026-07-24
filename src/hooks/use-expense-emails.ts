@@ -108,6 +108,9 @@ export function useCreateExpenseEmailSend() {
             sendId: variables.sendId,
           }),
         );
+        void queryClient.invalidateQueries(
+          trpc.consortiums.history.queryFilter({ id: variables.consortiumId }),
+        );
       },
     }),
   );
